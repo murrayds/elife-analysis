@@ -1,0 +1,10 @@
+"0","```r
+ggplot(time_data, aes(x = submission_year, y = measurement, fill = is_central)) +
+  geom_boxplot(outlier.alpha = 0.1, color = \"black\",  alpha = 0.8) +
+  facet_wrap(~key) +
+  ylim(0, 200) +
+  theme_dakota() +
+  labs(x = \"Submission Year\",
+       y = \"Days Elapsed\") +
+  scale_fill_manual(labels = c(\"Peripheral Nationality\", \"Central Nationality\"), values = c(\"#00b894\", \"#6c5ce7\"))
+```"

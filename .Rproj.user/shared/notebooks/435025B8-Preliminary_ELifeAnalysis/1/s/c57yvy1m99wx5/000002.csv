@@ -1,0 +1,4 @@
+"0","```r
+# Load and assign gender vie
+rmp <- read.csv(\"~/Desktop/AARMP_2017/processed_files/rmp_processed.csv\")
+```"

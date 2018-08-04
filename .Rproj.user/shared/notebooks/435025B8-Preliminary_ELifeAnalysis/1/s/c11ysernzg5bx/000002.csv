@@ -1,0 +1,16 @@
+"0","```r
+homophily %>%
+  group_by(submission_year) %>%
+  mutate(total = n()) %>%
+  group_by(submission_year, composition) %>%
+  summarize(
+    prop = n() / total[1]
+  ) %>%
+  ggplot(aes(x = submission_year, y = prop, color = composition, shape = composition)) +
+  geom_point() +
+  geom_line() +
+  theme_dakota() +
+  scale_color_brewer(palette = \"Set2\") +
+  labs(x = \"Year\",
+       y = \"Proportion of Total\")
+```"

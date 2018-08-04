@@ -1,0 +1,94 @@
+"0","```r
+elife$bre_gender <- relevel(factor(elife$bre_gender), ref = \"F\")
+#elife2$reviewer_gender <- relevel(factor(elife2$reviewer_gender), ref = \"F\")
+labs = c(\"(A) Average BRE Workload\", \"(B) Average Reviewer Workload\")
+annualized_bres <- elife %>%
+  filter(!is.na(bre_country)) %>%
+  mutate(
+    is_us = factor(ifelse(bre_country %in% c(\"United States\", \"United Kingdom\", \"Germany\"), T, F))
+  ) %>%
+  group_by(submission_year, is_us) %>%
+  summarize(
+    person_count = length(unique(bre_name)),
+    review_count = n(),
+    review_rate = review_count / person_count
+  ) %>%
+  group_by(submission_year) %>%
+  mutate(
+    total = sum(person_count)
+  ) %>%
+  group_by(submission_year, is_us) %>%
+  mutate(
+    prop = person_count / total,
+    source = labs[1]
+  ) %>%
+  ungroup()
+annualized_reviewers <- elife_with_reviewers %>%
+  filter(!is.na(reviewer_country)) %>%
+  mutate(
+    is_us = factor(ifelse(reviewer_country %in% c(\"United States\", \"United Kingdom\", \"Germany\"), T, F))
+  ) %>%
+  group_by(reviewer_name, submission_year) %>%
+  mutate(workload = n()) %>%
+  filter(!duplicated(reviewer_name)) %>%
+  group_by(submission_year, is_us) %>%
+  summarize(
+    person_count = length(unique(reviewer_name)),
+    review_count = length(unique(MSNO)),
+    review_rate = mean(workload)
+  ) %>%
+  group_by(submission_year) %>%
+  mutate(
+    total = sum(person_count)
+  ) %>%
+  group_by(submission_year, is_us) %>%
+  mutate(
+    prop = person_count / total,
+    source = labs[2]
+  ) %>%
+  ungroup()
+long_data <- rbind(annualized_bres, annualized_reviewers) %>%
+  gather(key, value = measurement, review_rate, prop)
+us_baseline <- elife %>%
+  filter(encouraged == T & decision_made == T) %>%
+  mutate(
+    is_us = ifelse(ca_country %in% c(\"United States\", \"United Kingdom\", \"Germany\"), T, F)
+  ) %>%
+  group_by(submission_year) %>%
+  mutate(
+    total = n()
+  ) %>%
+  group_by(submission_year, is_us) %>%
+  summarize(
+    proportion_us = sum(is_us == T, na.rm = T) / total[1]
+  ) %>%
+  filter(!is.na(is_us) & is_us == T)
+  
+  
+l1 <- subset(long_data, key == \"prop\")
+l1$source <- factor(l1$source, labels = c(\"BRE Proportion by Nationality\", \"Reviewer Proportion by Nationality \"))
+p1 <- ggplot(l1, aes(x = submission_year, y = measurement, color = is_us)) +
+  geom_line() +
+  geom_line(data = us_baseline, aes(x = submission_year, y = proportion_us), linetype = \"dashed\", color = \"red\") +
+  geom_point(aes(shape = is_us), color = \"black\") +
+  facet_wrap(~source, ncol = 1, nrow = 2) +
+  theme_dakota() +
+  ylim(0, 1) +
+  labs(x = \"Year\", 
+       y = \"%\") +
+  scale_shape_manual(values = c(4, 5), labels = c(\"Non-Central Nationality\", \"Central Nationality\")) +
+  scale_color_manual(labels = c(\"Non-Central Nationality\", \"Central Nationality\"), values = c(\"#00b894\", \"#6c5ce7\"))
+l2 <- subset(long_data, key == \"review_rate\")
+l2$source <- factor(l2$source, labels = c(\"BRE Worklaod by Nationality\", \"Reviewer Workload by Nationality\"))
+p2 <- ggplot(l2, aes(x = submission_year, y = measurement, color = is_us)) +
+  geom_line() +
+  geom_point(aes(shape = is_us), color = \"black\") +
+  facet_wrap(~source, ncol = 1, nrow = 2) +
+  theme_dakota() +
+  ylim(0, 5) +
+  labs(x = \"Year\", 
+       y = \"Reviews per Person\") +
+  scale_shape_discrete(labels = c(\"Person Not From U.S.\", \"Person From U.S.\")) +
+  scale_color_manual(labels = c(\"Person Not From U.S.\", \"Person From U.S.\"), values = c(\"#00b894\", \"#6c5ce7\"))
+grid_arrange_shared_legend(p1, p2, ncol = 2)
+```"

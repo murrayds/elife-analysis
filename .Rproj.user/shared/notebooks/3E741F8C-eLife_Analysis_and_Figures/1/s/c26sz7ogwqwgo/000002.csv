@@ -1,0 +1,12 @@
+"0","elife %>%
+  filter(initial_decision_made) %>%
+  gather(author_key, country, ca_ountry, fa_country, la_country) %>%
+  group_by(author_key, country) %>%
+  summarize(
+    submissions = n(),
+    num_people = length(unique(tolower(elife[, author_key])))
+  )
+"
+"2","Error in overscope_eval_next(overscope, expr) : 
+  object 'ca_ountry' not found
+"

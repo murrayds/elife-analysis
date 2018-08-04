@@ -1,0 +1,1929 @@
+---
+title: "eLife Preliminary Plots"
+author: "Dakota Murray"
+output:
+  pdf_document: default
+  html_notebook: default
+  html_document: default
+---
+ 
+```{r, message=FALSE, warning=FALSE}
+library(ggplot2)
+library(dplyr)
+library(readr)
+library(readxl)
+library(gridExtra)
+library(grid)
+library(tidyr)
+
+elife <- read_excel("~/Desktop/elife_datafile.xls")
+
+elife <- elife[!is.na(elife$initial_decision), ]
+
+elife$ca_gender[!elife$ca_gender %in% c("M", "F")] <- "UNK"
+elife$fa_gender[!elife$fa_gender %in% c("M", "F")] <- "UNK"
+elife$la_gender[!elife$la_gender %in% c("M", "F")] <- "UNK"
+elife$bre_gender[!elife$bre_gender %in% c("M", "F")] <- "UNK"
+elife$se_gender[!elife$se_gender %in% c("M", "F")] <- "UNK"
+elife$reviewer1_gender[!elife$reviewer1_gender %in% c("M", "F")] <- "UNK"
+elife$reviewer2_gender[!elife$reviewer2_gender %in% c("M", "F")] <- "UNK"
+elife$reviewer3_gender[!elife$reviewer3_gender %in% c("M", "F")] <- "UNK"
+elife$reviewer4_gender[!elife$reviewer4_gender %in% c("M", "F")] <- "UNK"
+
+# Setup some levels for the gender
+elife$ca_gender <- factor(elife$ca_gender, 
+                          levels = c("M", "F", "UNK"))
+
+elife$fa_gender <- factor(elife$fa_gender, 
+                          levels = c("M", "F", "UNK"))
+
+elife$la_gender <- factor(elife$la_gender, 
+                          levels = c("M", "F", "UNK"))
+
+elife$bre_gender <- factor(elife$bre_gender, 
+                          levels = c("M", "F", "UNK"))
+
+elife$se_gender <- factor(elife$se_gender, 
+                          levels = c("M", "F", "UNK"))
+
+elife$has_female_reviewer <- factor(elife$prop_female_reviewers > 0)
+elife$encouraged <- elife$initial_decision == "Encourage"
+elife$appealed <- factor(!is.na(elife$appealed_any_stage))
+
+elife$decision_made <- elife$initial_decision == "Reject" | 
+                          (elife$full_decision %in% c("Accept", "Reject") | 
+                             elife$rev1_decision %in% c("Accept", "Reject") | 
+                             elife$rev2_decision %in% c("Accept", "Reject"))
+
+elife <- elife[elife$type.x != "RE", ]
+
+elife <- elife[!(!is.na(elife$la_name) & is.na(elife$fa_name)), ]
+
+elife <- elife[!(is.na(elife$la_name) & !is.na(elife$fa_name)), ]
+
+```
+
+
+Lets try out the gender validation while we are at it. We will load the RMP data with pronouns assigned.
+```{r}
+# Load and assign gender vie
+rmp <- read.csv("~/Desktop/AARMP_2017/processed_files/rmp_processed.csv")
+
+rmp$pronoun_gender <- with(rmp, 
+                   ifelse(OUR.total_fem_pronouns > OUR.total_masc_pronouns^2, "F",
+                           ifelse(OUR.total_masc_pronouns > OUR.total_fem_pronouns^2, "M",
+                                  NA) # If no obvious gender, assign NA
+                              )
+                      )
+
+# keep only those records with a high number of comments
+rmp <- subset(rmp, OUR.numcomment > 5)
+
+# Now lets load vincent gender, limit to U.S. names
+vincent_gender <- read_delim("~/Dropbox/eLife/OldData/Gender_Country.txt", "\t", escape_double = FALSE, trim_ws = TRUE)
+vincent_gender <- subset(vincent_gender, Country == "United States")
+
+
+# Assign gender to the rmp dataset
+rmp$RMP.Fname <- tolower(rmp$RMP.Fname)
+vincent_gender$Name <- tolower(vincent_gender$Name)
+vincent_gender$Gender <- toupper(vincent_gender$Gender)
+
+rmp <- merge(rmp, vincent_gender, by.x = "RMP.Fname", by.y = "Name", all.x = T)
+rmp$Gender[is.na(rmp$Gender) | !rmp$Gender %in% c("M", "F")] <- "Unknown"
+
+rmp$pronoun_gender[is.na(rmp$pronoun_gender)] <- "Unknown"
+
+"Table for Pronoun Gender"
+# Table for pronoun gender
+round(prop.table(table(rmp$pronoun_gender)), 4)
+
+"Total Number of Male/Female Assignments"
+# Calculate total number of Male/Female assignments
+round(prop.table(table(rmp$Gender)), 4)
+
+
+round(prop.table(table(rmp$Gender, rmp$pronoun_gender)), 4)
+known <- subset(rmp, Gender != "Unknown" & pronoun_gender != "Unknown")
+
+"Raw Percent Agreement for Known Gender"
+# % agreement
+sum(known$Gender == known$pronoun_gender, na.rm = T) / dim(known)[1]
+
+# Table for known gender
+round(prop.table(table(known$Gender, known$pronoun_gender)), 4)
+
+known <- subset(known, !duplicated(RMP.Fname))
+round(prop.table(table(known$Gender, known$pronoun_gender)), 4)
+sum(known$Gender == known$pronoun_gender, na.rm = T) / dim(known)[1]
+```
+
+
+This code extracts all the revieewrs from the dataset, includes only unique names, 
+```{r}
+reviewer1 <- elife[, c("MSNO", "reviewer1_name", "reviewer1_gender", "reviewer1_country")]
+reviewer1 <- reviewer1[with(reviewer1, !is.na(reviewer1_name)), ]
+colnames(reviewer1) <- c("MSNO", "reviewer_name", "reviewer_gender", "reviewer_country")
+
+reviewer2 <- elife[, c("MSNO", "reviewer2_name", "reviewer2_gender", "reviewer2_country")]
+reviewer2 <- reviewer2[with(reviewer2, !is.na(reviewer2_name)), ]
+colnames(reviewer2) <- c("MSNO", "reviewer_name", "reviewer_gender", "reviewer_country")
+
+reviewer3 <- elife[, c("MSNO", "reviewer3_name", "reviewer3_gender", "reviewer3_country")]
+reviewer3 <- reviewer2[with(reviewer3, !is.na(reviewer3_name)), ]
+colnames(reviewer3) <- c("MSNO", "reviewer_name", "reviewer_gender", "reviewer_country")
+
+reviewer4 <- elife[, c("MSNO", "reviewer4_name", "reviewer4_gender", "reviewer4_country")]
+reviewer4 <- reviewer2[with(reviewer4, !is.na(reviewer4_name)), ]
+colnames(reviewer4) <- c("MSNO", "reviewer_name", "reviewer_gender", "reviewer_country")
+
+reviewers <- rbind(reviewer1, reviewer2, reviewer3, reviewer4)
+
+reviewers$reviewer_gender[!reviewers$reviewer_gender %in% c("M", "F")] <- "UNK" 
+
+#reviewers <- reviewers[reviewers$reviewer_gender %in% c("M", "F"), ]
+
+elife2 <- subset(elife, !duplicated(MSNO))
+elife2 <- merge(elife2, reviewers, all.y = T)
+elife_with_reviewers <- merge(elife, reviewers, all.y = T)
+
+```
+
+Here is where I create an "annualized" dataset, which can be found in the elife excel file. 
+```{r rows.print = 40, message=FALSE, paged.print=FALSE}
+generate_annualized_data <- function(elife, gender_var = "ca_gender") {
+    decision_rates <- elife %>%
+      # Filter out those for which a decision was not made
+      filter(decision_made == T) %>%
+      group_by_("submission_year", gender_var) %>%
+      summarize(
+        paper_count = n(),
+        accept_count = sum(accepted == TRUE),
+        encourage_count = sum(encouraged == TRUE),
+        encourage_rate = encourage_count / paper_count,
+        accept_rate = accept_count / paper_count,
+        appeal_count = sum(appealed_any_stage == TRUE)
+      ) %>%
+      group_by(submission_year) %>%
+      mutate(total_submissions = sum(paper_count),
+             total_published = sum(accept_count)) %>%
+      group_by_("submission_year", gender_var) %>%
+      mutate(
+        submit_rate = paper_count / total_submissions,
+        publish_rate = accept_count / total_published
+      )  %>%
+      ungroup() %>%
+      filter_(paste(gender_var,  "%in% c('M', 'F')"))
+}
+
+# This function for creating a multiplot grid object with a shared ledend is largely derivied, with a few minor
+# tweaks, from the following blog by Andy Phillips. 
+# https://andyphilips.github.io/blog/2017/04/04/single-legend-for-multiple-plots.html
+grid_arrange_shared_legend <- function(..., ncol = length(list(...)), nrow = 1, position = c("bottom", "right"), title = "", plot = T) {
+	plots <- list(...)
+	position <- match.arg(position)
+	g <- ggplotGrob(plots[[1]] + 
+	theme(legend.position = position, 
+	      legend.title = element_blank()))$grobs
+	legend <- g[[which(sapply(g, function(x) x$name) == "guide-box")]]
+	lheight <- sum(legend$height)
+	lwidth <- sum(legend$width)
+	gl <- lapply(plots, function(x) x +
+	theme(legend.position = "none"))
+	gl <- c(gl, ncol = ncol, nrow = nrow)
+
+	combined <- switch(position,
+	                   "bottom" = arrangeGrob(do.call(arrangeGrob, gl), 
+	                      legend,ncol = 1,
+	                      top = textGrob(title,
+	                                     gp=gpar(fontsize=12, 
+	                                             fontface = "bold", 
+	                                             fontfamily = "Times"),
+	                                     just = "top"),
+					              heights = unit.c(unit(1, "npc") - lheight, lheight)
+					              ),
+					              
+					           "right" = arrangeGrob(do.call(arrangeGrob, gl),
+                          legend, 
+					                ncol = 2,
+				                  top = textGrob(title,
+                                         gp=gpar(fontsize=12, 
+                                                 fontface = "bold", 
+                                                 fontfamily = "Times"), 
+				                  just = "top"),
+				                  widths = unit.c(unit(1, "npc") - lwidth, lwidth)))
+	
+	if(plot) {
+	  grid.newpage()
+	  grid.draw(combined)  
+	}
+	
+	# return gtable invisibly
+	invisible(combined)
+}
+
+
+theme_dakota <- function () { 
+    theme_bw(base_size=10, base_family="Times") %+replace% 
+        theme(
+            strip.background = element_blank(),
+            strip.text = element_text(face = "bold"),
+            plot.title = element_text(size = 11, face = "bold"),
+            axis.text.x = element_text(size = 9, margin = margin(t = 5, b = 5)),
+            legend.title = element_blank(),
+            legend.position = "bottom"
+        )
+}
+```
+
+
+```{r}
+elife$ca_gender <- relevel(factor(elife$ca_gender), ref = "F")
+
+ca_annualized <- generate_annualized_data(elife, gender = "ca_gender")
+
+labs = c(submission_rate = "Total Submission by Gender", encourage_rate = "Encourage Rate", accept_rate = "Acceptance Rate")
+ord = c(1, 2, 3)
+long_data <- ca_annualized %>%
+  gather(key, value = measurement, submit_rate, encourage_rate, accept_rate, factor_key = T) %>%
+  mutate(gender = ca_gender,
+         year = submission_year,
+         key = factor(key, levels = levels(key)[ord], labels = labs, ordered = T)
+         ) %>%
+  select(submission_year, gender, key, measurement)
+
+
+labs = c("Corresponding Authors by Gender", "First Authors by Gender", "Last Authors by Gender")
+ca_annualized <- generate_annualized_data(elife, gender = "ca_gender")
+fa_annualized <- generate_annualized_data(elife, gender = "fa_gender")
+la_annualized <- generate_annualized_data(elife, gender = "la_gender")
+
+ca <- ca_annualized %>%
+  mutate(key = labs[1],
+         measurement = publish_rate,
+         gender = ca_gender) %>%
+  select(-ca_gender)
+
+fa <- fa_annualized %>%
+  mutate(key = labs[2],
+         measurement = publish_rate,
+         gender = fa_gender) %>%
+  select(-fa_gender)
+
+la <- la_annualized %>%
+  mutate(key = labs[3],
+         measurement = publish_rate,
+         gender = la_gender) %>%
+  select(-la_gender)
+
+long_data2 <- rbind(ca, fa, la) %>%
+  select(submission_year, gender, key, measurement)
+
+data <- rbind(long_data, long_data2)
+
+ggplot(data, aes(x = submission_year, y = measurement, color = gender)) +
+  geom_line() +
+  geom_point(aes(shape = gender), color = "black") +
+  facet_wrap(~key, nrow = 2, ncol = 3) +
+  ylim(0, 1) +
+  theme_dakota() +
+  labs(
+    x = "Submission Year",
+    y = "%"
+  ) +
+  scale_color_discrete(labels = c("F" = "Female", "M" = "Male")) +
+  scale_shape_discrete(labels = c("F" = "Female", "M" = "Male"))
+```
+
+
+
+```{r}
+data <- elife %>%
+  filter(decision_made == T) %>%
+  group_by(submission_year) %>%
+  summarize(
+    paper_count = n(),
+    accept_count = sum(accepted == TRUE),
+    accept_rate = accept_count / paper_count,
+    appeal_count = sum(appealed_any_stage == TRUE),
+    encourage_count = sum(encouraged == T),
+    encourage_rate = encourage_count / paper_count
+  ) %>%
+  filter(submission_year < 2017) %>%
+  gather(key, value = measurement, paper_count, encourage_rate, accept_rate) %>%
+  mutate(key = factor(key),
+         key = factor(key, levels = levels(key)[c(3, 2, 1)])
+         )
+
+p1 <- data %>% 
+  ggplot(aes(x = submission_year, y = measurement)) +
+  geom_line() +
+  geom_point() +
+  facet_wrap(~key, 
+             scales = "free_y", 
+             labeller = labeller(key = c(
+               accept_rate = "Acceptance Rate",
+               encourage_rate = "Encourage Rate",
+               paper_count = "Total Submissions"
+             ))) +
+  theme_dakota() +
+  labs(x = "Submission Year") +
+  theme(axis.title.y = element_blank())
+
+
+elife$deltatime_rev1 <- as.Date(elife$rev1_decision_date) - as.Date(elife$rev1_submission_date)
+elife$deltatime_rev2 <- as.Date(elife$rev2_decision_date) - as.Date(elife$rev2_submission_date)
+
+elife$final_decision <- with(elife, ifelse(full_decision != "Revise", "Full", 
+                                           ifelse(rev1_decision != "Revise", "Revision 1", "Revision 2")))
+
+elife$revision_time <- with(elife, ifelse(full_decision != "Revise", NA, 
+                                          ifelse(rev1_decision != "Revise", deltatime_rev1, 
+                                                 deltatime_rev1 + deltatime_rev2)))
+elife$deltatime_final <- with(elife, ifelse(full_decision != "Revise", deltatime_full_submission_decision, 
+                   ifelse(rev1_decision != "Revise", deltatime_rev1 + deltatime_full_submission_decision, 
+                          deltatime_rev2 + deltatime_rev1 + deltatime_full_submission_decision)))
+
+
+labs = c("Initial Decision Duration", "Full Decision Duration", "Revision Duration")
+
+time_data <- elife %>%
+  filter(submission_year < 2017 & decision_made == T) %>%
+  gather(key, value = "measurement", deltatime_initial_submission_decision, deltatime_full_submission_decision,
+         revision_time, factor_key = T) %>%
+  mutate(submission_year = factor(submission_year),
+         key = factor(key, levels = levels(key)[c(1, 2, 3)], labels = labs)) %>%
+  filter(ca_gender %in% c("M", "F")) %>%
+  select(submission_year, key, measurement)
+  
+p2 <- ggplot(time_data, aes(x = submission_year, y = measurement)) +
+  geom_boxplot(outlier.alpha = 0.1, color = "black", fill = "dodgerblue4", alpha = 0.8) +
+  facet_wrap(~key) +
+  ylim(0, 100) +
+  theme_dakota() +
+  labs(x = "Submission Year",
+       y = "Days Elapsed")
+
+grid.arrange(p1, p2)
+```
+
+## Publish Rate by Author and Gender
+```{r}
+labs = c("(A) Corresponding Author", "(B) First Author", "(C) Last Author")
+
+ca_annualized <- generate_annualized_data(elife, gender = "ca_gender")
+fa_annualized <- generate_annualized_data(elife, gender = "fa_gender")
+la_annualized <- generate_annualized_data(elife, gender = "la_gender")
+
+ca <- ca_annualized %>%
+  mutate(gender_source = labs[1],
+         gender = ca_gender) %>%
+  select(-ca_gender)
+
+fa <- fa_annualized %>%
+  mutate(gender_source = labs[2],
+         gender = fa_gender) %>%
+  select(-fa_gender)
+
+la <- la_annualized %>%
+  mutate(gender_source = labs[3],
+         gender = la_gender) %>%
+  select(-la_gender)
+
+long_data <- rbind(ca, fa, la)
+
+p2 <- ggplot(long_data, aes(x = submission_year, y = publish_rate, color = gender)) +
+  geom_line() +
+  geom_point(aes(shape = gender), color = "black") +
+  facet_wrap(~gender_source, labeller = labeller(labs)) +
+  ylim(0, 1) +
+  theme_dakota() +
+  labs(x = "Year",
+       y = "%")
+
+```
+
+
+Now plot the review rate for BRE and reviewers
+```{r}
+elife$bre_gender <- relevel(factor(elife$bre_gender), ref = "F")
+
+labs = c("(A) Average BRE Workload", "(B) Average Reviewer Workload")
+
+annualized_bres <- elife %>%
+  group_by(submission_year, bre_gender) %>%
+  summarize(
+    person_count = length(unique(bre_name)),
+    review_count = n(),
+    review_rate = review_count / person_count
+  ) %>%
+  group_by(submission_year) %>%
+  mutate(
+    total = sum(person_count)
+  ) %>%
+  group_by(submission_year, bre_gender) %>%
+  mutate(
+    prop = person_count / total,
+    source = labs[1],
+    gender = bre_gender
+  ) %>%
+  ungroup() %>%
+  select(-bre_gender) %>%
+  filter(gender %in% c("M", "F"))
+
+annualized_reviewers <- elife_with_reviewers %>%
+  group_by(reviewer_name, submission_year) %>%
+  mutate(workload = n()) %>%
+  filter(!duplicated(reviewer_name)) %>%
+  group_by(submission_year, reviewer_gender) %>%
+  summarize(
+    person_count = length(unique(reviewer_name)),
+    review_count = length(unique(MSNO)),
+    review_rate = mean(workload)
+  ) %>%
+  group_by(submission_year) %>%
+  mutate(
+    total = sum(person_count)
+  ) %>%
+  group_by(submission_year, reviewer_gender) %>%
+  mutate(
+    prop = person_count / total,
+    source = labs[2],
+    gender = reviewer_gender
+  ) %>%
+  ungroup() %>%
+  select(-reviewer_gender) %>%
+  filter(gender %in% c("M", "F"))
+
+
+long_data <- rbind(annualized_bres, annualized_reviewers) %>%
+  gather(key, value = measurement, review_rate, prop)
+
+l1 <- subset(long_data, key == "prop")
+l1$source <- factor(l1$source, labels = c("BRE Proportion by Gender", "Reviewer Proportion by Gender"))
+
+p1 <- ggplot(l1, aes(x = submission_year, y = measurement, color = gender)) +
+  geom_line() +
+  geom_point(aes(shape = gender), color = "black") +
+  facet_wrap(~source, ncol = 1, nrow = 2) +
+  theme_dakota() +
+  ylim(0, 1) +
+  labs(x = "Year", 
+       y = "%") +
+  scale_shape_discrete(labels = c("F" = "Female", "M" = "Male")) +
+  scale_color_discrete(labels = c("F" = "Female", "M" = "Male"))
+
+l2 <- subset(long_data, key == "review_rate")
+l2$source <- factor(l2$source, labels = c("BRE Worklaod by Gender", "Reviewer Workload by Gender"))
+
+p2 <- ggplot(l2, aes(x = submission_year, y = measurement, color = gender)) +
+  geom_line() +
+  geom_point(aes(shape = gender), color = "black") +
+  facet_wrap(~source, ncol = 1, nrow = 2) +
+  theme_dakota() +
+  ylim(0, 5) +
+  labs(x = "Year", 
+       y = "Reviews per Person") +
+  scale_shape_discrete(labels = c("F" = "Female", "M" = "Male")) +
+  scale_color_discrete(labels = c("F" = "Female", "M" = "Male"))
+
+grid_arrange_shared_legend(p1, p2, position = "bottom")
+```
+
+Now do the same thing, but this time we will consider "US and "Not US" workloads
+```{r}
+elife$bre_gender <- relevel(factor(elife$bre_gender), ref = "F")
+#elife2$reviewer_gender <- relevel(factor(elife2$reviewer_gender), ref = "F")
+
+
+labs = c("(A) Average BRE Workload", "(B) Average Reviewer Workload")
+
+annualized_bres <- elife %>%
+  filter(!is.na(bre_country)) %>%
+  mutate(
+    is_us = factor(ifelse(bre_country %in% c("United States", "United Kingdom", "Germany"), T, F))
+  ) %>%
+  group_by(submission_year, is_us) %>%
+  summarize(
+    person_count = length(unique(bre_name)),
+    review_count = n(),
+    review_rate = review_count / person_count
+  ) %>%
+  group_by(submission_year) %>%
+  mutate(
+    total = sum(person_count)
+  ) %>%
+  group_by(submission_year, is_us) %>%
+  mutate(
+    prop = person_count / total,
+    source = labs[1]
+  ) %>%
+  ungroup()
+
+annualized_reviewers <- elife_with_reviewers %>%
+  filter(!is.na(reviewer_country)) %>%
+  mutate(
+    is_us = factor(ifelse(reviewer_country %in% c("United States", "United Kingdom", "Germany"), T, F))
+  ) %>%
+  group_by(reviewer_name, submission_year) %>%
+  mutate(workload = n()) %>%
+  filter(!duplicated(reviewer_name)) %>%
+  group_by(submission_year, is_us) %>%
+  summarize(
+    person_count = length(unique(reviewer_name)),
+    review_count = length(unique(MSNO)),
+    review_rate = mean(workload)
+  ) %>%
+  group_by(submission_year) %>%
+  mutate(
+    total = sum(person_count)
+  ) %>%
+  group_by(submission_year, is_us) %>%
+  mutate(
+    prop = person_count / total,
+    source = labs[2]
+  ) %>%
+  ungroup()
+
+
+long_data <- rbind(annualized_bres, annualized_reviewers) %>%
+  gather(key, value = measurement, review_rate, prop)
+
+us_baseline <- elife %>%
+  filter(encouraged == T & decision_made == T) %>%
+  mutate(
+    is_us = ifelse(ca_country %in% c("United States", "United Kingdom", "Germany"), T, F)
+  ) %>%
+  group_by(submission_year) %>%
+  mutate(
+    total = n()
+  ) %>%
+  group_by(submission_year, is_us) %>%
+  summarize(
+    proportion_us = sum(is_us == T, na.rm = T) / total[1]
+  ) %>%
+  filter(!is.na(is_us) & is_us == T)
+  
+  
+l1 <- subset(long_data, key == "prop")
+l1$source <- factor(l1$source, labels = c("BRE Proportion by Nationality", "Reviewer Proportion by Nationality "))
+
+p1 <- ggplot(l1, aes(x = submission_year, y = measurement, color = is_us)) +
+  geom_line() +
+  geom_line(data = us_baseline, aes(x = submission_year, y = proportion_us), linetype = "dashed", color = "red") +
+  geom_point(aes(shape = is_us), color = "black") +
+  facet_wrap(~source, ncol = 1, nrow = 2) +
+  theme_dakota() +
+  ylim(0, 1) +
+  labs(x = "Year", 
+       y = "%") +
+  scale_shape_manual(values = c(4, 5), labels = c("Non-Central Nationality", "Central Nationality")) +
+  scale_color_manual(labels = c("Non-Central Nationality", "Central Nationality"), values = c("#00b894", "#6c5ce7"))
+
+l2 <- subset(long_data, key == "review_rate")
+l2$source <- factor(l2$source, labels = c("BRE Worklaod by Nationality", "Reviewer Workload by Nationality"))
+
+p2 <- ggplot(l2, aes(x = submission_year, y = measurement, color = is_us)) +
+  geom_line() +
+  geom_point(aes(shape = is_us), color = "black") +
+  facet_wrap(~source, ncol = 1, nrow = 2) +
+  theme_dakota() +
+  ylim(0, 5) +
+  labs(x = "Year", 
+       y = "Reviews per Person") +
+  scale_shape_discrete(labels = c("Person Not From U.S.", "Person From U.S.")) +
+  scale_color_manual(labels = c("Person Not From U.S.", "Person From U.S."), values = c("#00b894", "#6c5ce7"))
+
+grid_arrange_shared_legend(p1, p2, ncol = 2)
+```
+
+For this, we will look at the average encourage and acceptance of male and female BREs, and male and female reviewers
+```{r}
+elife$bre_gender <- relevel(factor(elife$bre_gender), ref = "F")
+
+labs = c("(A) Average BRE Workload", "(B) Average Reviewer Workload")
+
+annualized_bres <- elife %>%
+  group_by(submission_year, bre_gender) %>%
+  summarize(
+    person_count = length(unique(bre_name)),
+    review_count = n(),
+    review_rate = review_count / person_count
+  ) %>%
+  group_by(submission_year) %>%
+  mutate(
+    total = sum(person_count)
+  ) %>%
+  group_by(submission_year, bre_gender) %>%
+  mutate(
+    prop = person_count / total,
+    source = labs[1],
+    gender = bre_gender
+  ) %>%
+  ungroup() %>%
+  select(-bre_gender) %>%
+  filter(gender %in% c("M", "F"))
+
+annualized_reviewers <- elife_with_reviewers %>%
+  group_by(reviewer_name, submission_year) %>%
+  mutate(workload = n()) %>%
+  filter(!duplicated(reviewer_name)) %>%
+  group_by(submission_year, reviewer_gender) %>%
+  summarize(
+    person_count = length(unique(reviewer_name)),
+    review_count = length(unique(MSNO)),
+    review_rate = mean(workload)
+  ) %>%
+  group_by(submission_year) %>%
+  mutate(
+    total = sum(person_count)
+  ) %>%
+  group_by(submission_year, reviewer_gender) %>%
+  mutate(
+    prop = person_count / total,
+    source = labs[2],
+    gender = reviewer_gender
+  ) %>%
+  ungroup() %>%
+  select(-reviewer_gender) %>%
+  filter(gender %in% c("M", "F"))
+  
+
+long_data <- rbind(annualized_bres, annualized_reviewers) %>%
+  gather(key, value = measurement, review_rate, prop)
+
+l1 <- subset(long_data, key == "prop")
+l1$source <- factor(l1$source, labels = c("BRE Proportion by Gender", "Reviewer Proportion by Gender"))
+
+p1 <- ggplot(l1, aes(x = submission_year, y = measurement, color = gender)) +
+  geom_line() +
+  geom_point(aes(shape = gender), color = "black") +
+  facet_wrap(~source, ncol = 1, nrow = 2) +
+  theme_dakota() +
+  ylim(0, 1) +
+  labs(x = "Year", 
+       y = "%") +
+  scale_shape_discrete(labels = c("F" = "Female", "M" = "Male")) +
+  scale_color_discrete(labels = c("F" = "Female", "M" = "Male"))
+
+l2 <- subset(long_data, key == "review_rate")
+l2$source <- factor(l2$source, labels = c("BRE Worklaod by Gender", "Reviewer Workload by Gender"))
+
+p2 <- ggplot(l2, aes(x = submission_year, y = measurement, color = gender)) +
+  geom_line() +
+  geom_point(aes(shape = gender), color = "black") +
+  facet_wrap(~source, ncol = 1, nrow = 2) +
+  theme_dakota() +
+  ylim(0, 5) +
+  labs(x = "Year", 
+       y = "Reviews per Person") +
+  scale_shape_discrete(labels = c("F" = "Female", "M" = "Male")) +
+  scale_color_discrete(labels = c("F" = "Female", "M" = "Male"))
+
+grid_arrange_shared_legend(p1, p2, position = "bottom")
+
+p1
+```
+
+
+## Compare homophily by gender vs. overall acceptance rates. 
+```{r}
+get_person_stats <- function(data, name_var, gender_var, country_var) {
+  
+  data.unq <- data[!duplicated(tolower(data[[name_var]])), ]
+  
+  tab <- table(data.unq[[gender_var]])
+  prop.tab <- prop.table(tab)
+  toreturn <- c(
+    manuscripts = sum(!duplicated(data$MSNO) & !is.na(data[[name_var]])),
+    people = length(data.unq[[name_var]]),
+    countries = length(unique(data.unq[[country_var]])),
+    male_count = tab[["M"]],
+    female_count = tab[["F"]],
+    unk_count = tab[["UNK"]],
+    male_prop = prop.tab[["M"]],
+    female_prop = prop.tab[["F"]],
+    unk_prop = prop.tab[["UNK"]]
+  )
+}
+
+ca_stats <- round(get_person_stats(elife, "ca_name", "ca_gender", "ca_country"), 4)
+se_stats <- round(get_person_stats(elife, "se_name", "se_gender", "se_country"), 4)
+fa_stats <- round(get_person_stats(elife, "fa_name", "fa_gender", "fa_country"), 4)
+la_stats <- round(get_person_stats(elife, "la_name", "la_gender", "la_country"), 4)
+bre_stats <- round(get_person_stats(elife, "bre_name", "bre_gender", "bre_country"), 4)
+reviewer_stats <- round(get_person_stats(reviewers, "reviewer_name", "reviewer_gender", "reviewer_country"), 4)
+
+frame <- data.frame(ca_stats, fa_stats, la_stats, se_stats, bre_stats, reviewer_stats)
+write.csv(frame, "~/Desktop/Author_Reviewer_Stats.csv")
+```
+
+
+Now we need to do something with the average time between decisions
+```{r}
+elife$deltatime_rev1 <- as.Date(elife$rev1_decision_date) - as.Date(elife$rev1_submission_date)
+elife$deltatime_rev2 <- as.Date(elife$rev2_decision_date) - as.Date(elife$rev2_submission_date)
+
+elife$final_decision <- with(elife, ifelse(full_decision != "Revise", "Full", 
+                                           ifelse(rev1_decision != "Revise", "Revision 1", "Revision 2")))
+
+elife$revision_time <- with(elife, ifelse(full_decision != "Revise", NA, 
+                                          ifelse(rev1_decision != "Revise", deltatime_rev1, 
+                                                 deltatime_rev1 + deltatime_rev2)))
+elife$deltatime_final <- with(elife, ifelse(full_decision != "Revise", deltatime_full_submission_decision, 
+                   ifelse(rev1_decision != "Revise", deltatime_rev1 + deltatime_full_submission_decision, 
+                          deltatime_rev2 + deltatime_rev1 + deltatime_full_submission_decision)))
+
+
+labs = c("Initial Decision Duration", "Full Decision Duration", "Revision Duration")
+
+time_data <- elife %>%
+  mutate(is_central = ifelse(ca_country %in% c("United States", "United Kingdom", "Germany"), T, F)) %>%
+  gather(key, value = "measurement", deltatime_initial_submission_decision, deltatime_full_submission_decision,
+         revision_time, factor_key = T) %>%
+  mutate(submission_year = factor(submission_year),
+         key = factor(key, levels = levels(key)[c(1, 2, 3)], labels = labs)) %>%
+  filter(ca_gender %in% c("M", "F")) %>%
+  select(submission_year, key, measurement, ca_gender, is_central)
+  
+  
+ggplot(time_data, aes(x = submission_year, y = measurement, fill = ca_gender)) +
+  geom_boxplot(outlier.alpha = 0.1, color = "black",  alpha = 0.8) +
+  facet_wrap(~key) +
+  ylim(0, 200) +
+  theme_dakota() +
+  labs(x = "Submission Year",
+       y = "Days Elapsed") +
+  #scale_fill_manual(labels = c("Peripheral Nationality", "Central Nationality"), values = c("#00b894", "#6c5ce7"))
+  scale_fill_discrete(labels = c("Female", "Male"))
+```
+
+```{r}
+ggplot(time_data, aes(x = submission_year, y = measurement, fill = is_central)) +
+  geom_boxplot(outlier.alpha = 0.1, color = "black",  alpha = 0.8) +
+  facet_wrap(~key) +
+  ylim(0, 200) +
+  theme_dakota() +
+  labs(x = "Submission Year",
+       y = "Days Elapsed") +
+  scale_fill_manual(labels = c("Peripheral Nationality", "Central Nationality"), values = c("#00b894", "#6c5ce7"))
+```
+
+## Create the homophily variables
+```{r}
+elife$fa_gender <- relevel(factor(elife$fa_gender), ref = "F")
+elife$la_gender <- relevel(factor(elife$la_gender), ref = "F")
+
+homophily <- elife %>% 
+      filter(!is.na(full_decision) & decision_made ) %>%
+      group_by(MSNO) %>%
+      mutate(
+        known_gender = reviewer1_gender %in% c("M", "F") &
+          (is.na(reviewer2_country) | reviewer2_gender %in% c("M", "F")) &
+          (is.na(reviewer3_country) | reviewer3_gender %in% c("M", "F")) & 
+          (is.na(reviewer4_country) | reviewer4_gender %in% c("M", "F")),
+        num_female_reviewers = sum(c(reviewer1_gender, reviewer2_gender, reviewer3_gender, reviewer4_gender) == "F", na.rm = T),
+        num_male_reviewers = sum(c(reviewer1_gender, reviewer2_gender, reviewer3_gender, reviewer4_gender) == "M", na.rm = T),
+        at_least_one_man = any(c(reviewer1_gender, reviewer2_gender, reviewer3_gender, reviewer4_gender) == "M", na.rm = T),
+        at_least_one_woman = any(c(reviewer1_gender, reviewer2_gender, reviewer3_gender, reviewer4_gender) == "F", na.rm = T),
+        all_women = sum(c(reviewer1_gender, reviewer2_gender, reviewer3_gender, reviewer4_gender) == "F", na.rm = T) == num_reviewers,
+        all_men = sum(c(reviewer1_gender, reviewer2_gender, reviewer3_gender, reviewer4_gender) == "M", na.rm = T) == num_reviewers,
+        #mixed = ifelse(all_men == T | all_women == T, FALSE, TRUE),
+        mixed = ifelse(at_least_one_man & at_least_one_woman, TRUE, FALSE),
+        homogeneous = (num_male_reviewers + num_female_reviewers == num_reviewers) & !mixed,
+        composition = ifelse(all_men, "All Men", ifelse(all_women, "All Women", ifelse(mixed, "Mixed", "Uncertain"))),
+        simple_composition = ifelse(mixed, "Mixed", ifelse(homogeneous, "Homogeneous", "Uncertain")),
+        ca_gender_homophily = ca_gender %in% na.omit(c(reviewer1_gender, reviewer2_gender, reviewer3_gender, reviewer4_gender)),
+        fa_gender_homophily = fa_gender %in% na.omit(c(reviewer1_gender, reviewer2_gender, reviewer3_gender, reviewer4_gender)),
+        la_gender_homophily = la_gender %in% na.omit(c(reviewer1_gender, reviewer2_gender, reviewer3_gender, reviewer4_gender)),
+        ca_country_homophily = ca_country %in% na.omit(c(reviewer1_country, reviewer2_country, reviewer3_country, reviewer4_country)),
+        fa_country_homophily = fa_country %in% na.omit(c(reviewer1_country, reviewer2_country, reviewer3_country, reviewer4_country)),
+        la_country_homophily = tolower(la_country) %in% tolower(na.omit(c(reviewer1_country, reviewer2_country, reviewer3_country, reviewer4_country))),
+        num_revisions = ifelse(full_decision != "Revise", 0, 
+                               ifelse(rev1_decision == "Revise", 1,
+                                      ifelse(rev2_decision == "Revise", 2, 3))
+                               
+                               ),
+        bre_is_reviewer = tolower(bre_name) %in% tolower(c(reviewer1_name, reviewer2_name, reviewer3_name, reviewer4_name)),
+        
+        num_revisions2 = sum(full_decision == "Revise", rev1_decision == "Revise", rev2_decision == "Revise", na.rm = T)
+  )
+
+sum(homophily$known_gender) / sum(elife$encouraged == T)
+```
+
+## Acceptance rates by author position, author gender, and presence of homophily with reviewer team
+```{r}
+generate_composition_data <- function(homophily, category_var, gender_var) {
+  homophily$var <- homophily[[category_var]]
+  homophily$gender <- homophily[[gender_var]]
+  
+  data <- homophily %>%
+    group_by(gender) %>%
+    filter(decision_made == T) %>%
+    mutate(total_submissions = n()) %>%
+    filter(gender %in% c("M", "F")) %>%
+    group_by(var, gender) %>%
+    summarize(
+      count = n(),
+      acc = sum(accepted == TRUE),
+      total = total_submissions[1],
+      acceptance_rate = sum(accepted == TRUE) / count,
+      standard_error = sqrt( (acceptance_rate * (1 - acceptance_rate)) / count),
+      lower = acceptance_rate - standard_error,
+      upper = acceptance_rate + standard_error
+    )
+  return(data)
+}
+
+fa_composition <- generate_composition_data(homophily,  "composition", "fa_gender")
+la_composition <- generate_composition_data(homophily,  "composition", "la_gender")
+
+fa_composition$source = "(B) First Author"
+la_composition$source = "(A) Last Author"
+
+long_data <- rbind(fa_composition, la_composition)
+
+long_data$source <- factor(long_data$source)
+#levels(long_data$source) <- rev(levels(long_data$source))
+
+ggplot(long_data, aes(x = gender, y = acceptance_rate, fill = gender)) +
+  geom_bar(stat = "identity", alpha = 0.8, color = "black") +
+  facet_grid(source~var) +
+  ylim(0, 0.8) +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2, color = "black", alpha = 0.8) +
+  geom_text(aes(label = paste0("n=", count), y = 0.05), size = 3.5) +
+  theme_dakota() +
+  theme(
+    strip.text.y = element_text(angle = 360, vjust = 1.0, size = 11),
+    axis.title.x = element_blank()
+  ) +
+  labs(y = "Encourage-Acceptance Rate") +
+  scale_fill_discrete(labels = c("F" = "Female", "M" = "Male"))
+```
+
+```{r}
+homophily %>%
+  group_by(la_gender, bre_gender) %>%
+  filter(decision_made == T) %>%
+  mutate(total_submissions = n()) %>%
+  filter(la_gender %in% c("M", "F")) %>%
+  group_by(simple_composition, la_gender, bre_gender) %>%
+  summarize(
+      count = n(),
+      acc = sum(accepted == TRUE),
+      total = total_submissions[1],
+      acceptance_rate = sum(accepted == TRUE) / count,
+      standard_error = sqrt( (acceptance_rate * (1 - acceptance_rate)) / count),
+      lower = acceptance_rate - standard_error,
+      upper = acceptance_rate + standard_error
+  ) %>%
+  filter(simple_composition != "Uncertain" & bre_gender %in% c("M", "F")) %>%
+  ggplot(aes(x = la_gender, y = acceptance_rate, fill = la_gender)) +
+    geom_bar(stat = "identity", alpha = 0.8, color = "black") +
+    facet_grid(bre_gender ~ simple_composition) +
+    ylim(0, 0.8) +
+    geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2, color = "black", alpha = 0.8) +
+    geom_text(aes(label = paste0("n=", count), y = 0.05), size = 3.5) +
+    theme_dakota() +
+    theme(
+      strip.text.y = element_text(angle = 360, vjust = 1.0, size = 11),
+      axis.title.x = element_blank()
+    ) +
+    labs(y = "Encourage-Acceptance Rate") +
+    scale_fill_discrete(labels = c("F" = "Female", "M" = "Male"))
+```
+
+```{r}
+homophily %>%
+  group_by(submission_year) %>%
+  mutate(total = n()) %>%
+  group_by(submission_year, composition) %>%
+  summarize(
+    prop = n() / total[1]
+  ) %>%
+  ggplot(aes(x = submission_year, y = prop, color = composition, shape = composition)) +
+  geom_point() +
+  geom_line() +
+  theme_dakota() +
+  scale_color_brewer(palette = "Set2") +
+  labs(x = "Year",
+       y = "Proportion of Total")
+  
+```
+
+
+Now repeat the same thing, but cut out the BRE
+
+
+```{r}
+advanced_nations <- c("United States", "United Kingdom", "Germany", "France", "Canada", "Japan", "Taiwan", "Sweden", "Switzerland", "Israel",
+                      "Italy", "Australia", "Netherlands", "Belgium", "Republic of Korea", "Austria", "Denmark", "Finland", "Norway", 
+                      "Ireland", "Russia")
+
+homophily %>%
+  filter(accepted == T & decision_made == T) %>%
+  mutate(
+    is_advanced = la_country %in% advanced_nations
+  ) %>%
+  group_by(is_advanced) %>%
+  summarize(
+    count = n(),
+    mu = mean(num_revisions2, na.rm = T)
+  ) 
+
+  ggplot(aes(x = is_advanced, y = mu, fill = is_advanced)) +
+  geom_bar(stat = "identity", position = position_dodge(), color = "black", alpha = 0.8) +
+  geom_text(aes(y = 0.025, label = paste0("n=", count)), size = 2.5, position = position_dodge(0.87)) +
+  scale_x_discrete(labels = c("Research Article", "Short Report", "Tools and Resources")) +
+  theme_dakota()
+  
+```
+
+
+
+## Acceptance rates by type of submission.
+## TODO: To be removed and replaced with line in the paper
+```{r}
+table(elife$type.x)
+labs = c(encourage_rate = "Encourage Rate", acceptance_rate = "Acceptance Rate")
+
+elife %>%
+  filter(type.x != "RE" & ca_gender %in% c("M", "F")) %>%
+  group_by(type.x, ca_gender) %>%
+  summarize(
+    submissions = n(),
+    acceptance_rate = sum(accepted == T) / submissions,
+    encourage_rate = sum(encouraged == T) / submissions
+    ) %>%
+  gather(key, value = measurement, acceptance_rate, encourage_rate, factor_key = T) %>%
+  mutate(
+    submission_type = type.x,
+    se = sqrt(measurement * (1 - measurement) / submissions),
+    lower = measurement - se,
+    upper = measurement + se,
+    key = factor(key, levels = levels(key)[c(2, 1)])
+  ) %>%
+  ggplot(aes(x = submission_type, y = measurement, fill = ca_gender)) +
+  geom_bar(stat = "identity", position = position_dodge(), color = "black", alpha = 0.8) +
+  facet_wrap(~key, 
+             labeller = labeller(key = labs)) +
+  geom_errorbar(aes(ymin = lower, ymax = upper), color = "black", width = 0.2, alpha = 0.8, position = position_dodge(0.87)) +
+  geom_text(aes(y = 0.025, label = paste0("n=", submissions)), size = 2.5, position = position_dodge(0.87)) +
+  scale_x_discrete(labels = c("Research Article", "Short Report", "Tools and Resources")) +
+  theme_dakota() +
+  labs(
+    x = "",
+    y = "%"
+  ) +
+  scale_fill_discrete(labels = c("F" = "Female", "M" = "Male"))
+```
+
+
+## Encourage-Acceptance rates by country and presence of homophily
+```{r}
+generate_country_homophily <- function(homophily, country_var, limit = 50) {
+  homophily$country = homophily[[country_var]]
+  #homophily$gender = homophily[[gender_var]]
+  
+  homophily_str <- paste0(country_var, "_homophily")
+  homophily$homophily <- homophily[[homophily_str]]
+  
+  data <- homophily %>%
+    filter(decision_made == T) %>%
+    group_by(country) %>%
+    mutate(total_submissions = n()) %>%
+    group_by(country, homophily) %>%
+    summarize(
+      count = n(),
+      prop = count / total_submissions[1],
+      acceptance_rate = sum(accepted == TRUE) / count,
+      standard_error = sqrt( (acceptance_rate * (1 - acceptance_rate)) / count),
+      lower = acceptance_rate - standard_error,
+      upper = acceptance_rate + standard_error
+    ) %>%
+    group_by(country) %>%
+    mutate(totals = sum(count)) %>%
+    filter(!is.na(country)) %>%
+    ungroup(country) %>%
+    top_n(16, totals)
+  
+  return(data)
+}
+
+plot_country_homophily <- function(data, varname = "acceptance_rate", title = "", 
+                              ylab = "Acceptance Rate", labs = c("TRUE", "FALSE")) {
+  data$var <- data[[varname]] 
+  p <- ggplot(data, aes(x = homophily, y = var, fill = homophily)) +
+    geom_bar(stat = "identity", position = position_dodge(), color = "black", alpha = 0.8) +
+    geom_text(aes(label = paste0("n=", count), y = 0.1), size = 2.5) +
+    facet_wrap(~country, nrow = 2, ncol = 4) +
+    theme_dakota() +
+    labs(
+      title = title,
+      y = ylab,
+      x = "Presence of Homophily"
+    ) +
+    theme(
+      text = element_text(size = 8, family = "Times"),
+      plot.title = element_text(size = 10, face = "bold"),
+      axis.title.x = element_blank(),
+      legend.title = element_blank(),
+      strip.background = element_blank(),
+      strip.text = element_text(size = 6, face = "bold"),
+      axis.text.x = element_text(size = 6, angle = 45, hjust = 1, vjust = 1)
+    ) + 
+    ylim(0, 1) +
+    scale_fill_brewer(palette = "Oranges", labels = labs) +
+    scale_x_discrete(labels = labs)
+  return(p)
+}
+
+fa_country_data <- generate_country_homophily(homophily, "fa_country", limit = 150)
+la_country_data <- generate_country_homophily(homophily, "la_country", limit = 130)
+
+p1 <- plot_country_homophily(fa_country_data, 
+                             varname = "acceptance_rate", 
+                             title = "(A) Country of First Author",
+                             ylab = "Encouraged-Acceptance Rate",
+                             labs = c("No Homophily", "Homophily")) +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2, position = position_dodge(), alpha = 0.7)
+
+p2 <- plot_country_homophily(la_country_data, 
+                             varname = "acceptance_rate", 
+                             title = "(B) Country of Last Author",
+                             ylab = "Encouraged-Acceptance Rate",
+                             labs = c("No Homophily", "Homophily")) +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2, position = position_dodge(), alpha = 0.7) +
+  theme(
+    plot.title = element_blank()
+  )
+
+p2
+```
+
+
+```{r}
+central <- c("United States", "United Kingdom", "Germany")
+
+p <- elife %>%
+  group_by(MSNO) %>%
+  mutate(
+    num_central = sum(c(reviewer1_country, reviewer2_country, reviewer3_country, reviewer4_country) %in% central, na.rm = T),
+    num_periphery = sum(!c(reviewer1_country, reviewer2_country, reviewer3_country, reviewer4_country) %in% central, na.rm = T),
+    composition = ifelse(num_central == num_reviewers, "All Central", 
+                         ifelse(num_periphery == num_reviewers, "All Peripheral", "Mixed")
+                         ),
+    la_central = la_country %in% central
+  ) %>%
+  filter(decision_made == T & !is.na(la_central))  %>%
+  group_by(la_country) %>%
+  mutate(total_submissions = n()) %>%
+  filter(!is.na(composition)) %>%
+  group_by(composition, la_central) %>%
+  summarize(
+    count = n(),
+    acc = sum(accepted == TRUE),
+    total = total_submissions[1],
+    acceptance_rate = sum(accepted == TRUE) / count,
+    standard_error = sqrt( (acceptance_rate * (1 - acceptance_rate)) / count),
+    lower = acceptance_rate - standard_error,
+    upper = acceptance_rate + standard_error
+  ) %>%
+  ggplot(aes(x = la_central, y = acceptance_rate, fill = la_central)) +
+  geom_bar(stat = "identity", alpha = 0.8, color = "black") +
+  facet_wrap(~composition) +
+  ylim(0, 0.8) +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2, color = "black", alpha = 0.8) +
+  geom_text(aes(label = paste0("n=", count), y = 0.05), size = 3.5) +
+  theme_dakota() +
+  theme(
+    strip.text.y = element_text(angle = 360, vjust = 1.0, size = 11)
+  ) +
+  labs(y = "Acceptance Rate")
+
+p
+```
+
+```{r}
+homophily %>%
+  filter(encouraged == T) %>%
+  group_by(fa_country_homophily) %>%
+  summarize(
+    count = n(),
+    accepted = sum(accepted == T),
+    acceptance_rate = accepted / count
+  )
+
+homophily %>%
+  filter(encouraged == T) %>%
+  group_by(la_country_homophily) %>%
+  summarize(
+    count = n(),
+    accepted = sum(accepted == T),
+    acceptance_rate = accepted / count
+  )
+
+elife %>%
+  filter(encouraged == T) %>%
+  summarize(
+    count = n(),
+    acceptance_rate = sum(accepted == T, na.rm = T) / count
+  )
+```
+
+## Proportion of total submissions, total encouraged, and total acceptnaces by country. Ie: the USA submits 37% of all papers to eLife, while making 50.3% of all encourages, and 54.7% of all acceptances
+```{r}
+elife$status <- ifelse(elife$accepted, "Accepted", ifelse(elife$encouraged, "Full Rejection", "Initial Rejection"))
+
+generate_country_data <- function(elife, country_str, name_str = "ca_name", limit = 8) {
+  elife$country = elife[[country_str]]
+  elife$name = elife[[name_str]]
+  
+  all_submissions <- length(unique(elife$MSNO))
+  all_accepted <- sum(elife$accepted == T, na.rm = T)
+  all_encouraged <- sum(elife$encouraged == T, na.rm = T)
+  all_bres <- length(unique(elife$bre_name))
+  
+  country_data <- elife %>%
+    filter(!is.na(country)) %>%
+    group_by(country) %>%
+    summarize(
+      submissions = n(),
+      num_people = length(unique(name)),
+      encouraged = sum(encouraged == T, na.rm = T),
+      accepted = sum(accepted == T, na.rm = T),
+      encourage_rate = encouraged / submissions,
+      acceptance_rate = accepted / submissions,
+      prop_of_all = submissions / all_submissions,
+      prop_of_encouraged = encouraged / all_encouraged,
+      prop_of_accepted = accepted / all_accepted,
+      prop_bre = length(unique(bre_name)) / all_bres
+    ) %>%
+    group_by(country) %>%
+      mutate(totals = sum(submissions)) %>%
+    ungroup() %>%
+    top_n(limit, totals)
+  return(country_data)
+}
+
+data <- generate_country_data(elife, "ca_country", limit = 8)
+
+data$country <- reorder(data$country, data$submissions)
+
+long_data <- data %>% 
+  gather(key,  value = measurement, prop_of_all, prop_of_encouraged, prop_of_accepted) %>%
+  mutate(key = factor(key))
+
+long_data$key <- factor(long_data$key, levels = levels(long_data$key)[c(2, 3, 1)])
+
+labels <- c(prop_of_all = "Proportion of All Submissions", prop_of_encouraged = "Proportion of All Encouraged", prop_of_accepted = "Proportion of All Accepted")
+
+p1 <- ggplot(long_data, aes(x = country, y = measurement)) +
+  geom_bar(stat = "identity", color = "black", alpha = 0.8, fill = "dodgerblue4", position = position_dodge(5)) +
+  geom_text(aes(y = measurement, label = paste0(round(measurement, 3) * 100, "%")), size = 2.5, hjust = -0.2, family = "Times") +
+  scale_y_continuous(limits = c(0, 0.7)) +
+  facet_wrap(~key, labeller = labeller(key = labels)) +
+  theme_bw() +
+  coord_flip() +
+  labs(y = "Proportion of All") +
+  theme(
+    strip.background = element_blank(),
+    text = element_text(size = 10, family = "Times"),
+    plot.title = element_text(size = 12),
+    strip.text = element_text(face = "bold"),
+    axis.title.y = element_blank()
+  )
+
+p1
+```
+
+## Enocurage and Acceptnace rate by country of corresponding author 
+```{r}
+country_data <- generate_country_data(elife, "ca_country", "ca_gender")
+country_data$country <- reorder(country_data$country, country_data$acceptance_rate)
+
+long_data <- country_data %>%
+  gather(key, value = measurement, encourage_rate, acceptance_rate) %>%
+  mutate(key = factor(key),
+         se = sqrt(measurement * (1 - measurement) / submissions),
+         lower = measurement - se,
+         upper = measurement + se)
+
+long_data$key <- factor(long_data$key, levels = levels(long_data$key)[c(2, 1)])
+labels = c(encourage_rate = "Encourage Rate By Country", acceptance_rate = "Acceptance Rate By Country")
+
+p2 <- ggplot(long_data, aes(x = country, y = measurement)) +
+  geom_bar(stat = "identity", color = "black", fill = "dodgerblue4", alpha = 0.8) +
+  geom_text(aes(y = measurement, label = paste0(round(measurement, 3) * 100, "%")), size = 2.5, hjust = -0.7, family = "Times") +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+  facet_wrap(~key, labeller = labeller(key = labels)) +
+  theme_bw() +
+  labs(y = "%") +
+  coord_flip() +
+  ylim(0, 0.5) +
+  theme(
+    strip.background = element_blank(),
+    text = element_text(size = 10, family = "Times"),
+    plot.title = element_text(size = 12),
+    strip.text = element_text(face = "bold"),
+    axis.title.y = element_blank()
+  )
+
+p2
+```
+
+```{r}
+grid.arrange(p1, p2)
+```
+
+
+
+# Proportion of BREs and reviewers affiliated with each country
+```{r}
+bre_data <- generate_country_data(elife, "bre_country", name_str = "bre_name", limit = 12)
+
+review_data <- reviewers %>%
+  group_by(reviewer_country) %>%
+  summarize(
+    num_reviewers = length(unique(reviewer_name)),
+    prop_reviewers = num_reviewers / length(unique(reviewers$reviewer_name))
+  ) %>%
+  mutate(country = reviewer_country)
+
+combined <- merge(bre_data, review_data, by = "country")
+combined$country <- with(combined, reorder(country, prop_bre))
+
+long_data <- combined %>%
+  filter(!is.na(country)) %>%
+  gather(key, value = measurement, prop_bre, prop_reviewers)
+
+labels = c(prop_bre = "BRE Proportion by Country", prop_reviewers = "Reviewer Proportion by Country")
+
+ggplot(long_data, aes(x = country, y = measurement)) +
+  geom_bar(stat = "identity", color = "black", fill = "dodgerblue4", alpha = 0.8) +
+  geom_text(aes(y = measurement, label = paste0(round(measurement, 3) * 100, "%")), size = 2.5, hjust = -0.5, family = "Times") +
+  facet_wrap(~key, labeller = labeller(key = labels)) +
+  theme_bw() +
+  labs(y = "Proportion of Count") +
+  coord_flip() +
+  ylim(0, 0.9) +
+  theme(
+    strip.background = element_blank(),
+    text = element_text(size = 10, family = "Times"),
+    plot.title = element_text(size = 12),
+    strip.text = element_text(face = "bold"),
+    axis.title.y = element_blank()
+  )
+```
+
+
+```{r}
+
+top_countries <- (elife %>%
+  group_by(ca_country) %>%
+  summarize(
+    total = n()
+  ) %>%
+  ungroup() %>%
+  top_n(6, total))$ca_country
+
+
+elife %>%
+  filter(decision_made == T) %>%
+  group_by(submission_year) %>%
+  mutate(total = n()) %>%
+  group_by(submission_year, ca_country) %>%
+  summarize(
+    paper_count = n(),
+    submission_rate = paper_count / total[1],
+    accept_count = sum(accepted == TRUE),
+    encourage_count = sum(encouraged == TRUE),
+    encourage_rate = encourage_count / paper_count,
+    accept_rate = accept_count / paper_count
+  ) %>%
+  filter(ca_country %in% c(top_countries) & !is.na(ca_country)) %>%
+  ggplot(aes(x = submission_year, y = submission_rate, color = ca_country, shape = ca_country)) +
+  geom_line() +
+  geom_point(color = "black") +
+  theme_dakota() +
+  labs(x = "Submission Year",
+       y = "Proportion of All Submissions")
+```
+
+```{r}
+advanced_nations <- c("United States", "United Kingdom", "Germany", "France", "Canada", "Japan", "Taiwan", "Sweden", "Switzerland", "Israel",
+                      "Italy", "Australia", "Netherlands", "Belgium", "Republic of Korea", "Austria", "Denmark", "Finland", "Norway", 
+                      "Ireland", "Russia")
+
+elife_nation <- elife %>%
+  filter(decision_made == T) %>%
+  group_by(MSNO) %>%
+  mutate(
+    ca_advanced = la_country %in% advanced_nations,
+    num_advanced = sum(c(reviewer1_country, reviewer2_country, reviewer3_country, reviewer4_country) %in% advanced_nations, na.rm = T),
+    num_non_advanced = num_reviewers - num_advanced,
+    composition = ifelse(num_advanced == num_reviewers, "All High-Capacity", ifelse(num_non_advanced == num_reviewers, "All Low-Med Capacity", "Mixed"))
+  ) %>%
+  filter(!is.na(composition))
+
+
+acc_data <- elife_nation %>%
+    group_by(composition) %>%
+    mutate(total_submissions = n()) %>%
+    group_by(composition, ca_advanced) %>%
+    summarize(
+      count = n(),
+      acc = sum(accepted == TRUE, na.rm = T),
+      total = total_submissions[1],
+      acc_rate = acc / count,
+      standard_error = sqrt( (acc_rate * (1 - acc_rate)) / count),
+      lower = acc_rate - standard_error,
+      upper = acc_rate + standard_error
+    )
+
+
+ggplot(acc_data, aes(x = ca_advanced, y = acc_rate, fill = ca_advanced)) +
+  geom_bar(stat = "identity", alpha = 0.8, color = "black") +
+  facet_grid(~composition) +
+  ylim(0, 1.0) +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2, color = "black", alpha = 0.8) +
+  geom_text(aes(label = paste0("n=", count), y = 0.05), size = 3.5) +
+  theme_dakota() +
+  theme(
+    strip.text.y = element_text(angle = 360, vjust = 1.0, size = 11),
+    axis.title.x = element_blank()
+  ) +
+  labs(y = "Encourage-Acceptance Rate") +
+  scale_fill_discrete(labels = c("Low/Med Scientific Capacity", "High Scientific Capacity")) +
+  scale_x_discrete(labels = c("Low/Med Capacity", "High Capacity")) +
+  scale_fill_brewer(palette = "Greens")
+
+```
+
+```{r}
+# Is there a difference between men and women in a mixed team?
+mixed_sub <- subset(elife_nation, decision_made == T & composition == "Mixed")
+all_high_sub <- subset(elife_nation, decision_made == T & composition == "All High-Capacity")
+all_low_sub <- subset(elife_nation, decision_made == T & composition == "All Low-Med Capacity")
+
+t_mixed <- with(mixed_sub, table(ca_advanced, accepted))[1:2, ]
+t_all_high <- with(all_high_sub, table(ca_advanced, accepted))[1:2, ]
+t_all_low <- with(all_low_sub, table(ca_advanced, accepted))[1:2, ]
+```
+
+First we will test mixed teams
+```{r}
+round(t_mixed / rowSums(t_mixed), 3)
+prop.test(t_mixed[, 2], rowSums(t_mixed))
+```
+
+
+Now when all the teams are from "advanced" nations
+```{r}
+round(t_all_high / rowSums(t_all_high), 3)
+prop.test(t_all_high[, 2], rowSums(t_all_high))
+```
+
+
+Now when all the teams are from "advanced" nations
+```{r}
+round(t_all_low / rowSums(t_all_low), 3)
+prop.test(t_all_low[, 2], rowSums(t_all_low))
+```
+
+
+```{r}
+# proportion of reviewers by gender compared to proportions of author by gender
+unique_bres <- elife[!duplicated(elife$bre_name), c("bre_gender", "bre_name", "bre_country")]
+unique_reviewers <- reviewers[!duplicated(reviewers$reviewer_name), c("reviewer_gender", "reviewer_name", "reviewer_country")]
+unique_ses <- elife[!duplicated(elife$se_name), c("se_gender", "se_name", "se_country")]
+names(unique_ses) <- c("gender", "name", "country")
+names(unique_bres) <- c("gender", "name", "country")
+names(unique_reviewers) <- c("gender", "name", "country")
+
+revs <- as.data.frame(rbind(unique_bres, unique_ses, unique_reviewers))
+revs$type <- "Reviewer"
+revs <- revs[!is.na(revs$country), ]
+
+# now we add the authors
+ca_authors <- elife[, c("ca_gender", "ca_name", "ca_country")]
+names(ca_authors) <- c("gender", "name", "country")
+ca_authors$type <- "Corr. Author"
+
+fa_authors <- elife2[, c("fa_gender", "fa_name", "fa_country")]
+names(fa_authors) <- c("gender", "name", "country")
+fa_authors$type <- "First Author"
+
+la_authors <- elife2[, c("la_gender", "la_name", "la_country")]
+names(la_authors) <- c("gender", "name", "country")
+la_authors$type <- "Last Author"
+
+df <- as.data.frame(rbind(revs, ca_authors, fa_authors, la_authors))
+df <- df[!is.na(df$country), ]
+df$is_advanced <- df$country %in% advanced_nations
+
+p1 <- df %>%
+  group_by(type) %>%
+  mutate(total = n()) %>%
+  filter(gender %in% c("M", "F")) %>%
+  mutate(gender = ifelse(gender == "M", "Male", "Female")) %>%
+  group_by(type, gender) %>%
+  summarize(
+    prop = n() / total[1]
+  ) %>%
+  ggplot(aes(x = gender, y = prop, fill = gender)) +
+  geom_bar(stat = "identity", alpha = 0.8, color = "black") +
+  facet_wrap(~type, nrow = 1) +
+  geom_text(aes(label = paste0(round(prop, 3) * 100, "%"), y = prop + 0.08), size = 3) +
+  theme_dakota() +
+  ylim(c(0, 1)) +
+  theme(
+    axis.title.x = element_blank(),
+    legend.position = "right"
+  ) +
+  labs(y = "Proportion")
+
+p2 <- df %>%
+  group_by(type) %>%
+  mutate(total = n()) %>%
+  filter(!is.na(country)) %>%
+  mutate(is_advanced = ifelse(is_advanced, "High Cap.", "Low/Med Cap.")) %>%
+  group_by(type, is_advanced) %>%
+  summarize(
+    prop = n() / total[1]
+  ) %>%
+  ggplot(aes(x = is_advanced, y = prop, fill = is_advanced)) +
+  geom_bar(stat = "identity", alpha = 0.8, color = "black") +
+  facet_wrap(~type, nrow = 1) +
+  geom_text(aes(label = paste0(round(prop, 3) * 100, "%"), y = prop + 0.05), size = 3) +
+  theme_dakota() +
+  ylim(c(0, 1)) +
+  theme(
+    axis.title.x = element_blank(),
+    legend.position = "right"
+  ) +
+  scale_fill_brewer(palette = "Greens") +
+  labs(y = "Proportion")
+
+
+gA <- ggplotGrob(p1)
+gB <- ggplotGrob(p2)
+
+# Set the widths
+gA$widths <- gB$widths
+
+grid.arrange(gA, gB, nrow = 2)
+```
+
+Now we should make a graph for the expected vs. actual author representation among the gatekeepers. First, lets look at gender
+```{r}
+num_female <- sum(revs$gender == "F", na.rm = T)
+
+expected <- sum(ca_authors$gender == "F", na.rm = T) / dim(ca_authors)[1]
+
+print(paste0("expected = ", expected))
+print(paste0("actual = ", num_female / dim(revs)[1]))
+
+prop.test(x = num_female / dim(revs)[1], n = dim(revs)[1], expected, correct = F)
+```
+
+First author
+```{r}
+num_female <- sum(revs$gender == "F", na.rm = T)
+
+expected <- sum(fa_authors$gender == "F", na.rm = T) / dim(fa_authors)[1]
+
+print(paste0("expected = ", expected))
+print(paste0("actual = ", num_female / dim(revs)[1]))
+
+prop.test(x = num_female / dim(revs)[1], n = dim(revs)[1], expected, correct = F)
+```
+
+Last author
+```{r}
+num_female <- sum(revs$gender == "F", na.rm = T)
+
+expected <- sum(la_authors$gender == "F", na.rm = T) / dim(la_authors)[1]
+
+print(paste0("expected = ", expected))
+print(paste0("actual = ", num_female / dim(revs)[1]))
+
+prop.test(x = num_female / dim(revs)[1], n = dim(revs)[1], expected, correct = F)
+```
+ 
+Now let sbegin repeating for the scientific capacity
+Corresponding authors
+```{r}
+reviewers <- subset(df, type = "Reviewer")
+authors <- subset(df, type == "Corr. Author")
+
+num_advanced <- sum(!reviewers$is_advanced, na.rm = T)
+expected <- sum(!authors$is_advanced, na.rm = T) / dim(authors)[1]
+
+print(paste0("expected = ", expected))
+print(paste0("actual = ", num_female / dim(reviewers)[1]))
+
+prop.test(x = num_advanced / dim(reviewers)[1], n = dim(reviewers)[1], expected, correct = F)
+```
+
+Now first authors
+```{r}
+reviewers <- subset(df, type = "Reviewer")
+authors <- subset(df, type == "First Author")
+
+num_advanced <- sum(!reviewers$is_advanced, na.rm = T)
+expected <- sum(!authors$is_advanced, na.rm = T) / dim(authors)[1]
+
+print(paste0("expected = ", expected))
+print(paste0("actual = ", num_female / dim(reviewers)[1]))
+
+prop.test(x = num_advanced / dim(reviewers)[1], n = dim(reviewers)[1], expected, correct = F)
+```
+
+```{r}
+reviewers <- subset(df, type = "Reviewer")
+authors <- subset(df, type == "Last Author")
+
+num_advanced <- sum(!reviewers$is_advanced, na.rm = T)
+expected <- sum(!authors$is_advanced, na.rm = T) / dim(authors)[1]
+
+print(paste0("expected = ", expected))
+print(paste0("actual = ", num_female / dim(reviewers)[1]))
+
+prop.test(x = num_advanced / dim(reviewers)[1], n = dim(reviewers)[1], expected, correct = F)
+```
+
+
+
+
+```{r}
+country_gender <- elife %>%
+  group_by(ca_country, ca_gender) %>%
+  summarize(
+    submissions = n(),
+    accepted = sum(accepted == T, na.rm = T),
+    encouraged = sum(encouraged == T, na.rm = T),
+    acceptance_rate = accepted / submissions,
+    encourage_rate = encouraged / submissions,
+    accept_se = sqrt( (acceptance_rate * (1 - acceptance_rate)) / submissions),
+    accept_lower = acceptance_rate - accept_se,
+    accept_upper = acceptance_rate + accept_se,
+    encourage_se = sqrt( (encourage_rate) * (1 - encourage_rate) / submissions),
+    encourage_lower = encourage_rate - encourage_se,
+    encourage_upper = encourage_rate + encourage_se
+  ) %>%
+  group_by(ca_country) %>%
+  mutate(totals = sum(submissions)) %>%
+  filter(ca_gender %in% c("M", "F") & totals > 430)
+
+diff_data <- country_gender %>%
+  mutate(ca_gender = relevel(factor(ca_gender), "F")) %>%
+  arrange(ca_gender) %>%
+  group_by(ca_country) %>%
+  mutate(
+    totals = sum(submissions),
+    accept_rate_diff = acceptance_rate - lag(acceptance_rate),
+    encourage_rate_diff = encourage_rate - lag(encourage_rate)
+  ) %>%
+  filter(!is.na(accept_rate_diff) & !is.na(encourage_rate_diff) & totals > 160) %>%
+  mutate(country = ca_country) %>%
+  gather(key, value = measurement, encourage_rate_diff, accept_rate_diff, factor_key = T) %>%
+  arrange(key, measurement) %>%
+  ungroup() %>%
+  mutate(order = row_number()) %>%
+  select(country, key, measurement, order)
+
+diff_data
+labs = c(encourage_rate_diff = "Encourage Rate", accept_rate_diff = "Acceptance Rate", mixed_accept_rate_diff = "(C) Mixed Reviewers")
+
+ord <- diff_data$country[order(subset(diff_data, key == "encourage_rate_diff")$measurement)]
+diff_data$country <- factor(diff_data$country, levels = ord)
+
+countries <- unique(diff_data$country)
+for(c in countries) {
+  s <- subset(elife, ca_country == c)
+  t_ca <- table(s$ca_gender, s$encouraged)[1:2, ]
+  round(t_ca / rowSums(t_ca), 4)
+  out = prop.test(t_ca[, 2], rowSums(t_ca))
+  print(paste0("country = ", c, " and p-value = ", round(out$p.value, 3), " and n = ", dim(s)[1]))
+}
+
+for(c in countries) {
+  s <- subset(elife, ca_country == c & !is.na(full_decision))
+  t_ca <- table(s$ca_gender, s$accepted)[1:2, ]
+  round(t_ca / rowSums(t_ca), 4)
+  out = prop.test(t_ca[, 2], rowSums(t_ca))
+  print(paste0("country = ", c, " and p-value = ", round(out$p.value, 3), " and n = ", dim(s)[1]))
+}
+
+
+ggplot(diff_data, aes(x = country, y = measurement, fill = (measurement > 0))) +
+    geom_bar(stat = "identity", alpha = 0.8, color = "black") +
+    facet_wrap(~key, scales = "free_x", labeller = labeller(key = labs)) +
+    theme_dakota() +
+    #scale_x_continuous(
+    #  breaks = diff_data$order,
+    #  labels = diff_data$country,
+    #  expand = c(0,0.5)
+    #)  +
+  ylim(-0.08, 0.18) +
+  coord_flip() +
+  labs(y = "Difference",
+       x = "") +
+  scale_fill_discrete(labels = c("Favors women", "Favors men"))
+```
+
+## Proportion of encouraged papers left over in review after 2 revisions
+```{r}
+unique_sub <- subset(elife, !duplicated(MSNO))
+
+sum(unique_sub$encouraged == T) / dim(unique_sub)[1]
+
+encouraged = subset(unique_sub, encouraged == T)
+
+(table(encouraged$rev2_decision)) / dim(encouraged)[1]
+```
+
+
+```{r}
+elife2 %>%
+  group_by(submission_year) %>%
+  summarize(
+    bres = length(unique(tolower(bre_name)))
+  )
+```
+
+
+# Statistical Tests
+###Is there a difference in the acceptance rates between men and women in aggregate? 
+
+These will be using the encourage-accept rates (since we are examining first and last authors)
+
+Lets begin by looking at the last author...
+```{r}
+t_la <- table(elife$la_gender, elife$accepted)[1:2, ]
+round(t_la / rowSums(t_la), 4)
+
+prop.test(t_la[, 2], rowSums(t_la))
+```
+
+Then the first author,
+```{r}
+t_fa <- table(elife$fa_gender, elife$accepted)[1:2, ]
+round(t_fa / rowSums(t_fa), 4)
+prop.test(t_fa[, 2], rowSums(t_fa))
+```
+
+
+Is there a difference in encourage rates? This time we look at corresponding author
+```{r}
+t_ca <- table(elife$ca_gender, elife$encouraged)[1:2, ]
+t_ca
+round(t_ca / rowSums(t_ca), 4)
+
+prop.test(t_ca[, 2], rowSums(t_ca))
+```
+
+
+And then lets do the same for the raw acceptnace rates, again by corresponding author
+```{r}
+t_ca <- table(elife$ca_gender, elife$accepted)[1:2, ]
+round(t_ca / rowSums(t_ca), 4)
+
+prop.test(t_ca[, 2], rowSums(t_ca))
+```
+
+Now lets try it again, but limit it to the accepted papers.
+```{r}
+e_sub <- subset(elife, !is.na(full_decision))
+t_ca <- table(e_sub$ca_gender, e_sub$accepted)[1:2, ]
+t_ca
+round(t_ca / rowSums(t_ca), 4)
+
+prop.test(t_ca[, 2], rowSums(t_ca))
+```
+
+```{r}
+e_sub <- subset(elife, !is.na(full_decision))
+t_ca <- table(e_sub$la_gender, e_sub$accepted)[1:2, ]
+t_ca
+round(t_ca / rowSums(t_ca), 4)
+
+prop.test(t_ca[, 2], rowSums(t_ca))
+```
+
+```{r}
+e_sub <- subset(elife, !is.na(full_decision))
+t_ca <- table(e_sub$fa_gender, e_sub$accepted)[1:2, ]
+t_ca
+round(t_ca / rowSums(t_ca), 4)
+
+prop.test(t_ca[, 2], rowSums(t_ca))
+```
+
+
+### Now lets move on to testing porportions of homophily. 
+
+First lets run the test bases on last author's gender. I organize these test a little differently than previous, since we are really testing three categorical variables. Here we do tests of proportions by group
+```{r}
+# Is there a difference between men and women in a mixed team?
+mixed_sub <- subset(homophily, decision_made == T & composition == "Mixed" & la_gender %in% c("M", "F"))
+all_men_sub <- subset(homophily, decision_made == T & composition == "All Men" & la_gender %in% c("M", "F"))
+all_women_sub <- subset(homophily, decision_made == T & composition == "All Women" & la_gender %in% c("M", "F"))
+
+t_mixed <- with(mixed_sub, table(la_gender, accepted))[1:2, ]
+t_all_women <- with(all_women_sub, table(la_gender, accepted))[1:2, ]
+t_all_men <- with(all_men_sub, table(la_gender, accepted))[1:2, ]
+```
+
+First we will test mixed teams
+```{r}
+round(t_mixed / rowSums(t_mixed), 3)
+prop.test(t_mixed[, 2], rowSums(t_mixed))
+```
+
+Then all women reviewer teams
+```{r}
+round(t_all_women / rowSums(t_all_women), 3)
+prop.test(t_all_women[, 2], rowSums(t_all_women))
+```
+
+And finally reviewer teams of all men
+```{r}
+round(t_all_men / rowSums(t_all_men), 3)
+prop.test(t_all_men[, 2], rowSums(t_all_men))
+```
+
+
+Now lets run the same tests, but with the first author's gender. 
+```{r}
+# Is there a difference between men and women in a mixed team?
+mixed_sub <- subset(homophily, decision_made == T & composition == "Mixed" & fa_gender %in% c("M", "F"))
+all_men_sub <- subset(homophily, decision_made == T & composition == "All Men" & fa_gender %in% c("M", "F"))
+all_women_sub <- subset(homophily, decision_made == T &  composition == "All Women" & fa_gender %in% c("M", "F"))
+
+t_mixed <- with(mixed_sub, table(fa_gender, accepted))[1:2, ]
+t_all_women <- with(all_women_sub, table(fa_gender, accepted))[1:2, ]
+t_all_men <- with(all_men_sub, table(fa_gender, accepted))[1:2, ]
+```
+
+Test mixed-gender reviewer teams
+```{r}
+round(t_mixed / rowSums(t_mixed), 3)
+prop.test(t_mixed[, 2], rowSums(t_mixed))
+```
+
+Test all female reviewer teams
+```{r}
+round(t_all_women / rowSums(t_all_women), 3)
+prop.test(t_all_women[, 2], rowSums(t_all_women))
+```
+
+Test all male reviewer teams
+```{r}
+round(t_all_men / rowSums(t_all_men), 3)
+prop.test(t_all_men[, 2], rowSums(t_all_men))
+```
+
+```{r}
+s <- subset(homophily, !is.na(full_decision) & decision_made & la_country == "United States")
+t <- with(s, table("Country Homophily" = la_country_homophily, "Accepted" = accepted))[1:2, ]
+
+t
+round(t / rowSums(t), 3)
+prop.test(t[, 2], rowSums(t))
+```
+
+
+Lets look at US vs non-US nationa
+```{r}
+# make three gorups, U.S., Central, and Peripheral...
+elife$is_us <- elife$ca_country == "United States"
+t <- with(elife, table(is_us, encouraged))[1:2, ]
+
+round(t / rowSums(t), 3)
+prop.test(t[, 2], rowSums(t))
+```
+
+
+```{r}
+# make three gorups, U.S., Central, and Peripheral...
+elife$is_us <- elife$ca_country == "United States"
+elife2 <- subset(elife, encouraged == T & !is.na(full_decision))
+t <- with(elife2, table(is_us, accepted))[1:2, ]
+
+round(t / rowSums(t), 3)
+prop.test(t[, 2], rowSums(t))
+```
+
+
+```{r}
+# make three gorups, U.S., Central, and Peripheral...
+elife$is_us <- elife$ca_country == "United States"
+elife2 <- subset(elife, submission_year == 2016)
+t <- with(elife2, table(is_us, encouraged))[1:2, ]
+
+round(t / rowSums(t), 3)
+prop.test(t[, 2], rowSums(t))
+```
+
+
+```{r}
+# make three gorups, U.S., Central, and Peripheral...
+elife$is_us <- elife$ca_country == "United States"
+elife2 <- subset(elife, encouraged == T & !is.na(full_decision) & submission_year == 2016)
+t <- with(elife2, table(is_us, accepted))[1:2, ]
+
+round(t / rowSums(t), 3)
+prop.test(t[, 2], rowSums(t))
+```
+
+
+```{r}
+# make three gorups, U.S., Central, and Peripheral...
+elife$central <- elife$ca_country %in% c("United States", "Germany", "United Kindgom", "France", "Canada", "Netherlands", "Spain", "Italy")
+elife2 <- subset(elife, encouraged == T & !is.na(full_decision) & submission_year == 2016)
+t <- with(elife2, table(central, accepted))[1:2, ]
+
+round(t / rowSums(t), 3)
+prop.test(t[, 2], rowSums(t))
+```
+
+
+
+Let us test, at the aggregate, how country country homophily affects acceptance rates
+```{r}
+sub <- subset(homophily, encouraged == T)
+sub$la_country_homophily <- ifelse(sub$la_country_homophily == T, "Has Homophily", "No Homophily")
+t <- table(homophily = sub$la_country_homophily, accepted = sub$accepted)
+round(t / rowSums(t), 4)
+prop.test(t[1:2, 2], rowSums(t))
+```
+
+Now do the same, but with first author
+```{r}
+sub <- subset(homophily, encouraged == T)
+sub$la_country_homophily <- ifelse(sub$fa_country_homophily == T, "Has Homophily", "No Homophily")
+t <- table(homophily = sub$fa_country_homophily, accepted = sub$accepted)
+round(t / colSums(t), 4)
+t
+prop.test(t)
+```
+
+
+Test for signifigance of appeal rates
+```{r}
+t <- table(bre_gender = elife$bre_gender, appealed = elife$appealed_any_stage)[1:2, ]
+t / rowSums(t)
+
+prop.test(t[1:2, 2], rowSums(t))
+```
+
+
+```{r}
+s <- subset(elife, accepted == T)
+
+prop.table(table(s$ca_gender))
+
+prop.table(table(s$fa_gender))
+
+prop.table(table(s$la_gender))
+```
+
+Now lets run by country for homophily of top 15 countries, and create a table of the outputs
+```{r}
+top_countries <- elife %>%
+  group_by(la_country) %>%
+  filter(!is.na(la_country)) %>%
+  summarize(count = n()) %>%
+  top_n(15, count) %>%
+  select(la_country)
+
+l <- t(data.frame(sapply(top_countries$la_country, function(country) {
+  relevant = subset(homophily, decision_made == T & la_country == country)
+  t = table(homophily = relevant$la_country_homophily, accepted = relevant$accepted)
+  result = prop.test(t[1:2, 2], rowSums(t))
+  row = c(country = country, 
+          n_no_homophily = rowSums(t)[1],
+          n_homophily = rowSums(t)[2],
+          result$statistic, 
+          result$parameter,
+          p_value = result$p.value,
+          prop_homophily = result$estimate[1],
+          prop_no_homophily = result$estimate[2],
+          ci_lower = result$conf.int[1],
+          ci_upper = result$conf.int[2]
+          )
+  return(row)
+})))
+
+colnames(l) <- c(
+  "Country", "count_no_homophily", "count_homophily", "X_squared", "D.F.", "p.value", "estimate_no_homophily", 
+  "estimate_homophily", "ci_lower", "ci_upper"
+)
+
+rownames(l) <- NULL
+
+write.csv(l, "~/Desktop/country_homophily_tests.csv")
+```

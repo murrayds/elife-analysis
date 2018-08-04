@@ -1,0 +1,32 @@
+"0","```r
+elife$deltatime_rev1 <- as.Date(elife$rev1_decision_date) - as.Date(elife$rev1_submission_date)
+elife$deltatime_rev2 <- as.Date(elife$rev2_decision_date) - as.Date(elife$rev2_submission_date)
+elife$final_decision <- with(elife, ifelse(full_decision != \"Revise\", \"Full\", 
+                                           ifelse(rev1_decision != \"Revise\", \"Revision 1\", \"Revision 2\")))
+elife$revision_time <- with(elife, ifelse(full_decision != \"Revise\", NA, 
+                                          ifelse(rev1_decision != \"Revise\", deltatime_rev1, 
+                                                 deltatime_rev1 + deltatime_rev2)))
+elife$deltatime_final <- with(elife, ifelse(full_decision != \"Revise\", deltatime_full_submission_decision, 
+                   ifelse(rev1_decision != \"Revise\", deltatime_rev1 + deltatime_full_submission_decision, 
+                          deltatime_rev2 + deltatime_rev1 + deltatime_full_submission_decision)))
+labs = c(\"Initial Decision Duration\", \"Full Decision Duration\", \"Revision Duration\")
+time_data <- elife %>%
+  mutate(is_central = ifelse(ca_country %in% c(\"United States\", \"United Kingdom\", \"Germany\"), T, F)) %>%
+  gather(key, value = \"measurement\", deltatime_initial_submission_decision, deltatime_full_submission_decision,
+         revision_time, factor_key = T) %>%
+  mutate(submission_year = factor(submission_year),
+         key = factor(key, levels = levels(key)[c(1, 2, 3)], labels = labs)) %>%
+  filter(ca_gender %in% c(\"M\", \"F\")) %>%
+  select(submission_year, key, measurement, ca_gender, is_central)
+  
+  
+ggplot(time_data, aes(x = submission_year, y = measurement, fill = ca_gender)) +
+  geom_boxplot(outlier.alpha = 0.1, color = \"black\",  alpha = 0.8) +
+  facet_wrap(~key) +
+  ylim(0, 200) +
+  theme_dakota() +
+  labs(x = \"Submission Year\",
+       y = \"Days Elapsed\") +
+  #scale_fill_manual(labels = c(\"Peripheral Nationality\", \"Central Nationality\"), values = c(\"#00b894\", \"#6c5ce7\"))
+  scale_fill_discrete(labels = c(\"Female\", \"Male\"))
+```"

@@ -1,0 +1,47 @@
+"0","```r
+elife$ca_gender <- relevel(factor(elife$ca_gender), ref = \"F\")
+ca_annualized <- generate_annualized_data(elife, gender = \"ca_gender\")
+labs = c(submission_rate = \"Total Submission by Gender\", encourage_rate = \"Encourage Rate\", accept_rate = \"Acceptance Rate\")
+ord = c(1, 2, 3)
+long_data <- ca_annualized %>%
+  gather(key, value = measurement, submit_rate, encourage_rate, accept_rate, factor_key = T) %>%
+  mutate(gender = ca_gender,
+         year = submission_year,
+         key = factor(key, levels = levels(key)[ord], labels = labs, ordered = T)
+         ) %>%
+  select(submission_year, gender, key, measurement)
+labs = c(\"Corresponding Authors by Gender\", \"First Authors by Gender\", \"Last Authors by Gender\")
+ca_annualized <- generate_annualized_data(elife, gender = \"ca_gender\")
+fa_annualized <- generate_annualized_data(elife, gender = \"fa_gender\")
+la_annualized <- generate_annualized_data(elife, gender = \"la_gender\")
+ca <- ca_annualized %>%
+  mutate(key = labs[1],
+         measurement = publish_rate,
+         gender = ca_gender) %>%
+  select(-ca_gender)
+fa <- fa_annualized %>%
+  mutate(key = labs[2],
+         measurement = publish_rate,
+         gender = fa_gender) %>%
+  select(-fa_gender)
+la <- la_annualized %>%
+  mutate(key = labs[3],
+         measurement = publish_rate,
+         gender = la_gender) %>%
+  select(-la_gender)
+long_data2 <- rbind(ca, fa, la) %>%
+  select(submission_year, gender, key, measurement)
+data <- rbind(long_data, long_data2)
+ggplot(data, aes(x = submission_year, y = measurement, color = gender)) +
+  geom_line() +
+  geom_point(aes(shape = gender), color = \"black\") +
+  facet_wrap(~key, nrow = 2, ncol = 3) +
+  ylim(0, 1) +
+  theme_dakota() +
+  labs(
+    x = \"Submission Year\",
+    y = \"%\"
+  ) +
+  scale_color_discrete(labels = c(\"F\" = \"Female\", \"M\" = \"Male\")) +
+  scale_shape_discrete(labels = c(\"F\" = \"Female\", \"M\" = \"Male\"))
+```"

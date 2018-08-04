@@ -1,0 +1,28 @@
+"0","```r
+get_person_stats <- function(data, name_var, gender_var, country_var) {
+  
+  data.unq <- data[!duplicated(tolower(data[[name_var]])), ]
+  
+  tab <- table(data.unq[[gender_var]])
+  prop.tab <- prop.table(tab)
+  toreturn <- c(
+    manuscripts = sum(!duplicated(data$MSNO) & !is.na(data[[name_var]])),
+    people = length(data.unq[[name_var]]),
+    countries = length(unique(data.unq[[country_var]])),
+    male_count = tab[[\"M\"]],
+    female_count = tab[[\"F\"]],
+    unk_count = tab[[\"UNK\"]],
+    male_prop = prop.tab[[\"M\"]],
+    female_prop = prop.tab[[\"F\"]],
+    unk_prop = prop.tab[[\"UNK\"]]
+  )
+}
+ca_stats <- round(get_person_stats(elife, \"ca_name\", \"ca_gender\", \"ca_country\"), 4)
+se_stats <- round(get_person_stats(elife, \"se_name\", \"se_gender\", \"se_country\"), 4)
+fa_stats <- round(get_person_stats(elife, \"fa_name\", \"fa_gender\", \"fa_country\"), 4)
+la_stats <- round(get_person_stats(elife, \"la_name\", \"la_gender\", \"la_country\"), 4)
+bre_stats <- round(get_person_stats(elife, \"bre_name\", \"bre_gender\", \"bre_country\"), 4)
+reviewer_stats <- round(get_person_stats(reviewers, \"reviewer_name\", \"reviewer_gender\", \"reviewer_country\"), 4)
+frame <- data.frame(ca_stats, fa_stats, la_stats, se_stats, bre_stats, reviewer_stats)
+write.csv(frame, \"~/Desktop/Author_Reviewer_Stats.csv\")
+```"

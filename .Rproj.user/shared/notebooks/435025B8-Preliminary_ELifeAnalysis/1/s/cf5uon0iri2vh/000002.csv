@@ -1,0 +1,31 @@
+"0","```r
+homophily %>%
+  group_by(la_gender, bre_gender) %>%
+  filter(decision_made == T) %>%
+  mutate(total_submissions = n()) %>%
+  filter(la_gender %in% c(\"M\", \"F\")) %>%
+  group_by(simple_composition, la_gender, bre_gender) %>%
+  summarize(
+      count = n(),
+      acc = sum(accepted == TRUE),
+      total = total_submissions[1],
+      acceptance_rate = sum(accepted == TRUE) / count,
+      standard_error = sqrt( (acceptance_rate * (1 - acceptance_rate)) / count),
+      lower = acceptance_rate - standard_error,
+      upper = acceptance_rate + standard_error
+  ) %>%
+  filter(simple_composition != \"Uncertain\" & bre_gender %in% c(\"M\", \"F\")) %>%
+  ggplot(aes(x = la_gender, y = acceptance_rate, fill = la_gender)) +
+    geom_bar(stat = \"identity\", alpha = 0.8, color = \"black\") +
+    facet_grid(bre_gender ~ simple_composition) +
+    ylim(0, 0.8) +
+    geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2, color = \"black\", alpha = 0.8) +
+    geom_text(aes(label = paste0(\"n=\", count), y = 0.05), size = 3.5) +
+    theme_dakota() +
+    theme(
+      strip.text.y = element_text(angle = 360, vjust = 1.0, size = 11),
+      axis.title.x = element_blank()
+    ) +
+    labs(y = \"Encourage-Acceptance Rate\") +
+    scale_fill_discrete(labels = c(\"F\" = \"Female\", \"M\" = \"Male\"))
+```"

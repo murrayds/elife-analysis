@@ -1,0 +1,84 @@
+"0","```r
+generate_annualized_data <- function(elife, gender_var = \"ca_gender\") {
+    decision_rates <- elife %>%
+      # Filter out those for which a decision was not made
+      filter(decision_made == T) %>%
+      group_by_(\"submission_year\", gender_var) %>%
+      summarize(
+        paper_count = n(),
+        accept_count = sum(accepted == TRUE),
+        encourage_count = sum(encouraged == TRUE),
+        encourage_rate = encourage_count / paper_count,
+        accept_rate = accept_count / paper_count,
+        appeal_count = sum(appealed_any_stage == TRUE)
+      ) %>%
+      group_by(submission_year) %>%
+      mutate(total_submissions = sum(paper_count),
+             total_published = sum(accept_count)) %>%
+      group_by_(\"submission_year\", gender_var) %>%
+      mutate(
+        submit_rate = paper_count / total_submissions,
+        publish_rate = accept_count / total_published
+      )  %>%
+      ungroup() %>%
+      filter_(paste(gender_var,  \"%in% c('M', 'F')\"))
+}
+# This function for creating a multiplot grid object with a shared ledend is largely derivied, with a few minor
+# tweaks, from the following blog by Andy Phillips. 
+# https://andyphilips.github.io/blog/2017/04/04/single-legend-for-multiple-plots.html
+grid_arrange_shared_legend <- function(..., ncol = length(list(...)), nrow = 1, position = c(\"bottom\", \"right\"), title = \"\", plot = T) {
+	plots <- list(...)
+	position <- match.arg(position)
+	g <- ggplotGrob(plots[[1]] + 
+	theme(legend.position = position, 
+	      legend.title = element_blank()))$grobs
+	legend <- g[[which(sapply(g, function(x) x$name) == \"guide-box\")]]
+	lheight <- sum(legend$height)
+	lwidth <- sum(legend$width)
+	gl <- lapply(plots, function(x) x +
+	theme(legend.position = \"none\"))
+	gl <- c(gl, ncol = ncol, nrow = nrow)
+	combined <- switch(position,
+	                   \"bottom\" = arrangeGrob(do.call(arrangeGrob, gl), 
+	                      legend,ncol = 1,
+	                      top = textGrob(title,
+	                                     gp=gpar(fontsize=12, 
+	                                             fontface = \"bold\", 
+	                                             fontfamily = \"Times\"),
+	                                     just = \"top\"),
+					              heights = unit.c(unit(1, \"npc\") - lheight, lheight)
+					              ),
+					              
+					           \"right\" = arrangeGrob(do.call(arrangeGrob, gl),
+                          legend, 
+					                ncol = 2,
+				                  top = textGrob(title,
+                                         gp=gpar(fontsize=12, 
+                                                 fontface = \"bold\", 
+                                                 fontfamily = \"Times\"), 
+				                  just = \"top\"),
+				                  widths = unit.c(unit(1, \"npc\") - lwidth, lwidth)))
+	
+	if(plot) {
+	  grid.newpage()
+	  grid.draw(combined)  
+	}
+	
+	# return gtable invisibly
+	invisible(combined)
+}
+theme_dakota <- function () { 
+    theme_bw(base_size=10, base_family=\"Times\") %+replace% 
+        theme(
+            strip.background = element_blank(),
+            strip.text = element_text(face = \"bold\"),
+            plot.title = element_text(size = 11, face = \"bold\"),
+            axis.text.x = element_text(size = 9, margin = margin(t = 5, b = 5)),
+            legend.title = element_blank(),
+            legend.position = \"bottom\"
+        )
+}
+```"
+"1","Warning in rm(list = \"print.knitr_kable\", envir = as.environment(\"tools:rstudio\"),  :
+  object 'print.knitr_kable' not found
+"

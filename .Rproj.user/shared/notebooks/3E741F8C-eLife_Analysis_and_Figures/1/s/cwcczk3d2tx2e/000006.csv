@@ -1,0 +1,5 @@
+"0","#ggsave(""~/Desktop/elife_figure2.png"", plot = fig2, height = 4, width = 7)"
+"0","# now again clear the namespace"
+"0","fig2 <- NULL"
+"0","p1 <- NULL"
+"0","p2 <- NULL"

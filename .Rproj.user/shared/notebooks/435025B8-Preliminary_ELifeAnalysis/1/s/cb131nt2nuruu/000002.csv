@@ -1,0 +1,43 @@
+"0","```r
+generate_composition_data <- function(homophily, category_var, gender_var) {
+  homophily$var <- homophily[[category_var]]
+  homophily$gender <- homophily[[gender_var]]
+  
+  data <- homophily %>%
+    group_by(gender) %>%
+    filter(decision_made == T) %>%
+    mutate(total_submissions = n()) %>%
+    filter(gender %in% c(\"M\", \"F\")) %>%
+    group_by(var, gender) %>%
+    summarize(
+      count = n(),
+      acc = sum(accepted == TRUE),
+      total = total_submissions[1],
+      acceptance_rate = sum(accepted == TRUE) / count,
+      standard_error = sqrt( (acceptance_rate * (1 - acceptance_rate)) / count),
+      lower = acceptance_rate - standard_error,
+      upper = acceptance_rate + standard_error
+    )
+  return(data)
+}
+fa_composition <- generate_composition_data(homophily,  \"composition\", \"fa_gender\")
+la_composition <- generate_composition_data(homophily,  \"composition\", \"la_gender\")
+fa_composition$source = \"(B) First Author\"
+la_composition$source = \"(A) Last Author\"
+long_data <- rbind(fa_composition, la_composition)
+long_data$source <- factor(long_data$source)
+#levels(long_data$source) <- rev(levels(long_data$source))
+ggplot(long_data, aes(x = gender, y = acceptance_rate, fill = gender)) +
+  geom_bar(stat = \"identity\", alpha = 0.8, color = \"black\") +
+  facet_grid(source~var) +
+  ylim(0, 0.8) +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2, color = \"black\", alpha = 0.8) +
+  geom_text(aes(label = paste0(\"n=\", count), y = 0.05), size = 3.5) +
+  theme_dakota() +
+  theme(
+    strip.text.y = element_text(angle = 360, vjust = 1.0, size = 11),
+    axis.title.x = element_blank()
+  ) +
+  labs(y = \"Encourage-Acceptance Rate\") +
+  scale_fill_discrete(labels = c(\"F\" = \"Female\", \"M\" = \"Male\"))
+```"

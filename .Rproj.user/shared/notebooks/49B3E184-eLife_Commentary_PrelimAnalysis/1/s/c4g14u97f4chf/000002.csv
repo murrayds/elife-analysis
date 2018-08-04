@@ -1,0 +1,6 @@
+"0","```r
+library(tidytext)
+
+text_df <- commentary %>%
+  unnest_tokens(word, Text)
+```"

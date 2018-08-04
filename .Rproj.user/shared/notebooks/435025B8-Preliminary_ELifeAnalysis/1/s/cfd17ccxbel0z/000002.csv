@@ -1,0 +1,20 @@
+"0","```r
+reviewer1 <- elife[, c(\"MSNO\", \"reviewer1_name\", \"reviewer1_gender\", \"reviewer1_country\")]
+reviewer1 <- reviewer1[with(reviewer1, !is.na(reviewer1_name)), ]
+colnames(reviewer1) <- c(\"MSNO\", \"reviewer_name\", \"reviewer_gender\", \"reviewer_country\")
+reviewer2 <- elife[, c(\"MSNO\", \"reviewer2_name\", \"reviewer2_gender\", \"reviewer2_country\")]
+reviewer2 <- reviewer2[with(reviewer2, !is.na(reviewer2_name)), ]
+colnames(reviewer2) <- c(\"MSNO\", \"reviewer_name\", \"reviewer_gender\", \"reviewer_country\")
+reviewer3 <- elife[, c(\"MSNO\", \"reviewer3_name\", \"reviewer3_gender\", \"reviewer3_country\")]
+reviewer3 <- reviewer2[with(reviewer3, !is.na(reviewer3_name)), ]
+colnames(reviewer3) <- c(\"MSNO\", \"reviewer_name\", \"reviewer_gender\", \"reviewer_country\")
+reviewer4 <- elife[, c(\"MSNO\", \"reviewer4_name\", \"reviewer4_gender\", \"reviewer4_country\")]
+reviewer4 <- reviewer2[with(reviewer4, !is.na(reviewer4_name)), ]
+colnames(reviewer4) <- c(\"MSNO\", \"reviewer_name\", \"reviewer_gender\", \"reviewer_country\")
+reviewers <- rbind(reviewer1, reviewer2, reviewer3, reviewer4)
+reviewers$reviewer_gender[!reviewers$reviewer_gender %in% c(\"M\", \"F\")] <- \"UNK\" 
+#reviewers <- reviewers[reviewers$reviewer_gender %in% c(\"M\", \"F\"), ]
+elife2 <- subset(elife, !duplicated(MSNO))
+elife2 <- merge(elife2, reviewers, all.y = T)
+elife_with_reviewers <- merge(elife, reviewers, all.y = T)
+```"
