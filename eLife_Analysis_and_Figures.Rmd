@@ -2,13 +2,13 @@
 title: 'Gender and international diversity improves equity in peer review: R Notebook'
 author: "Dakota Murray"
 output:
-  html_document:
-    df_print: paged
-  html_notebook: default
   pdf_document: default
+  html_notebook: default
   prettydoc::html_pretty:
     theme: cayman
     highlight: github
+  html_document:
+    df_print: paged
 ---
 
 This notebook documents the analysis of the dataset on peer review outcomes by eLife. Due to the sensitive nature of the data, it is not all made public. However, a sample dataset with all identifying information such as name and instution has been supplied. If you are using this data, run the first, and the third code blocks, skipping the second. 
@@ -408,6 +408,13 @@ outcomes <- elife %>%
 table(outcomes$outcome)
 ```
 
+## Proportion of initial submissions with decisions which were accepted/rejected
+```{r}
+with_decision <- outcomes %>% filter(outcome != "No Decision Yet")
+
+prop.table(table(with_decision$outcome))
+```
+
 
 ### Gender dsitirbution of distinct corresponding authors of initial submissions to eLife 
 ```{r}
@@ -453,7 +460,7 @@ full <- elife %>%
 dim(full)[1]
 ```
 
-### Final decision outcomes for full submissions
+###Final decision outcomes for full submissions
 ```{r}
 outcomes <- full %>%
   mutate(outcome = ifelse(!final_decision_made, "No Decision Yet", ifelse(accepted, "Accepted", "Rejected")))
@@ -464,21 +471,22 @@ table(outcomes$outcome)
 ### First full decision outcomes for full submissions
 ```{r}
 table(ifelse(is.na(full$full_decision), "No Decision", full$full_decision))
+prop.table(table(ifelse(is.na(full$full_decision), "No Decision", full$full_decision)))
 ```
 
-### First revision review outcomes for full submissions
+###First revision review outcomes for full submissions
 ```{r}
 rev1 <- full %>% filter(!is.na(rev1_submission_date))
 table(ifelse(is.na(rev1$rev1_decision), "No Decision", rev1$rev1_decision))
 ```
 
-### Second revision review outcomes for full submissions
+###Second revision review outcomes for full submissions
 ```{r}
 rev2 <- full %>% filter(!is.na(rev2_submission_date))
 table(ifelse(is.na(rev2$rev2_decision), "No Decision", rev2$rev2_decision))
 ```
 
-### Number of distinct corresponding authors in full submissions at eLife
+###Number of distinct corresponding authors in full submissions at eLife
 ```{r}
 ca_authors <- full %>% 
   filter(!is.na(ca_name)) %>%
@@ -489,7 +497,7 @@ ca_authors <- full %>%
 dim(ca_authors)[1]
 ```
 
-### Gender distirbution of distinct correpsonding authors on full submissions at eLife
+###Gender distirbution of distinct correpsonding authors on full submissions at eLife
 ```{r}
 table(ca_authors$ca_gender)
 ```
@@ -508,9 +516,17 @@ dim(fa_authors)[1]
 ### Gender distirbution of distinct first authors on full submissions at eLife
 ```{r}
 table(fa_authors$fa_gender)
+prop.table(table(fa_authors$fa_gender))
 ```
 
-### Number of distinct last authors on full submissions at eLife
+###Gender distirbution of distinct gender-identified first authors on full submissions at eLife
+```{r}
+identified <- fa_authors %>% filter(fa_gender %in% c("M", "F"))
+table(identified$fa_gender)
+prop.table(table(identified$fa_gender))
+```
+
+###Number of distinct last authors on full submissions at eLife
 ```{r}
 la_authors <- full %>% 
   filter(!is.na(la_name)) %>%
@@ -524,6 +540,13 @@ dim(la_authors)[1]
 ### Gender distirbution of distinct last authors on full submissions at eLife
 ```{r}
 table(la_authors$la_gender)
+```
+
+### Gender distirbution of distinct gender-identified first authors on full submissions at eLife
+```{r}
+identified <- la_authors %>% filter(la_gender %in% c("M", "F"))
+table(identified$la_gender)
+prop.table(table(identified$la_gender))
 ```
 
 ### Gender distirbution of distinct last authors on full submissions at eLife, as %
@@ -541,20 +564,25 @@ dim(gatekeepers)[1]
 ### Gender distirbution of distinct gatekeepers involved in processing full submissions at eLife, includes senior editors, reviewing editors, and invited peer reviewers
 ```{r}
 table(gatekeepers$gender)
-```
-
-### Gender distirbution of distinct gatekeepers involved in processing full submissions at eLife, includes senior editors, reviewing editors, and invited peer reviewers as %
-```{r}
 prop.table(table(gatekeepers$gender))
 ```
+
+###Gender distribution of distinct gatekeepers invovled in the processing of full submissions submissions at eLife, but now for only gender-identified individuals
+```{r}
+identified <- gatekeepers %>% filter(gender %in% c("M", "F"))
+table(identified$gender)
+prop.table(table(identified$gender))
+```
+
 
 ### Continent distirbution of distinct gatekeepers involved in processing full submissions at eLife, includes senior editors, reviewing editors, and invited peer reviewers
 ```{r}
 table(gatekeepers$continent)
+prop.table(table(gatekeepers$continent))
 ```
 
 
-### Proportion of full submissions for which the correposnding author was also the last author
+### Proportion of full submissions for which the correposnding author was also the first author
 ```{r}
 sum(full$ca_name == full$fa_name, na.rm = T) / dim(full)[1]
 ```
@@ -589,11 +617,30 @@ sum(full$ca_country == full$la_country, na.rm = T) / dim(full)[1]
 ```
 
 
+###Number of unique name/role combinations that appear in the data
+```{r}
+dim(people)[1]
+```
+
+###Number of thees combinations for which a gender was assigned
+```{r}
+sum(people$gender != "UNK")
+sum(people$gender != "UNK") / dim(people)[1]
+
+```
+
+
+###Gender distribution of all name/role combinations that appear in the dataset
+```{r}
+table(people$gender)
+prop.table(table(people$gender))
+```
+
+
 ## Table SI.2
 
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE}
 gatekeepers <- subset(people, type == "Gatekeeper")
-#table(gatekeepers$continent)
 editors <- subset(editors, !duplicated(name, country))
 reviewers <- subset(reviewers, !duplicated(reviewer_name, reviewer_country))
 bres <- subset(bres, !duplicated(name, country))
@@ -620,6 +667,26 @@ write.csv(all_data, file = "tables/table_SI2.csv")
 all_data
 ```
 
+###Gender distribution of gender-identified correpsonding authors of full submissions
+```{r}
+identified <- full %>% filter(ca_gender != "UNK")
+table(identified$ca_gender)
+prop.table(table(identified$ca_gender))
+```
+
+###Gender distribution of gender-identified first authors of full submissions
+```{r}
+identified <- full %>% filter(fa_gender != "UNK")
+table(identified$fa_gender)
+prop.table(table(identified$fa_gender))
+```
+
+###Gender distribution of gender-identified last authors of full submissions
+```{r}
+identified <- full %>% filter(la_gender != "UNK")
+table(identified$la_gender)
+prop.table(table(identified$la_gender))
+```
 
 
 ## Anonymize and save date
@@ -900,7 +967,7 @@ rownames(fig3_top_sig_table) <- NULL
 fig3_top_sig_table
 ```
 
-And the same for the content-level tests
+And the same for the continent-level tests
 ```{r}
 fig3_bottom_sig_table <- data.frame(
   continent = c("Corresponding", "First", "Last"),
@@ -1577,9 +1644,12 @@ full <- elife %>%
     submissions = n(),
     prop_homogeny = sum(ca_country_homophily, na.rm = T) / submissions
   ) %>%
-  arrange(-prop_homogeny)
+  arrange(-prop_homogeny) %>%
+  top_n(20)
 
 full
+
+write.csv(full, file = "tables/table_SI3.csv")
 ```
 
 
