@@ -1,17 +1,17 @@
 ---
-title: 'Gender and international diversity improves equity in peer review: R Notebook'
+title: 'Gender and international diversity improves equity in peer review: R Notebook, August 2018'
 author: "Dakota Murray"
 output:
-  pdf_document: default
+  html_document:
+    df_print: paged
   html_notebook: default
   prettydoc::html_pretty:
     theme: cayman
     highlight: github
-  html_document:
-    df_print: paged
+  pdf_document: default
 ---
 
-This notebook documents the analysis of the dataset on peer review outcomes by eLife. Due to the sensitive nature of the data, it is not all made public. However, a sample dataset with all identifying information such as name and instution has been supplied. If you are using this data, run the first, and the third code blocks, skipping the second. 
+This notebook documents the analysis of the dataset on peer review outcomes by eLife. Due to the sensitive nature of the data, it is not all made public. However, a sample dataset with all identifying information such as name and instution has been supplied. If you are using this data, run the first code block, and then skip to the "checkpoint" later in the file, after the data has been anonymized.
 
 
 ## Setup
@@ -85,6 +85,10 @@ Next we import the data. This version of the dataset was compiled from a seried 
 ```{r message=FALSE}
 # Load the main eLife data file
 elife <- read_excel("~/Dropbox/eLife/data/elife_datafile.xlsx")
+
+
+# exclude the article type "Scientific Correspondance"
+elife <- elife %>% filter(type.x != "RE")
 
 # Load the country infomration .csv file, which was manually created and available along with this file
 country_mapping <- read_csv("~/Dropbox/eLife/data/elife_countries.csv")
@@ -373,7 +377,8 @@ elife <- elife %>%
                                        )
                                 )
                   )
-  ) 
+  ) %>%
+  filter(submission_type != "RE")
 ```
 
 
@@ -502,7 +507,7 @@ dim(ca_authors)[1]
 table(ca_authors$ca_gender)
 ```
 
-### Number of distinct first authors on full submissions at eLife
+###Number of distinct first authors on full submissions at eLife
 ```{r}
 fa_authors <- full %>% 
   filter(!is.na(fa_name)) %>%
@@ -513,7 +518,7 @@ fa_authors <- full %>%
 dim(fa_authors)[1]
 ```
 
-### Gender distirbution of distinct first authors on full submissions at eLife
+###Gender distirbution of distinct first authors on full submissions at eLife
 ```{r}
 table(fa_authors$fa_gender)
 prop.table(table(fa_authors$fa_gender))
@@ -582,18 +587,18 @@ prop.table(table(gatekeepers$continent))
 ```
 
 
-### Proportion of full submissions for which the correposnding author was also the first author
+###Proportion of full submissions for which the correposnding author was also the first author
 ```{r}
 sum(full$ca_name == full$fa_name, na.rm = T) / dim(full)[1]
 ```
 
 
-### Proportion of full submissions for which the correposnding author was also the last author
+###Proportion of full submissions for which the correposnding author was also the last author
 ```{r}
 sum(tolower(full$ca_name) == tolower(full$la_name), na.rm = T) / dim(full)[1]
 ```
 
-### Number of full submissions that were appealed
+###Number of full submissions that were appealed
 ```{r}
 table(full$appealed_any_stage)
 ```
@@ -605,13 +610,13 @@ f <- full %>% filter(accepted)
 mean(f$num_revisions, na.rm = T)
 ```
 
-### Proportion of full submissions for which the correpsonding auhtor is from the same country as the first author
+###Proportion of full submissions for which the correpsonding auhtor is from the same country as the first author
 ```{r}
 sum(full$ca_country == full$fa_country, na.rm = T) / dim(full)[1]
 ```
 
 
-### Proportion of full submissions for which the correpsonding auhtor is from the same country as the last author
+###Proportion of full submissions for which the correpsonding auhtor is from the same country as the last author
 ```{r}
 sum(full$ca_country == full$la_country, na.rm = T) / dim(full)[1]
 ```
@@ -795,7 +800,7 @@ p2 <- d2 %>%
                           values = c("dotted", "dashed", "dotdash"))
 
 fig2 <- grid.arrange(p1, p2, ncol = 2)
-ggsave("figures/main/fig_2.png", plot = fig2, height = 4, width = 7)
+ggsave("figures/main/fig_2.tiff", plot = fig2, height = 4, width = 7)
 
 write.csv(d1, "formatted_data/figure2_leftpanel_data.csv")
 write.csv(d2, "formatted_data/figure2_rightpanel_data.csv")
@@ -950,7 +955,7 @@ p2 <- people %>%
   scale_fill_brewer(palette = "Set2")
 
 fig3 <- grid.arrange(p1, p2)
-ggsave("figures/main/fig_3.png", plot = fig3, height = 5, width = 7)
+ggsave("figures/main/fig_3.tiff", plot = fig3, height = 5, width = 7)
 ```
 
 And below are the explicit results of the significaince tests used in the previous graphs to compare the actual proportion of male/female authors with the expected proportion given the population of gatekeepers. 
@@ -1082,7 +1087,7 @@ data_fig4 <- elife %>%
         encourage_accept_rate = accept_count / sum(has_full_submission & full_decision_made, na.rm = T)
   ) %>%
   ungroup() %>%
-  gather(measure_key, value = measurement, submit_rate, encourage_accept_rate) %>%
+  gather(measure_key, value = measurement, encourage_accept_rate) %>%
   left_join(sig_df, by = c("measure_key", "author_key")) %>%
   mutate(
     author_key = factor(author_key,
@@ -1103,19 +1108,20 @@ fig4 <- data_fig4 %>%
   ggplot(aes(x = gender, y = measurement, color = factor(gender), shape = factor(gender), fill = factor(gender))) +
   geom_bar(stat = "identity", alpha = 0.8, color = "black") +
   geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2, color = "black") +
-  geom_text(aes(x = 1.5, y = 0.92, label = ifelse(measure_key == "Submissions", "", as.character(sig))), color = "black") +
-  geom_segment(aes(x = 1, xend = 2, y = ifelse(sig != "N/A", 0.85, 1.1), yend = ifelse(sig != "N/A", 0.85, 1.1)), color = "black") +
-  facet_grid(author_key ~ measure_key) +
-  coord_cartesian(ylim = c(0, 1)) +
+  geom_text(aes(x = 1.5, y = 0.59, label = ifelse(measure_key == "Submissions", "", as.character(sig))), color = "black") +
+  geom_segment(aes(x = 1, xend = 2, y = ifelse(sig != "N/A", 0.58, 1.1), yend = ifelse(sig != "N/A", 0.58, 1.1)), color = "black") +
+  #facet_grid(author_key ~ measure_key) +
+  facet_wrap(~author_key) +
+  coord_cartesian(ylim = c(0.4, 0.6)) +
   theme_dakota() +
   guides(fill = F) +
   labs(
     x = "Gender of Author",
-    y = "% accepted of full submissions"
+    y = "% of full submissions accepted"
   )
 
 fig4
-ggsave("figures/main/fig_4.png", plot = fig4, height = 5, width = 7)
+ggsave("figures/main/fig_4.tiff", plot = fig4, height = 5, width = 7)
 ```
 
 Signif. test results for figure 4
@@ -1227,7 +1233,7 @@ data_fig5 <- elife %>%
                         labels = c("ca_gender" = "Corresponding", "fa_gender" = "First", "la_gender" = "Last"))
     ,
     gender = ifelse(gender == "M", "Male", "Female"),
-    composition = factor(composition, labels = c("All Men" = "All male reviewers", "All Women" = "All women reviewers", "Mixed" = "Mixed-gender reviewers", "Uncertain" = "Uncertain"))
+    composition = factor(composition, labels = c("All Men" = "All-male reviewers", "All Women" = "All-female reviewers", "Mixed" = "Mixed-gender reviewers", "Uncertain" = "Uncertain"))
   ) %>%
   filter(composition != "Uncertain")
 
@@ -1245,12 +1251,12 @@ fig5 <- data_fig5 %>%
   coord_cartesian(ylim = c(0.30, 0.8)) +
   theme_dakota() +
   guides(fill = F) +
-  labs(y = "% accepted of full submissions",
+  labs(y = "% of full submissions accepted",
        x = "Gender of Last Author"
   ) 
 
 fig5
-ggsave("figures/main/fig_5.png", plot = fig5, height = 5, width = 7)
+ggsave("figures/main/fig_5.tiff", plot = fig5, height = 5, width = 7)
 ```
 
 ###Signif. test resutls for figure 5
@@ -1384,9 +1390,9 @@ data_fig5_p2 <- elife %>%
   gather(measure_key, value = measurement, encourage_rate, accept_rate, encourage_accept_rate) %>%
   mutate(measure_key = factor(measure_key, 
                            levels = c("encourage_accept_rate", "encourage_rate", "accept_rate"),
-                           labels = c("encourage_accept_rate" = "% accepted of full submissions",
-                                      "encourage_rate" = "% encouraged of initial submissions", 
-                                      "accept_rate" = "%accepted of initial submissions"
+                           labels = c("encourage_accept_rate" = "% of full submissions accepted",
+                                      "encourage_rate" = "% of initial submissions encouraged", 
+                                      "accept_rate" = "% of initial submissions accepted"
                                       ))
   ) %>%
   group_by(measure_key) %>%
@@ -1399,7 +1405,7 @@ data_fig5_p2 <- elife %>%
 p2 <- data_fig5_p2 %>%
   ggplot(aes(x = ca_country, y = measurement)) +
   geom_bar(stat = "identity", color = "black", fill = "dodgerblue4", alpha = 0.8) +
-  geom_text(aes(y = measurement, label = paste0(round(measurement, 3) * 100, "%")), size = 2.5, hjust = -0.4, family = "Times") +
+  geom_text(aes(y = measurement, label = paste0(round(measurement, 3) * 100, "%")), size = 2.5, hjust = -0.6, family = "Times") +
   geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
   facet_wrap(~measure_key, labeller = labeller(key = labels)) +
   theme_dakota() +
@@ -1411,7 +1417,7 @@ p2 <- data_fig5_p2 %>%
   )
 
 fig6 <- grid.arrange(p1, p2)
-ggsave("figures/main/fig_6.png", plot = fig6, height = 7, width = 8)
+ggsave("figures/main/fig_6.tiff", plot = fig6, height = 6, width = 8)
 ```
 
 ### Data to produce figure 5, the top panel
@@ -1500,7 +1506,7 @@ fig7.A <- elife %>%
   scale_x_discrete(labels = c("No Homogeneity", "Homogeneity")) +
   labs(
     x = "",
-    y = "% accepted of full submissions"
+    y = "% of full submissions accepted"
   ) +
   theme(
     axis.text.x = element_text(angle = 20, vjust = 1, hjust = 1)
@@ -1613,12 +1619,12 @@ fig7.B <- d1.summ %>%
   scale_x_discrete(labels = c("No Homogeneity", "Homogeneity")) +
   labs(
     x = "",
-    y = "% accepted of full submissions"
+    y = "% of full submissions accepted"
   )
 
 fig7 <- grid.arrange(fig7.B, fig7.A, ncol = 2, widths = 1:2)
 
-ggsave("figures/main/fig_7.png", plot = fig7, height = 4, width = 7)
+ggsave("figures/main/fig_7.tiff", plot = fig7, height = 4, width = 7)
 ```
 
 
@@ -1698,7 +1704,7 @@ fig_SI.1.B <- elife %>%
 fig_SI.1 <- grid.arrange(fig_SI.1.A, fig_SI.1.B, widths = 2:1)
 
 fig_SI.1
-ggsave("figures/supp/fig_SI1.png", plot = fig_SI.1, height = 4, width = 7)
+ggsave("figures/supp/fig_SI1.tiff", plot = fig_SI.1, height = 4, width = 7)
 ```
 
 
@@ -1806,7 +1812,7 @@ fig_SI.2 <- elife %>%
   )
 
 fig_SI.2
-ggsave("figures/supp/fig_SI2.png", plot = fig_SI.2, height = 4, width = 7)
+ggsave("figures/supp/fig_SI2.tiff", plot = fig_SI.2, height = 4, width = 7)
 ```
 
 
@@ -1874,7 +1880,7 @@ fig_SI.3 <- elife %>%
   ) 
 
 fig_SI.3
-ggsave("figures/supp/fig_SI2.png", plot = fig_SI.2, height = 4, width = 7)
+ggsave("figures/supp/fig_SI2.tiff", plot = fig_SI.2, height = 4, width = 7)
 ```
 
 
@@ -1986,7 +1992,7 @@ p2 <- elife %>%
   )
 
 fig_SI.4 <- grid.arrange(p1, p2)
-ggsave("figures/supp/fig_SI3.png", plot = fig_SI.3, height = 4, width = 7)
+ggsave("figures/supp/fig_SI3.tiff", plot = fig_SI.3, height = 4, width = 7)
 ```
 
 
@@ -2024,7 +2030,7 @@ fig_SI.5 <- elife %>%
        )
 
 fig_SI.5
-ggsave("figures/supp/fig_SI5.png", plot = fig_SI.5, height = 4, width = 7)
+ggsave("figures/supp/fig_SI5.tiff", plot = fig_SI.5, height = 4, width = 7)
 ```
 
 
@@ -2082,7 +2088,7 @@ fig_SI.6 <- elife %>%
 
 
 fig_SI.6
-ggsave("figures/supp/fig_SI6.png", plot = fig_SI.6, height = 4, width = 7)
+ggsave("figures/supp/fig_SI6.tiff", plot = fig_SI.6, height = 4, width = 7)
 ```
 
 
@@ -2118,5 +2124,21 @@ fig_SI.7 <- elife %>%
   scale_fill_discrete(labels = c("F" = "Female", "M" = "Male"))
 
 fig_SI.7
-ggsave("figures/supp/fig_SI7.png", plot = fig_SI.7, height = 4, width = 7)
+ggsave("figures/supp/fig_SI7.tiff", plot = fig_SI.7, height = 4, width = 7)
 ```
+
+
+### Data used to construct alluvial diagram, figure 1. 
+```{r, rows.print = 40}
+decisions <- elife %>%
+  group_by(elife$initial_decision, elife$full_decision, elife$rev1_decision, elife$rev2_decision) %>%
+  summarize(
+    freq = n()
+  )
+
+
+decisions
+
+write.csv(decisions, "~/desktop/decisions.csv")
+```
+
