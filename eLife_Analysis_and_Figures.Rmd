@@ -801,6 +801,7 @@ p2 <- d2 %>%
 
 fig2 <- grid.arrange(p1, p2, ncol = 2)
 ggsave("figures/main/fig_2.tiff", plot = fig2, height = 4, width = 7)
+ggsave("figures/main/fig_2.png", plot = fig2, height = 4, width = 7)
 
 write.csv(d1, "formatted_data/figure2_leftpanel_data.csv")
 write.csv(d2, "formatted_data/figure2_rightpanel_data.csv")
@@ -956,6 +957,7 @@ p2 <- people %>%
 
 fig3 <- grid.arrange(p1, p2)
 ggsave("figures/main/fig_3.tiff", plot = fig3, height = 5, width = 7)
+ggsave("figures/main/fig_3.png", plot = fig3, height = 5, width = 7)
 ```
 
 And below are the explicit results of the significaince tests used in the previous graphs to compare the actual proportion of male/female authors with the expected proportion given the population of gatekeepers. 
@@ -1122,6 +1124,7 @@ fig4 <- data_fig4 %>%
 
 fig4
 ggsave("figures/main/fig_4.tiff", plot = fig4, height = 5, width = 7)
+ggsave("figures/main/fig_4.png", plot = fig4, height = 5, width = 7)
 ```
 
 Signif. test results for figure 4
@@ -1257,6 +1260,7 @@ fig5 <- data_fig5 %>%
 
 fig5
 ggsave("figures/main/fig_5.tiff", plot = fig5, height = 5, width = 7)
+ggsave("figures/main/fig_5.png", plot = fig5, height = 5, width = 7)
 ```
 
 ###Signif. test resutls for figure 5
@@ -1418,6 +1422,7 @@ p2 <- data_fig5_p2 %>%
 
 fig6 <- grid.arrange(p1, p2)
 ggsave("figures/main/fig_6.tiff", plot = fig6, height = 6, width = 8)
+ggsave("figures/main/fig_6.png", plot = fig6, height = 6, width = 8)
 ```
 
 ### Data to produce figure 5, the top panel
@@ -1625,6 +1630,7 @@ fig7.B <- d1.summ %>%
 fig7 <- grid.arrange(fig7.B, fig7.A, ncol = 2, widths = 1:2)
 
 ggsave("figures/main/fig_7.tiff", plot = fig7, height = 4, width = 7)
+ggsave("figures/main/fig_7.png", plot = fig7, height = 4, width = 7)
 ```
 
 
@@ -1705,6 +1711,7 @@ fig_SI.1 <- grid.arrange(fig_SI.1.A, fig_SI.1.B, widths = 2:1)
 
 fig_SI.1
 ggsave("figures/supp/fig_SI1.tiff", plot = fig_SI.1, height = 4, width = 7)
+ggsave("figures/supp/fig_SI1.png", plot = fig_SI.1, height = 4, width = 7)
 ```
 
 
@@ -1784,7 +1791,7 @@ fig_SI.2 <- elife %>%
   mutate(
     author_key = factor(author_key,
                         levels = c("ca_gender", "fa_gender", "la_gender"),
-                        labels = c("ca_gender" = "Corresponding Author", "fa_gender" = "First Author", "la_gender" = "Last Author")
+                        labels = c("ca_gender" = "Corr. Author", "fa_gender" = "First Author", "la_gender" = "Last Author")
                         ),
     measure_key = factor(measure_key, 
                          labels = c("submit_rate" = "Submissions", "encourage_rate" = "Enc %", "accept_rate" = "Overall Acc %", "encourage_accept_rate" = "Accept %"),
@@ -1813,6 +1820,7 @@ fig_SI.2 <- elife %>%
 
 fig_SI.2
 ggsave("figures/supp/fig_SI2.tiff", plot = fig_SI.2, height = 4, width = 7)
+ggsave("figures/supp/fig_SI2.png", plot = fig_SI.2, height = 4, width = 7)
 ```
 
 
@@ -1880,7 +1888,8 @@ fig_SI.3 <- elife %>%
   ) 
 
 fig_SI.3
-ggsave("figures/supp/fig_SI2.tiff", plot = fig_SI.2, height = 4, width = 7)
+ggsave("figures/supp/fig_SI3.tiff", plot = fig_SI.3, height = 4, width = 7)
+ggsave("figures/supp/fig_SI3.png", plot = fig_SI.3, height = 4, width = 7)
 ```
 
 
@@ -1992,7 +2001,8 @@ p2 <- elife %>%
   )
 
 fig_SI.4 <- grid.arrange(p1, p2)
-ggsave("figures/supp/fig_SI3.tiff", plot = fig_SI.3, height = 4, width = 7)
+ggsave("figures/supp/fig_SI4.tiff", plot = fig_SI.4, height = 4, width = 7)
+ggsave("figures/supp/fig_SI4.png", plot = fig_SI.4, height = 4, width = 7)
 ```
 
 
@@ -2031,6 +2041,7 @@ fig_SI.5 <- elife %>%
 
 fig_SI.5
 ggsave("figures/supp/fig_SI5.tiff", plot = fig_SI.5, height = 4, width = 7)
+ggsave("figures/supp/fig_SI5.png", plot = fig_SI.5, height = 4, width = 7)
 ```
 
 
@@ -2089,6 +2100,7 @@ fig_SI.6 <- elife %>%
 
 fig_SI.6
 ggsave("figures/supp/fig_SI6.tiff", plot = fig_SI.6, height = 4, width = 7)
+ggsave("figures/supp/fig_SI6.png", plot = fig_SI.6, height = 4, width = 7)
 ```
 
 
@@ -2125,6 +2137,7 @@ fig_SI.7 <- elife %>%
 
 fig_SI.7
 ggsave("figures/supp/fig_SI7.tiff", plot = fig_SI.7, height = 4, width = 7)
+ggsave("figures/supp/fig_SI7.png", plot = fig_SI.7, height = 4, width = 7)
 ```
 
 
