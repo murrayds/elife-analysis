@@ -1,0 +1,1384 @@
+% Template for PLoS
+% Version 3.5 March 2018
+%
+% % % % % % % % % % % % % % % % % % % % % %
+%
+% -- IMPORTANT NOTE
+%
+% This template contains comments intended 
+% to minimize problems and delays during our production 
+% process. Please follow the template instructions
+% whenever possible.
+%
+% % % % % % % % % % % % % % % % % % % % % % % 
+%
+% Once your paper is accepted for publication, 
+% PLEASE REMOVE ALL TRACKED CHANGES in this file 
+% and leave only the final text of your manuscript. 
+% PLOS recommends the use of latexdiff to track changes during review, as this will help to maintain a clean tex file.
+% Visit https://www.ctan.org/pkg/latexdiff?lang=en for info or contact us at latex@plos.org.
+%
+%
+% There are no restrictions on package use within the LaTeX files except that 
+% no packages listed in the template may be deleted.
+%
+% Please do not include colors or graphics in the text.
+%
+% The manuscript LaTeX source should be contained within a single file (do not use \input, \externaldocument, or similar commands).
+%
+% % % % % % % % % % % % % % % % % % % % % % %
+%
+% -- FIGURES AND TABLES
+%
+% Please include tables/figure captions directly after the paragraph where they are first cited in the text.
+%
+% DO NOT INCLUDE GRAPHICS IN YOUR MANUSCRIPT
+% - Figures should be uploaded separately from your manuscript file. 
+% - Figures generated using LaTeX should be extracted and removed from the PDF before submission. 
+% - Figures containing multiple panels/subfigures must be combined into one image file before submission.
+% For figure citations, please use "Fig" instead of "Figure".
+% See http://journals.plos.org/plosone/s/figures for PLOS figure guidelines.
+%
+% Tables should be cell-based and may not contain:
+% - spacing/line breaks within cells to alter layout or alignment
+% - do not nest tabular environments (no tabular environments within tabular environments)
+% - no graphics or colored text (cell background color/shading OK)
+% See http://journals.plos.org/plosone/s/tables for table guidelines.
+%
+% For tables that exceed the width of the text column, use the adjustwidth environment as illustrated in the example table in text below.
+%
+% % % % % % % % % % % % % % % % % % % % % % % %
+%
+% -- EQUATIONS, MATH SYMBOLS, SUBSCRIPTS, AND SUPERSCRIPTS
+%
+% IMPORTANT
+% Below are a few tips to help format your equations and other special characters according to our specifications. For more tips to help reduce the possibility of formatting errors during conversion, please see our LaTeX guidelines at http://journals.plos.org/plosone/s/latex
+%
+% For inline equations, please be sure to include all portions of an equation in the math environment.  For example, x$^2$ is incorrect; this should be formatted as $x^2$ (or $\mathrm{x}^2$ if the romanized font is desired).
+%
+% Do not include text that is not math in the math environment. For example, CO2 should be written as CO\textsubscript{2} instead of CO$_2$.
+%
+% Please add line breaks to long display equations when possible in order to fit size of the column. 
+%
+% For inline equations, please do not include punctuation (commas, etc) within the math environment unless this is part of the equation.
+%
+% When adding superscript or subscripts outside of brackets/braces, please group using {}.  For example, change "[U(D,E,\gamma)]^2" to "{[U(D,E,\gamma)]}^2". 
+%
+% Do not use \cal for caligraphic font.  Instead, use \mathcal{}
+%
+% % % % % % % % % % % % % % % % % % % % % % % % 
+%
+% Please contact latex@plos.org with any questions.
+%
+% % % % % % % % % % % % % % % % % % % % % % % %
+
+\documentclass[10pt,letterpaper]{article}
+\usepackage[top=0.85in,left=2.75in,footskip=0.75in]{geometry}
+
+% amsmath and amssymb packages, useful for mathematical formulas and symbols
+\usepackage{amsmath,amssymb}
+
+% Use adjustwidth environment to exceed column width (see example table in text)
+\usepackage{changepage}
+
+% Use Unicode characters when possible
+\usepackage[utf8x]{inputenc}
+
+% textcomp package and marvosym package for additional characters
+\usepackage{textcomp,marvosym}
+
+% cite package, to clean up citations in the main text. Do not remove.
+\usepackage{cite}
+
+% Use nameref to cite supporting information files (see Supporting Information section for more info)
+\usepackage{nameref,hyperref}
+
+% line numbers
+\usepackage[right]{lineno}
+
+% ligatures disabled
+\usepackage{microtype}
+\DisableLigatures[f]{encoding = *, family = * }
+
+% color can be used to apply background shading to table cells only
+\usepackage[table]{xcolor}
+
+% array package and thick rules for tables
+\usepackage{array}
+
+% personal table packages
+\usepackage[normalem]{ulem}
+\useunder{\uline}{\ul}{}
+
+% create "+" rule type for thick vertical lines
+\newcolumntype{+}{!{\vrule width 2pt}}
+
+% create \thickcline for thick horizontal lines of variable length
+\newlength\savedwidth
+\newcommand\thickcline[1]{%
+  \noalign{\global\savedwidth\arrayrulewidth\global\arrayrulewidth 2pt}%
+  \cline{#1}%
+  \noalign{\vskip\arrayrulewidth}%
+  \noalign{\global\arrayrulewidth\savedwidth}%
+}
+
+% \thickhline command for thick horizontal lines that span the table
+\newcommand\thickhline{\noalign{\global\savedwidth\arrayrulewidth\global\arrayrulewidth 2pt}%
+\hline
+\noalign{\global\arrayrulewidth\savedwidth}}
+
+
+% Remove comment for double spacing
+%\usepackage{setspace} 
+%\doublespacing
+
+% Text layout
+\raggedright
+\setlength{\parindent}{0.5cm}
+\textwidth 5.25in 
+\textheight 8.75in
+
+% Bold the 'Figure #' in the caption and separate it from the title/caption with a period
+% Captions will be left justified
+\usepackage[aboveskip=1pt,labelfont=bf,labelsep=period,justification=raggedright,singlelinecheck=off]{caption}
+\renewcommand{\figurename}{Fig}
+
+% Use the PLoS provided BiBTeX style
+\bibliographystyle{plos2015}
+
+% Remove brackets from numbering in List of References
+\makeatletter
+\renewcommand{\@biblabel}[1]{\quad#1.}
+\makeatother
+
+
+
+% Header and Footer with logo
+\usepackage{lastpage,fancyhdr,graphicx}
+\usepackage{epstopdf}
+%\pagestyle{myheadings}
+\pagestyle{fancy}
+\fancyhf{}
+\setlength{\headheight}{27.023pt}
+%\lhead{\includegraphics[width=2.0in]{PLOS-submission.eps}}
+%\rhead{\textit{Submitted to PLOS Biology}}t
+\rfoot{\thepage/\pageref{LastPage}}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrule}{\hrule height 2pt \vspace{2mm}}
+\fancyheadoffset[L]{2.25in}
+\fancyfootoffset[L]{2.25in}
+\lfoot{\today}
+
+%% Include all macros below
+
+\newcommand{\lorem}{{\bf LOREM}}
+\newcommand{\ipsum}{{\bf IPSUM}}
+
+%% END MACROS SECTION
+
+
+\begin{document}
+\vspace*{0.2in}
+
+% Title must be 250 characters or less.
+\begin{flushleft}
+{\Large
+\textbf\newline{Gender and international diversity improves equity in peer review} % Please use "sentence case" for title and headings (capitalize only the first word in a title (or heading), the first word in a subtitle (or subheading), and any proper nouns).
+}
+\newline
+% Insert author names, affiliations and corresponding author email (do not include titles, positions, or degrees).
+\\
+Dakota Murray\textsuperscript{1},
+Kyle Siler\textsuperscript{2},
+Vincent Larivière\textsuperscript{3},
+Wei Mun Chan\textsuperscript{4},
+Andrew M Collings\textsuperscript{4},
+Jennifer Raymond\textsuperscript{5\Yingyang},
+Cassidy R. Sugimoto\textsuperscript{1\Yinyang*}
+\\
+\bigskip
+\textbf{1} School of Informatics Computing, and Engineering, Indiana University Bloomington, Bloomington, Indiana, U.S.A.
+\\
+\textbf{2} Copernicus Institute for Sustainable Development, Utrecht University, Utrecht, The Netherlands
+\\
+\textbf{3} École de bibliothéconomie et des sciences de l’information, Université de Montréal, Montréal, Québec, Canada
+\\
+\textbf{4} eLife Sciences Publishing Ltd., Cambridge, United Kingdom
+\\
+\textbf{5} Department of Neurobiology, Stanford University, Stanford, California, U.S.A.
+\bigskip
+
+% Insert additional author notes using the symbols described below. Insert symbol callouts after author names as necessary.
+% 
+% Remove or comment out the author notes below if they aren't used.
+%
+% Primary Equal Contribution Note
+\Yinyang These authors contributed equally to this work.
+
+% Use the asterisk to denote corresponding authorship and provide email address in note below.
+* corresponding author: sugimoto@indiana.edu
+
+\end{flushleft}
+% Please keep the abstract below 300 words
+\section*{Abstract}
+The robustness of scholarly peer review has been challenged by evidence of disparities in publication outcomes based on author’s gender and nationality. To address this, we examine the peer review outcomes of 23,873 initial submissions and 7,192 full submissions that were submitted to the biosciences journal \textit{eLife} between 2012 and 2017. Women and authors from nations outside of North America and Europe were underrepresented both as gatekeepers (editors and peer reviewers) and last authors. We found a homophilic interaction between the demographics of the gatekeepers and authors in determining the outcome of peer review; that is, gatekeepers favor manuscripts from authors of the same gender and from the same country. The acceptance rate for manuscripts with male last authors was significantly higher than for female last authors, and this gender inequity was greatest when the team of reviewers was all male; mixed-gender gatekeeper teams lead to more equitable peer review outcomes. Similarly, manuscripts were more likely to be accepted when reviewed by at least one gatekeeper with the same national affiliation as the corresponding author. Our results indicated that homogeneity between author and gatekeeper gender and nationality is associated with the outcomes of scientific peer review. We conclude with a discussion of mechanisms that could contribute to this effect, directions for future research, and policy implications. Code and anonymized data have been made available at https://github.com/murrayds/elife-analysis
+
+
+% Please keep the Author Summary between 150 and 200 words
+% Use first person. PLOS ONE authors please skip this step. 
+% Author Summary not valid for PLOS ONE submissions.   
+\section*{Author summary}
+
+Peer review, the primary method by which scientific work is evaluated and developed, is ideally a fair and equitable process, in which scientific work is judged solely on its own merit. However, the integrity of peer review has been called into question based on evidence that outcomes often differ between between male and female authors, and between authors in different countries. We investigated such a disparity at the biosciences journal \textit{eLife}, by analyzing the author and gatekeepers (editors and peer reviewers) demographics and review outcomes of all submissions between 2012 and 2017. We found evidence of disparity in outcomes that disfavored women and those outside of North America and Europe, and that these groups were underrepresented among authors and gatekeepers. The gender disparity was greatest when reviewers were all male; mixed-gender reviewer teams lead to more equitable outcomes. Similarly, manuscripts were more likely to be accepted when reviewed by at least one gatekeeper from the same country as the corresponding author.  Our results indicated that gatekeeper characteristics are associated with the outcomes of scientific peer review. We discuss mechanisms that could contribute to this effect, directions for future research, and policy implications.
+
+
+\linenumbers
+
+
+\section*{Introduction}
+Peer review is foundational to the development, gatekeeping, and dissemination of research, while also underpinning the professional hierarchies of academia. Normatively, peer review is expected to follow the ideal of “universalism” \cite{merton_matthew_1968}, where scholarship is judged solely on its intellectual merit. However, confidence in the extent to which peer review accomplishes the goal of promoting the best scholarship has been eroded by questions about whether social biases \cite{walker_personal_2015}, based on or correlated with the characteristics of the scholar, could also influence outcomes of peer review \cite{lee_bias_2013, pinholster_journals_2016}. This challenge to the integrity of peer review has prompted an increasing number of funding agencies and journals to assess the disparities and potential influence of bias in their peer review processes. 
+
+Several terms are often conflated in the discussion on bias in peer review. We use the term \textit{disparities} to refer to unequal composition between groups, \textit{inequities} to characterize unequal outcomes, and \textit{bias} to refer to the degree of impartiality in judgment. Disparities and inequities have been widely studied in scientific publishing, most notably in regards to gender and country of affiliation. Globally, women account for about 30 percent of scientific authorship~\cite{lariviere_bibliometrics:_2013} and are underrepresented in the scientific workforce~\cite{noauthor_women_2017, noauthor_gender_2017}. Articles authored by women are disproportionately underrepresented in the most prestigious and high-profile scientific journals~\cite{west_role_2013,lariviere_end_2017, bendels_gender_2018, bernard_editorial:_2018, shen_persistent_2018, noauthor_natures_2018}. Moreover, developed countries dominate the production of highly-cited publications~\cite{king_scientific_2004, white_science_2017}.
+ 
+The underrepresentation of authors from certain groups may reflect differences in submission rates, or it may reflect differences in success rates during peer review (percent of submissions accepted). Analyses of success rates have yielded mixed results in terms of the presence and magnitude of such inequities. Some analyses have found lower success rates for female-authored papers~\cite{wenneras_nepotism_1997, li_gender_2011} and grant applications~\cite{tamblyn_assessment_2018, witteman_female_2017}, while other studies have found no gender differences in review outcomes (for examples, see~\cite{grant_no_1997, gilbert_is_1994, mutz_does_2012, beck_gender_2017}). Inequities in journal success rates based on authors’ nationalities have also been documented, with reports that authors from English-speaking and scientifically-advanced countries have higher success rates~\cite{coates_language_2002, primack_bias_2008}; however, other studies found no evidence that the language or country of affiliation of an author influences peer review outcomes~\cite{harris_explicit_2017, primack_gender_2009, yousefi-nooraie_country_2006, primack_bias_2008}. These inconsistencies could be explained by several factors, such as the contextual factors of the studies and the variations in research design and sample size. 
+
+The nature of bias and its contribution to inequities in scientific publishing is highly controversial. Implicit bias—the macro-level social and cultural stereotypes that can subtly influence everyday interpersonal judgements and thereby produce and perpetuate status inequalities and hierarchies~\cite{berger_status_1977, correll_expectation_2006}—has been suggested as a possible mechanism to explain differences in peer review outcomes based on socio-demographic and professional characteristics~\cite{lee_bias_2013, budden_double-blind_2008}. When faced with uncertainty—which is quite common in academia—people often weight the social status and other ascriptive characteristics of others to help make decisions~\cite{podolny_status_2008}. Hence, scholars are more likely to consider particularistic characteristics (e.g., gender, institutional status) of an author under conditions of uncertainty~\cite{long_scientific_1995, pfeffer_paradigm_1977}, such as at the frontier of new scientific knowledge~\cite{cole_hierarchy_1983}. However, given the stratification of scholars within institutions and across countries, it can be difficult to pinpoint the nature of a potential bias. For example, women are underrepresented in prestigious educational institutions~\cite{clauset_systematic_2015, jacobs_gender_1999,weeden_degrees_2017}, which conflates gender and prestige biases. These institutional differences can be compounded by gendered differences in age, professional seniority, research topic, and access to top mentors~\cite{sheltzer_elite_2014}. Another potential source of bias is what \cite{travis_new_1991} dubbed \textit{cognitive particularism}, where scholars harbor preferences for work and ideas similar to their own~\cite{teplitskiy_sociology_2018}. Evidence of this process has been reported in peer review at one journal, in the reciprocity (i.e., correspondences between patterns of recommendations received by authors and patterns of recommendations given by reviewers in the same social group) between authors and reviewers of the same race and gender~\cite{demarest_reviewer_2014} (see also~\cite{link_us_1998,helmer_research:_2017}). Reciprocity can exacerbate or mitigate existing inequalities in science. If the work and ideas favored by gatekeepers are unevenly distributed across author demographics, this could be conducive to Matthew Effects~\cite{merton_matthew_1968}, whereby scholars accrue accumulative advantages via \textit{a priori} status privileges. Consistent with this, inclusion of more female reviewers was reported to attenuate biases that disfavor women in the awarding of Health RO1 grants at the National Institute of Health~\cite{li_gender_2011}. However, an inverse reaction was found by~\cite{bagues_does_2017} in the evaluation of candidates for professorships: when female evaluators were present, male evaluators became less favorable toward female candidates. Thus the nature and potential impact of cognitive biases during peer review are multiple and complex. 
+
+Another challenge is to disentangle the contribution of bias during peer review from factors external to the review process that could influence success rates. For example, there are gendered differences in access to funding, domestic responsibilities, and cultural expectations of career preferences and ability~\cite{ceci_understanding_2011, ceci_women_2014} that may adversely impact manuscript preparation and submission. Furthermore, women have been found to be less likely to compete~\cite{niederle_gender_2011} and hold themselves to higher standards ~\cite{hengel_publishing_2017}, hence they may self-select a higher quality of work for submission to prestigious journals. At the country level, disparities in peer review outcomes could reflect structural factors related to a nation’s scientific investment ~\cite{may_scientific_1997, king_scientific_2004}, publication incentives~\cite{quan_publish_2017, duszak_publishing_2008}, local challenges ~\cite{salager-meyer_scientific_2008}, and research culture~\cite{yang_policy:_2016}, all of which could influence the actual and perceived quality of submissions from different nations. Because multiple factors external to the peer review process can influence peer review outcomes, unequal success rates for authors with particular characteristics do not necessarily reflect bias, conversely, equal success rates do not necessarily reflect a lack of bias. 
+
+Several approaches have been applied in an attempt to identify and analyze bias. One quasi-experimental approach was to compare outcomes in anonymized (double-blind) and non-anonymized (single-blind) peer review. The results of these studies demonstrates that double-blind review yields more equitable outcomes~\cite{budden_double-blind_2008} and mitigates inequities that favor famous authors, elite institutions~\cite{tomkins_reviewer_2017, blank_effects_1991, okike_single-blind_2016}, and those from high-income and English-speaking nations~\cite{harris_explicit_2017}. However, although double-blind review is generally viewed positively by the scientific community~\cite{ware_peer_2008, kmietowicz_double_2008}, this process has not been widely used in peer review in the biosciences, and authors rarely opted-in when offered ~\cite{mcgillivray_uptake_2018}. Therefore, the experimental approach has not resolved debate over the role of bias in the outcomes of peer review in scholarly publishing. 
+
+Here, we use an alternative approach to assess the extent to which gender and national disparities manifest in peer review outcomes at \textit{eLife}—an open-access journal in the life and biomedical sciences. In particular, we study the extent to which the magnitude of these disparities vary across different gender and national compositions of gatekeeper teams. Peer review at \textit{eLife} differs from other traditional forms of peer review used in the life sciences in that review at \textit{eLife} is done through deliberation between reviewers (usually three in total) on an online platform. Previous studies have shown that deliberative scientific evaluation are influenced by social dynamics between evaluators ~\cite{langfeldt_decision-making_2001,lamont_how_2009}. Therefore, we assessed the extent to which the composition of the reviewer teams relates to peer review outcomes. Using all research papers (Research Articles, Short Reports, and Tools and Resources) submitted between 2012 and 2017 (n=23,879), we investigated the extent to which an interaction manifests between the gender and nationality of authors (first, last, and corresponding) and gatekeepers (editors and invited peer reviewers), similar to the approach used by~\cite{walker_personal_2015}. We acknowledge that inequity in success rates could result from a variety of factors unrelated to the peer review process. However, if the outcomes vary significantly based on the demographic characteristics of the reviewers in relation to authors, we contend that this provides evidence of potential bias in the peer review process. 
+
+%
+% Start new section
+%
+\section*{Data and methods}
+% Subsection discussing consultative peer review
+\subsection*{Consultative peer review and \textit{eLife}}
+Founded in 2012 by the Howard Hughes Medical Institute (United States), the Max Planck Society (Germany), and the Wellcome Trust (United Kingdom), \textit{eLife} is an open-access journal that publishes research in the life and biomedical sciences. Manuscripts submitted to \textit{eLife} progress through several stages. In the first stage, the manuscript is assessed by a Senior Editor, who may confer with one or more Reviewing Editors and decide whether to reject the manuscript or encourage the authors to provide a full submission. In May 2018, \textit{eLife} had 45 Senior Editors, including the Editor-in-Chief and three Deputy Editors, and 339 Reviewing Editors, all of whom were active scientists. When a full manuscript is submitted, the Reviewing Editor recruits a small number of peer reviewers (typically two or three) to write reports on the manuscript. The Reviewing Editor is encouraged to serve as one of the peer reviewers; in our sample, the Reviewing Editor was listed as a peer reviewer for 58.9 percent of full submissions. When all individual reports have been submitted, both the Reviewing Editor and peer reviewers discuss the manuscript and their reports using a private online chat system hosted by \textit{eLife}. At this stage the identities of the Reviewing Editor and peer reviewers are known to one another. If the consensus of this group is to reject the manuscript, all the reports are usually sent to the authors. If the consensus is that the manuscript requires revision, the Reviewing Editor and additional peer reviewers agree on the essential points that need to be addressed before the paper can be accepted. In this case, a decision letter outlining these points is sent to the authors (and the original reports by the peer reviewers are not usually sent in their entirety to the authors). When a manuscript is accepted, the decision letter and the authors' response are published along with the manuscript. The name of the Reviewing Editor is also published. Peer reviewers can also choose to have their name published. This process has been referred to as consultative peer review (see ~\cite{schekman_scientific_2013,king_peer_2017} for a more in-depth description of the \textit{eLife} peer-review process). Consultative peer review provides a unique context for analyzing deliberation and social valuation in professional groups. 
+
+% Subsection discussing data
+\subsection*{Data}
+We retrieved metadata for research papers submitted to \textit{eLife} between its inception in 2012 and mid-September, 2017 (n=23,873). Submissions fell into three main categories: 20,945 Research Articles (87.7 percent), 2,186 Short Reports (9.2 percent), and 742 Tools and Resources (3.1 percent). Not included in this total were six Scientific Correspondence articles, which were excluded because they follow a distinct review process. Each record potentially included four submissions—an initial submission, full submission, and up to two revision submissions (though in some cases manuscripts remain in revision even after two revised submissions). Fig~\ref{fig1} depicts the flow of all 23,873 manuscripts through each review stage. The majority, 70.0 percent, of initial submissions for which a decision was made were rejected. Only 7,111 manuscripts were encouraged for a full submission. A total of 7,192 manuscripts were submitted as full submission; the number is slightly larger than encouraged initial submissions due to appeals of initial decisions and other special circumstances. Most full submissions, 52.4 percent (n = 3,767), received a decision of revise, while another 43.9 percent (n = 3,154) were rejected. A small number of full submissions (n = 54) were accepted without any revisions. On average, full submissions that were ultimately accepted underwent 1.23 revisions and, within our dataset, 3,426 full submissions were eventually accepted to be published. A breakdown of the number of revisions requested before a final decision is made, by gender and nationality of the last author, is provided in \nameref{S1_Fig}. On the date on which data was collected (mid-September, 2017), a portion of initial submission (n = 147) and full submissions (n = 602) remained in various stages of processing and deliberation (without final decisions). Another portion of initial and full submissions (n = 619) appealed their decision, causing some movement from decisions of “Reject” to decisions of “Accept” or “Revise”.
+
+% Figure 1
+\begin{figure}[!h]
+\caption{\bf Flow of papers through the \textit{eLife} review process.}
+Begins with an initial submission and initial decision of encourage or reject, and then leading to the first full review and subsequent rounds of revision. “Encouraged”, “Accepted”, “Rejected” and “Revision needed” represent the decisions made by \textit{eLife} editors and reviewers at each submission stage. A portion of manuscripts remained in various stages of processing at the time of data collection—these manuscripts were labeled as “Decision pending”. The status of manuscripts after the second revision is the final status that we consider in the present data. The dashed line delineates full submissions from rejected initial submissions. 
+\label{fig1}
+\end{figure}
+
+The review process at \textit{eLife} was highly selective, and became more selective over time. Fig~\ref{fig2} shows that while the total count of manuscripts submitted to \textit{eLife} has rapidly increased since the journal’s inception, the count of encouraged initial submissions and accepted full submissions has grown more slowly. The encourage rate (percentage of initial submissions encouraged to submit full manuscripts) was 44.6 percent in 2012, and dropped to 26.6 percent in 2016. The overall accept rate (percentage of initial submissions eventually accepted) began at 27.0 percent in 2012 and decreased to 14.0 percent in 2016. The accept rate (the percentage of accepted full submissions) was 62.4 percent in 2012 and decreased to 53.0 percent in 2016. While only garnering 307 submissions in 2012, \textit{eLife} accrued 8,061 submissions in 2016. In the present analysis we considered the outcomes of all manuscripts without respect to submission year, though we note that data was skewed to the large portion of manuscripts published most recently. 
+
+% Figure 2
+\begin{figure}[!h]
+\caption{\bf Submissions and selectivity of \textit{eLife} over time.}
+Left: Yearly count of initial submissions, encouraged initial submissions, and accepted full submissions to \textit{eLife} between 2012 and 2016; Right: rate of initial submissions encouraged (Encourage \%), rate of full submissions accepted (\% Full accepted) and rate of initial submissions accepted (Overall accept \%) between 2012 and 2016. Submissions during the year of 2017 were excluded because we do not have sufficient data for full life-cycle of these manuscripts. 
+\label{fig2}
+\end{figure}
+
+In addition to authorship data, we obtained information about the gatekeepers involved in the processing of each submission. In our study, we define gatekeepers to include any Senior Editor or Reviewing Editor at \textit{eLife} or invited peer reviewer involved in the review of at least one initial or full submission between 2012 and mid-September 2017. Gatekeepers at \textit{eLife} often serve in multiple roles, for example, acting as both a Reviewing Editor and peer reviewer on a given manuscript. For initial submissions, we had data on the corresponding author of the manuscript and the Senior Editor tasked with making the decision. For full submissions we had data on the corresponding author, first author, last author, Senior Editor, Reviewing Editor, and members of the team of peer reviewers. Data for each individual included their stated name, institutional affiliation, and country of affiliation. A small number of submissions were removed, such as cases where a paper had a first but no last author or papers which did not have a valid submission type. Country names were manually disambiguated (for example, normalized names such as “USA” to “United States” and “Viet Nam” to “Vietnam”). 
+
+Full submissions included 6,669 distinct gatekeepers, 6,694 distinct corresponded authors, 6,691 distinct first authors, and 5,580 distinct last authors. Authors were also likely to appear on multiple manuscripts and may hold a different authorship role in each: in 26.5 percent of full submissions the corresponding author was also the first author, while in 71.2 percent of submissions the corresponding author was also the last author. We did not have access to the full authorship list that included middle authors. Note that in the biosciences, the last author is typically the most senior researcher involved ~\cite{costas_age_2011} and responsible for more conceptual work, whereas the first author is typically less senior and performs more of the scientific labor (such as lab work, analysis, etc.) to produce the study~\cite{macaluso_is_2016, baerlocher_meaning_2007, tscharntke_author_2007}.
+
+% Gender assignment subsection
+\subsection*{Gender assignment}
+Gender variables for authors and gatekeepers were coded using an updated version of the algorithm developed in~\cite{lariviere_bibliometrics:_2013}. This algorithm used a combination of the first name and country of affiliation to assign each author’s gender on the basis of several universal and country-specific name-gender lists (e.g., United States Census). This list of names was complemented with an algorithm that searches Wikipedia for pronouns associated with names. This new list was validated by applying it to a dataset of names with known gender. We used data collected from RateMyProfessor.com, a website containing anonymous student-submitted ratings and comments for professors, lecturers, and teachers for professors at United States, United Kingdom and Canadian universities. We limited the dataset to only individuals with at least five comments, and counted the total number of gendered pronouns that appear in comments; if the total of one gendered-pronoun type was at least the square of the other, then we assigned the gender of the majority pronoun to the individual. To compare with pronoun-based assignment, we assigned gender using the previously detailed first-name based algorithm. In total, there were 384,127 profiles on RateMyProfessor.com that had at least five comments and for whom pronouns indicated a gender. Our first name-based algorithm assigned a gender of male or female to 91.26 percent of these profiles. The raw match-rate between these two assignments was 88.6 percent. Of those that were assigned a gender, our first name-based assignment matched the pronoun assignment in 97.1 percent of cases, and 90.3 percent of distinct first names. While RateMyProfessor.com and the authors submitting to \textit{eLife} represent different populations (RateMyProfessor.com being biased towards teachers in the United States, United Kingdom, and Canada), the results of this validation provide some credibility to the first-name based gender assignment used here. We also manually identified gender for three Senior Editors and 24 Reviewing Editors for whom our algorithm did not assign gender by searching for them on the web and inspected resulting photos in order to determine if the individual was presenting as male or female. 
+
+Through the combination of manual efforts and our first-name based gender-assignment algorithm, we assigned a gender of male or female to 92.3 percent (n = 34,333) of the 37,195 name/role combinations that appear in our dataset. 26.0 percent (n = 9,675) were assigned a gender of female, 66.3 percent (n = 24,658) were assigned a gender of male, while the remaining 7.7 percent (n = 2,862) were assigned no gender. This gender distribution roughly matches the gender distribution observed globally across scientific publications~\cite{lariviere_bibliometrics:_2013}.
+
+% Subsection discussing methods of analysis
+\subsection*{Analysis}
+When comparing peer review outcomes between groups, we used $\chi^{2}$ tests of independence. We maintain the convention of 0.05 as the threshold of statistical significance, though we also report significance levels less than or equal to 0.1 as marginally significant. When visualizing our results, we superimposed the 95\textsuperscript{th} percentile sample proportion confidence intervals. When comparing groups based on gender, we excluded submissions for which no gender could be identified. Data processing, statistical testing, and visualization was performed using R version 3.4.2 and RStudio version 1.1.383. 
+
+%
+% Begin results section
+%
+\section*{Results}
+
+% Begin subsection to assess gatekeeper demographics
+\subsection*{Gatekeeper representation}
+We first analyzed whether the gender and national affiliations of the population of gatekeepers at \textit{eLife} was similar to that of the authors of initial and full submissions (Fig~\ref{fig2}). The population of gatekeepers was primarily comprised of invited peer reviewers, as there were far fewer Senior and Reviewing Editors. A gender breakdown by type of gatekeeper has been provided in \nameref{S1_Table}, and a national breakdown is provided in \nameref{S2_Table}.
+
+Fig~\ref{fig3} illustrates the gender and national demographics of authors and gatekeepers at \textit{eLife}. The population of gatekeepers at \textit{eLife} was largely male. Only 20.6 percent (n = 1,372) of gatekeepers were identified as female, compared with 26.4 percent (n = 4,803) of corresponding authors (includes authors of initial submissions), 33.6 percent (n = 2,256) of first authors, and 22.2 percent (n = 1,243) of last authors. The difference between the gender composition of gatekeepers and authors was statistically significant for corresponding authorship, $\chi^{2} (1, n = 16,774) = 465.9, p < 0.0001$; first authorship, $\chi^{2} (1, n = 6,087) = 837.6, p < 0.0001$; and last authorship, $\chi^{2} (1, n = 5,162) = 16.4$, $p < 0.0001$. Thus, the gender proportions of gatekeepers at \textit{eLife} was male-skewed in comparison to the authorship profile. 
+
+% Figure 3
+\begin{figure}[!h]
+\caption{\bf Gender and nationality demographics of authors and gatekeepers at \textit{eLife}.}
+Top: proportion of identified men and women in the populations of distinct gatekeepers (Senior Editors, Reviewing Editors, and peer reviewers) and of the populations of distinct corresponding authors, first authors, and last authors; percentages exclude those for whom gender could be identified. Bottom: proportion of people with national affiliations within each of six continents in the population of distinct gatekeepers, and for the population of distinct corresponding, first, and last authors. Black dashed lines overlaid on authorship graphs indicate the proportion of gatekeepers within that gendered or continental category. Asterisks indicate the significance level of $\chi^{2}$ tests of independence comparing the frequency of gender or continents between gatekeepers and each authorship type. “****“ = $p < 0.0001$; “ns” = $p > 0.1$.
+\label{fig3}
+\end{figure}
+
+The population of gatekeepers at \textit{eLife} was heavily dominated by those from North America, who constitute 59.9 percent (n = 3,992). Gatekeepers from Europe were the next most represented, constituting 32.4 percent (n = 2,161), followed by Asia with 5.7 percent (n = 379). Individuals from South America, Africa, and Oceania each made up less than two percent of the population of gatekeepers. As with gender, we identified significant differences between the international composition of gatekeepers and that of the authors. Gatekeepers from North America were over-represented whereas gatekeepers from Asia and Europe were under-represented compared to the population of corresponding authors, $\chi^{2} (5, n = 18,191) = 6904.6, p < 0.0001$, first authors, $\chi^{2} (5, n = 6,670) = 480.4, p < 0.0001$, and last authors, $\chi^{2} (5, n = 5,564) = 428.2$, $p < 0.0001$. The international representation of gatekeepers was most similar to first and last authorship, and least similar to corresponding authorship. This likely resulted from the fact that our population of corresponding authors included initial submissions, which tend to be more internationally diverse than full submissions, for which we had information about first and last authors as well as corresponding authors. 
+
+% Begin subsection that discusses differences in outcomes by author gender
+\subsection*{Authorship, Gender, and Outcomes}
+Male authorship dominated \textit{eLife} submissions: men accounted for 76.8 percent (n = 5,113) of gender-identified last authorships and 74.0 percent (n = 4,913) of gender-identified corresponding authorships of full submissions (see \nameref{S2_Fig}). First authorship of full submissions was closest to gender parity, although still skewed towards male authorship at 63.2 percent (n = 4,125).
+
+We found small but statistically significant gender inequity favoring men in the outcomes of each stage of the review processes. The percentage of initial submissions encouraged was higher for male corresponding authors—30.6 to 28.6 percent, $\chi^{2} (1, n = 21,841) = 7.79, p < 0.01$ (see \nameref{S2_Fig}). Likewise, the percentage of full submissions accepted was higher for male corresponding authors—53.4 to 50.4 percent $\chi^{2} (1, n = 6,013) = 4.0, p < 0.05$. The gender disparity at each stage of the review process yielded significantly higher overall accept rates (the percentage of initial submissions eventually accepted) for male corresponding authors (15.4 percent) compared with female corresponding authors (13.6 percent), $\chi^{2} (1, n = 21,217) = 10.5, p < 0.01$ (see \nameref{S2_Fig}).
+
+Fig~\ref{fig4} shows the gendered acceptance rates of full submissions for corresponding, first, and last author. The greatest gender disparity in success rates was observed for last authors. The accept rate of full submissions was 3.7 percentage points higher for male last authors—53.4 to 49.7 percent, $\chi^{2} (1, n = 6,035) = 5.70, p < 0.05$. There was no significant relationship between the gender of the first author and percentage of full submissions accepted, $\chi^{2} (1, n = 5,913) = 0.42, p > 0.1$. Differences may be present at the intersection of gender and national affiliation (see \nameref{S3_Fig}), though the data was not sufficient to support statistically valid conclusions. 
+
+% Figure 4
+\begin{figure}[!h]
+\caption{\bf Peer review outcomes by gender of last author}
+Percentage of full submissions that were accepted, shown by the gender of the corresponding author, first author, and last author. Authors whose gender was unknown were excluded from analysis. See \nameref{S2_Fig} for an extension of this figure including submission rates, encourage rates, and overall acceptance races. Vertical error bars indicate 95\textsuperscript{th} confidence intervals of the proportion of submitted, encouraged, and accepted initial and full submissions. Asterisks indicate significance level of $\chi^{2}$ tests of independence of frequency of encourage and acceptance by gender; “*” = $p < 0.05$; “ns” = $p > 0.1$.
+\label{fig4}
+\end{figure}
+
+% Discusses the role of homogeneity and homophily 
+\subsection*{Gender homogeneity and peer review outcome}
+
+To examine the relationship between author-gatekeeper gender homogeneity on review outcomes, we analyzed the gender composition of the gatekeepers and authors of full submissions. Each manuscript was assigned a reviewer composition category of \textit{all-male}, \textit{all-female}, \textit{mixed}, or \textit{uncertain}. Reviewer teams labeled \textit{all-male} and \textit{all-female} were teams for which we could identify a gender for every member, and for which all genders were identified as either male or female, respectively. Teams labeled as \textit{mixed} were those teams where we could identify a gender for at least two members, and which had at least one male and at least one female peer reviewer. Teams labeled as \textit{uncertain} were those teams for which we could not assign a gender to every member and which were not mixed. A full submission is typically reviewed by two to three peer reviewers, which may or may not include the Reviewing Editor. However, the Reviewing Editor is likely to some degree always involved in the review process of a manuscript, and so we always considered the Reviewing Editor as a member of the reviewing team. Of 7,912 full submissions, a final decision of accept or reject was given for 6,590 during the dates analyzed; of these, 40.9 percent (n = 2,696) were reviewed by all-male teams, 1.2 percent (n = 81) by all-female teams, and 49.0 percent (n = 3,226) by mixed-gender teams; the remaining 587 reviewer teams were classified as uncertain.
+
+Fig~\ref{fig4} illustrates higher acceptance rates for full submissions from male corresponding and last authors (submissions with authors of unidentified gender excluded). Fig~\ref{fig5} shows that this disparity manifested largely from instances when the reviewer team was all male. When all reviewers were male, the acceptance rate of full submissions was significantly higher for male compared to female last authors (Fig~\ref{fig5}; $\chi^{2} (1, n = 2,472)$ $= 6.6, p < 0.05)$ and corresponding authors (\nameref{S3_Fig}; $\chi^{2} (1, n = 2,472)$ $= 4.5, p < 0.05$). For mixed-gender reviewer teams, the disparity in author success rates by gender was smaller and non-significant. All-female reviewer teams were rare (only 81 of 6,509 processed full submissions). In the few cases of all-female reviewer teams, there was a higher acceptance rate for female last, corresponding, and first authors; however, this difference was not statistically significant, and the number of observations was too small to draw conclusions. There was no significant relationship between first authorship gender and acceptance rates, regardless of the gender composition of the reviewer team (see \nameref{S3_Fig}). In summary, we found that full submissions with male corresponding and last authors were more often accepted when they were reviewed by a team of gatekeepers consisting only of men; greater parity in outcomes was observed when gatekeeper teams contained both men and women. We refer to this favoring by reviewers of authors sharing the same gender as homophily.
+
+% Figure 5
+\begin{figure}[!h]
+\caption{\bf Interaction between author gender and gender-composition of gatekeepers.}
+Percentage of full submissions that were accepted, shown by the gender of the last author, and divided by the gender composition of the peer reviewers. Text at the base of each bar indicate the number full submissions within each category of reviewer team and authorship gender. Vertical error bars indicate 95\textsuperscript{th} percentile confidence intervals of the proportion of accepted full submissions. See ~\nameref{S3_Fig} for all combinations of authorship and gatekeeper composition. Asterisks indicate significance level of $\chi^{2}$ tests of independence on frequency of acceptance by gender of author given each team composition; “ns” indicates no observed statistical significance. “*“ = $p < 0.05$; “ns” = $p > 0.1$.
+\label{fig5}
+\end{figure}
+
+% Now turn differences in success rates by country
+\subsection*{Country of affiliation and peer review outcome}
+
+Fig~\ref{fig6} shows the proportions and rates of manuscripts submitted, encouraged, and accepted to \textit{eLife} for corresponding authors originating from the eight most prolific countries (in terms of initial submissions). Manuscripts with corresponding authors from these eight countries accounted for a total of 73.9 percent of all initial submissions, 81.2 percent of all full submissions, and 86.5 percent of all accepted publications. Many countries were underrepresented in full and accepted submissions compared to their submissions. For example, while papers with Chinese corresponding authors accounted for 6.9 percent of initial submissions, they comprised only 3.0 percent of full and 2.4 percent of accepted submissions. The only countries that were overrepresented—making up a greater portion of full and accepted submissions than expected given their initial submissions—were the United States, United Kingdom, and Germany. In particular, corresponding authors from the United States made up 35.8 percent of initial submissions, yet constituted 48.5 percent of full submissions and the majority (54.9 percent) of accepted submissions. 
+
+% Figure 6
+\begin{figure}[!h]
+\caption{\bf Share of submissions and outcomes of submissions by country of affiliation}
+Top: proportion of all initial submissions, encouraged initial submissions, and accepted full submissions comprised by the national affiliation of the corresponding author for the top eight most prolific countries in terms of initial submissions. Bottom: Encourage rate of initial submissions, acceptance rate of initial submissions, and acceptance rate of full submissions by national affiliation of the corresponding author for the top eight more prolific countries in terms of initial submissions. Error bars on bottom panel indicate standard error of proportion of encouraged initial submissions and accepted initial and full submissions for each country. This same graph with the top 16 most prolific nations can be found in \nameref{S4_Fig}.
+\label{fig6}
+\end{figure}
+
+Each stage of review contributed to the disparity of national representation between initial, full, and accepted submissions, with manuscripts from the United States, United Kingdom, and Germany more often encouraged as initial submissions, and accepted as full submissions. Figure~\ref{fig6} shows that initial submissions with a corresponding author from the United States were the most likely to be encouraged (39.2 percent), followed by the United Kingdom (31.7 percent) and Germany (29.3 percent). By contrast, manuscripts with corresponding authors from Japan, Spain, and China were least likely of these eight to be encouraged (21.4, 16.7, and 12.6 percent, respectively). These differences narrowed somewhat for full submissions; the accept rate for full submissions with corresponding authors from the U.S. was the highest (57.6 percent), though more similar to the United Kingdom and France than encourage rates. Full submissions from China, Spain, and Japan had the lowest acceptance rates of these eight countries
+
+% Now examine the role of homogeneity and homophily based on country of affiliation
+\subsection*{Country homogeneity and peer review outcomes}
+
+We also investigated the relationship between peer review outcomes and the presence of nationality-based homogeneity between the authors and reviewers. We defined national homogeneity as a condition with at least one member of the reviewer team (Reviewing Editor and peer reviewers) listing the same national affiliation as the corresponding author. We only considered the nationality of the corresponding author, since the nationality of the corresponding author was identical to the nationality of the first and last author for 94.1 and 94.5 percent of full submissions, respectively. Outside of the United States, the presence of country homogeneity during review was rare. While 90.5 percent of full submissions with corresponding authors from the U.S. were reviewed by at least one gatekeeper from their country, homogeneity was present for only 29.8 percent of full submissions with corresponding authors from the United Kingdom and 25.3 percent of those with a corresponding author from Germany. The likelihood of reviewer homogeneity falls sharply for Japan and China, which had author-reviewer homogeneity for only 7.6 and 6.4 percent of full submissions, respectively. More extensive details on the rate of author/reviewer homogeneity for each country can be found in \nameref{S3_Table}. 
+
+We examined whether author-reviewer homogeneity tended to result in the favoring of submissions from authors of the same country as the reviewer. We first pooled together all countries, as shown in Fig~\ref{fig7}, and found that the presence of homogeneity during review was significantly associated with a higher accept rate, $\chi^{2} (1, n = 6,508) = 75.9,$ $p < 0.0001$. However, most cases of homogeneity occurred for authors from the United States, so this result could potentially reflect the higher accept rate for these authors, rather than homophily. Therefore we repeated the test, excluding all full submissions with corresponding authors from the United States, and we again found a significant homophilic effect, $\chi^{2} (1, n = 3,236) = 14.1, p < 0.001$. We repeated once more, excluding full submissions with corresponding authors from the the United States, United Kingdom, and Germany, and we identified no homophilic effect, $\chi^{2} (1, n = 1,920) = 0.095, p > 0.1$. 
+
+% Figure 7
+\begin{figure}[!h]
+\caption{\bf Interaction between author nationality and national-composition of gatekeepers.}
+Left: acceptance rate of full submissions compared between presence and absence of homogeneity between the national affiliation of the corresponding author and of at least one. Difference is shown comparing the results for all submissions (top), for all submissions that do not have corresponding authors from the U.S. (middle), and for all submissions that do not have a corresponding author from the U.S., U.K., or Germany (bottom). Right: acceptance rate of full submissions by national homogeneity, shown by individual countries. Included here were the top eight most prolific countries in terms of number of initial submissions. For both panels: vertical error bars indicate 95\textsuperscript{th} percentile confidence intervals for the proportion of accepted full submissions. Values at the base of each bar indicate the number of observations within that combination of country and homophily variables. Asterisks indicate significance level of $\chi^{2}$ tests of independence comparing frequency of accepted full submissions between presence and absence of homophily and within each country. “****” = $p < 0.0001$; “***” = $p < 0.001$; “*“ = $p < 0.05$; “.” = $p < 0.1$; “ns” = $p > 0.1$.
+\label{fig7}
+\end{figure}
+
+We also examined the effects of homogeneity within individual nations and tested for the presence of homophilic effects. Fig~\ref{fig7} shows accept rates for the eight most prolific nations submitting to \textit{eLife}. For the United States, there was a weak relationship between the percentage of accepted full submissions and the presence of national homogeneity, $\chi^{2} (1, n = 3,270) = 2.9, p = < 0.1$. We observed a similar weak relationship for the United Kingdom, $\chi^{2} (1, n = 739) = 3.3, p < 0.1$. For China, we observed a statistically significant homophilic relationship between the acceptance rate of full submissions and national homogeneity $\chi^{2} (1, n = 204) = 5.2, p < 0.05$. We observed the inverse trend for France and Canada, where the presence of gatekeepers from the same country was associated with lower accept rates, though this trend was not statistically significant. In summary, we found that the presence of national homogeneity was rare unless an author was from the United States, but that author/reviewer homogeneity was often (though not always) associated with homophilic bias. 
+%
+% Begin discussion section
+%
+\section*{Discussion}
+We identified inequities in peer review outcomes at \textit{eLife}, based on gender and nationality of the senior (last and corresponding) authors. We observed a significant disparity in the acceptance rates of submissions with male and female last authors, which favored men. Inequities were also observed by country of affiliation. In particular, submissions from highly developed countries, with high scientific capacities, tended to have higher success rates than others. These inequities in peer review outcomes could be attributed, at least in part, to an interaction between gatekeeper and author demographics, which can be described as homophily, or a preference based on shared characteristics: Gatekeepers were more likely to recommend a manuscript for acceptance if they shared demographic characteristics with the authors. In particular, manuscripts with male senior (last or corresponding) authors were more likely to be accepted if reviewed by an all-male reviewer panel rather than a mixed-gender panel. Similarly, manuscripts were more likely to be accepted if at least one of the reviewers was from the same country as the last or corresponding author. The differential outcomes on the basis of homophily suggests that peer review at \textit{eLife} is influenced by some form of bias—be it implicit bias~\cite{lee_bias_2013, wenneras_nepotism_1997}, geographic or linguistic bias~\cite{kliewer_peer_2004, ross_effect_2006, coates_language_2002}, or cognitive particularism~\cite{travis_new_1991}. Specifically, a homophilic interaction suggests that peer review outcomes may sometimes be based on more than the intrinsic quality of manuscript; the composition of the review team is also related to outcomes in peer review.
+
+The opportunity for homophilous interactions is determined by the demographics of the gatekeeper pool. We found that the demographics of the gatekeepers differed significantly from those of the authors, even for last authors, who tend to be more senior 
+~\cite{costas_age_2011, macaluso_is_2016, baerlocher_meaning_2007, tscharntke_author_2007}. Women were underrepresented among \textit{eLife} gatekeepers, and gatekeepers tended to come from a small number of highly-developed countries. The underrepresentation of women at \textit{eLife} mirrors global trends—women comprise a minority of total authorships, yet constitute an even smaller proportion of gatekeepers across many domains ~\cite{amrein_women_2011, cho_women_2014,mauleon_assessing_2013, metz_gender_2009, metz_update_2012, morton_women_2007, stegmaier_getting_2011, topaz_gender_2016, noauthor_natures_2018}. Similarly, gatekeepers at \textit{eLife} were less internationally diverse than their authorship, reflecting the general underrepresentation of the “global south” in leadership positions of international journals~\cite{espin_persistent_2017}. 
+
+The demographics of the reviewer pool made certain authors more likely to benefit from homophily in the review process than others. US authors were much more likely than not (see \nameref{S3_Table}) to be reviewed by a panel with at least one reviewer from the US. However, the opposite was true for authors from other countries. Fewer opportunities for such homophily may result in a disadvantage for scientists from smaller and less scientifically prolific countries. For gender, male lead authors had a nearly 50 percent chance of being reviewed by a homophilous (all-male), rather than a mixed-gender team. In contrast, because all-female reviewer panels were so rare (accounting for only 81 of 6,509 full submission decisions), female authors were highly unlikely to benefit from homophily in the review process.
+
+Increasing \textit{eLife}’s representation of women and scientists from a more diverse set of nations among editors may lead to more diverse reviewer pool and a more equitable peer review process. Editors often invite peer reviewers from their own professional networks, networks that likely reflect the characteristics of the editor~\cite{addis_editorial_2003,avin_homophily_2015, szell_how_2013}; this can lead to editors, who tend to be men~\cite{amrein_women_2011, cho_women_2014,mauleon_assessing_2013, metz_gender_2009, metz_update_2012, morton_women_2007, stegmaier_getting_2011, topaz_gender_2016, noauthor_natures_2018} and from scientifically advanced countries ~\cite{espin_persistent_2017} to invite peer reviewers who are cognitively or demographically similar to themselves ~\cite{helmer_research:_2017,lerback_journals_2017, tite_why_2007}, inadvertently excluding certain groups from the gatekeeping process. Accordingly, we found that male Reviewing Editors at \textit{eLife} were less likely to create mixed-gender teams of gatekeepers than female Reviewing Editors (see \nameref{S5_Fig}). We observed a similar effect based on the nationality of the Reviewing Editor and invited peer reviewers (see ~\nameref{S6_Fig}).
+
+The size of disparities we observe in peer review outcomes may seem modest, however these small disparities can accumulate through each stage of the review process (initial submission, full submission, revisions), and potentially affect the outcomes of many submissions. For example, the overall acceptance rate (the rate at which initial submissions were eventually accepted) for male and female corresponding authors was 15.4 and 13.6 percent respectively; in other words, manuscripts submitted to \textit{eLife} with female lead authors were published at 88.3 percent the rate of those with male lead authors. Similarly, manuscripts submitted by lead authors from China were accepted at only 22.0 percent the rate of manuscripts submitted by a lead author from the United States (with overall acceptance rates of 4.9 and 22.3 percent, respectively). Success in peer review is vital for a researcher’s career because successful publication strengthens their professional reputation and makes it easier to attract funding, students, postdocs, and hence further publications. Even small advantages can compound over time and result in pronounced inequalities in science~\cite{bol_matthew_2018, obrien_academic_2012, petersen_inequality_2014, day_big_2015}. 
+
+Our finding that the gender of the last authors is associated with a significant difference in the rate at which full submissions were accepted at \textit{eLife} stands in contrast with a number of previous studies of journal peer review; these studies have found no significant difference in outcomes of papers submitted by male and female authors~\cite{tomkins_reviewer_2017, valkonen_gender_2011, fox_editor_2015}, or differences in reviewer’s evaluations based on the author’s apparent gender~\cite{borsuk_name_2009}. This discrepancy may may be explained in part by \textit{eLife}’s unique context, policies, or the relative selectivity of \textit{eLife} compared to venues where previous studies found gender equity. In addition, our results point to a key feature of study design that may account for some of the differences across studies, which is the consideration of multiple authorship roles. This is especially important for the biosciences, where authorship order is strongly associated with contribution~\cite{baerlocher_meaning_2007, kassis_how_2017, tscharntke_author_2007}. Whereas our study examines the gender of the first, last, and corresponding authors, most previous studies have focused on the gender of the first author (e.g., \cite{walker_personal_2015, tregenza_gender_2002, valkonen_gender_2011}) or of the corresponding author (e.g., \cite{noauthor_women_2006, gilbert_is_1994}). Like previous studies, we observed no strong relationship between first author gender and review outcomes at \textit{eLife}. Only when considering lead authorship roles—last authorship, and to a lesser extent, corresponding author, did we observe such an effect. Our results may be better compared with studies of grant peer review, where leadership roles are more explicitly defined, and many studies have identified significant disparities in outcomes favoring men~\cite{li_gender_2011, bedi_gender_2012, gannon_searching_2001, lee_gender_2015, shen_inequality_2013, tamblyn_assessment_2018}, although many other studies have found no evidence of gender disparity~\cite{beck_gender_2017, mutz_does_2012, pohlhaus_sex_2011, waisbren_gender_2008, grant_no_1997, marsh_gender_2011}. Given that science has grown increasingly collaborative and that average authorship per paper has expanded~\cite{lariviere_team_2014, wuchty_increasing_2007}, future studies of disparities would benefit from explicitly accounting for multiple authorship roles and signaling among various leadership positions on the byline~\cite{costas_age_2011, lariviere_contributorship_2016}. 
+
+The interaction we found between the gender and nationality of the gatekeepers and peer review outcomes also stands in contrast to the findings from a number of previous studies. One study, \cite{lloyd_gender_1990}, identified a homophilous relationship between female reviewers and female authors. However, most previous analyses found only procedural differences based on the gender of the gatekeeper~\cite{fox_editor_2015, wing_differences_2010, borsuk_name_2009, gilbert_is_1994} and identified no difference in outcomes based on the interaction of author and gatekeeper gender in journal submissions ~\cite{bornmann_gatekeepers_2007, fox_editor_2015, petty_review_1999} or grant review~\cite{mutz_does_2012}. Studies of gatekeeper nationality have found no difference in peer review outcomes based on the nationality of the reviewer~\cite{bornmann_gatekeepers_2007, zhang_effect_2012}, though there is little research on the correspondence between author and reviewer gender. One past study examined the interaction between U.S. and non-U.S. authors and gatekeepers, but found an effect opposite to what we observed, such that U.S. reviewers tended to rate submissions of U.S. authors more harshly than those of non-U.S. authors~\cite{link_us_1998}. Our results also contrast with the study most similar to our own, which found no evidence of bias related to gender, and only modest evidence of bias related to geographic region~\cite{walker_personal_2015}. These discrepancies may result from our analysis of multiple author roles. Alternatively, they may result from the unique nature of \textit{eLife’s} consultative peer review; the direct communication between peer reviewers compared to traditional peer review may render the social characteristics of reviewers more influential. 
+
+% Limitations section
+\subsection*{Limitations}
+There are limitations of our methodology that must be considered. First, we have no objective measure of the intrinsic quality of manuscripts. Therefore, it is not clear which review condition (homophilic or non-homophilic) more closely approximates the ideal of merit-based peer review outcomes. Second, measuring the interaction between reviewer and author demographics on peer review outcomes cannot readily detect biases that are shared by all reviewers/gatekeepers (e.g., if all reviewers, regardless of gender, favored manuscripts from male authors); hence, our approach could underestimate the influence of bias. Third, our analysis is observational, so we cannot establish causal relationships between success rates and authors or gatekeeper demographics. Along these lines, the reliance on statistical tests with arbitrary significance thresholds may provide misleading results (see \cite{gelman_difference_2006}), or obfuscate statistically weak but potentially important relationships. Fourth, our gender-assignment algorithm is only a proxy for author gender and varies in reliability by continent. 
+
+Further studies will be required to determine the extent to which the effects we observe generalize to other peer review contexts. Specific policies at \textit{eLife}, such as their consultative peer review process, may contribute to the effects we observed. Other characteristics of \textit{eLife} may also be relevant, including its level of prestige~\cite{shen_persistent_2018}, and its disciplinary specialization in the biological sciences, whose culture may differ from other scientific and academic disciplines. Future work is necessary to confirm and expand upon our findings, assess the extent to which they can be generalized, establish causal relationships, and mitigate the effects of these methodological limitations. To aid in this effort, we have made as much as possible of the data and analysis publicly available at (https://github.com/murrayds/elife-analysis).
+
+%
+% Conclusion and recommendations
+%
+\section*{Conclusion and recommendations}
+
+Many factors can contribute to gender, national, and other inequities in scientific publishing. This includes a variety of factors entirely external to peer review~\cite{adamo_attrition_2013, ceci_womens_2009, ceci_sex_2010, ceci_understanding_2011, xie_sex_1998, may_scientific_1997}, which can affect the quantity and perceived quality of submitted manuscripts. However, these structural factors do not readily account for the observed interaction between gatekeeper and author demographics associated with peer review outcomes at \textit{eLife}; rather, biases related to the personal characteristics of the authors and gatekeepers are likely to play some role in peer review outcomes. 
+
+Our results suggest that it is not only the form of peer review that matters, but also the composition of reviewers. Homophilous preferences in evaluation are a potential mechanism underpinning the Matthew Effect~\cite{merton_matthew_1968} in academia. This effect entrenches privileged groups while potentially limiting diversity, which could hinder scientific production, since diversity may lead to better working groups~\cite{page_difference:_2008} and promote high-quality science~\cite{campbell_gender-heterogeneous_2013, noauthor_science_2018}. Increasing gender and international representation among scientific gatekeepers may improve fairness and equity in peer review outcomes, and accelerate scientific progress. However, this must be carefully balanced to avoid overburdening scholars from minority groups with disproportionate service obligations. 
+
+Although some journals, such as \textit{eLife} and Frontiers Media, have begun providing peer review data to researchers (see~\cite{helmer_research:_2017, giordan_effects_2016}), data on equity in peer review outcomes is currently available only for a small fraction of journals and funders. While many journals collect these data internally, they are not usually standardized or shared publicly. One group, PEERE, authored a protocol for open sharing of peer review data~\cite{noauthor_peere_2017, squazzoni_publishing:_2017}, though this protocol is recent, and the extent to which it will be adopted remains uncertain. To both provide better benchmarks and to incentivize better practices, journals should make analyses on author and reviewer demographics publicly available. These data include, but would not be limited to, characteristics such as gender, race, sexual orientation, seniority, and institution and country of affiliation. It is likely that privacy concerns and issues relating to confidentiality will limit the full availability of the data; but analyses that are sensitive to the vulnerabilities of smaller populations should be conducted and made available as benchmarking data. 
+
+Some high-profile journals have experimented with implementing double-blind peer review as a potential solution to inequities in publishing, including \textit{Nature}~\cite{noauthor_nature_2015} and \textit{eNeuro}~\cite{bernard_editorial:_2018}, though in some cases with mixed results~\cite{mcgillivray_uptake_2018}. In addition, journals are analyzing the demographics of their published authorship and editorial staff in order to identify key problem areas, focus initiatives, and track progress in achieving diversity goals~\cite{noauthor_natures_2018, lerback_journals_2017, valkonen_gender_2011}. Alternatives to traditional peer review have also been proposed, including open peer review, study pre-registration, consultative peer review, and hybrid processes (eg: \cite{pulverer_transparent_2010, o_faolean_frontiers_2016, merchant_plant_2016, pourquie_future_2016, rodgers_peer_2017, king_peer_2017}), as well as alternative forms of dissemination, such as preprint servers (e.g., arXiv, bioRxiv). Currently, there is little empirical evidence to determine whether these formats constitute less biased or more equitable alternatives~\cite{lee_bias_2013}.
+
+More work should be done to study and understand the issues facing peer review and scientific gatekeeping in all its forms, and to promote fair, efficient, and meritocratic scientific cultures and practices. Editorial bodies should craft policies and implement practices that diminish disparities in peer review; they should also continue to be innovative and reflective about their practices to ensure that papers are accepted on scientific merit, rather than particularistic characteristics of the authors. 
+
+%
+% Supporting Information
+%
+\section*{Supporting information}
+
+% Figure SI.1
+\paragraph*{S1 Fig.}
+\label{S1_Fig}
+{\bf Number of revisions by author gender and nationality.} Average number of revisions a full submissions undergoes before a final decision of accept or reject is made. In this case, zero revisions occurs when a full submission is accepted or rejected without a request for any revisions. The dataset records at maximum two revisions, though only a small number of manuscripts remain in revision after two submissions (see Fig~\ref{fig1}). For this figure, we only include manuscripts for which a final decision is made after zero, one, or two revisions. The left panel shows differences in the average number of revisions by the country of the last author. The right shows the average revisions by the gender of the last author.
+
+% Figure SI.2
+\paragraph*{S2 Fig.}
+\label{S2_Fig}
+{\bf Submission and success rates by gender of corresponding, first, and last author.} Proportion of initial submissions, encourage rate, overall accept rate, and accept rate of full submissions by the gender of the corresponding author, first author, and last author. Gender data is unavailable for first and last authors of initial submissions that were never submitted as full submissions, therefore these cells remain blank. Authors whose gender is unknown are excluded from analysis. Vertical error bars indicate 95\textsuperscript{th} confidence intervals of the proportion of submitted, encouraged, and accepted initial and full submissions. Asterisks indicate significance level of $\chi^{2}$ tests of independence of frequency of encourage and acceptance by gender; “*” = $p < 0.05$; “ns” = $p > 0.1$.
+
+% Figure SI.3
+\paragraph*{S3 Fig.}
+\label{S3_Fig}
+{\bf Submission and success rates by gender of corresponding, first, and last author.} Percentage of full submissions that were accepted, shown by the gender of the corresponding, first, and last author, and by the gender composition of the peer reviewers. Text at the base of each bar indicate the number full submissions within each category of reviewer team and authorship gender. Vertical error bars indicate 95\textsuperscript{th} percentile confidence intervals of the proportion of accepted full submissions. Asterisks indicate significance level of $chi^{2}$ tests of independence on frequency of acceptance by gender of author given each team composition. “*“ = $p < 0.05$; “ns” = $p > 0.1$.
+
+% Figure SI.4
+\paragraph*{S4 Fig.}
+\label{S4_Fig}
+{\bf Submission and success rates by country for top 16 most prolific countries.} Top: proportion of all initial submissions, encouraged initial submissions, and accepted full submissions comprised by the national affiliation of the corresponding author for the top sixteen most prolific countries in terms of initial submissions. Bottom: acceptance rate of full submissions, encourage rate of full submissions, and overall accept rate of full submissions by national affiliation of the corresponding author for the top eight more prolific countries in terms of initial submissions. Error bars on bottom panel indicate standard error of proportion of encouraged initial submissions and accepted initial and full submissions for each country.
+
+% Figure SI.5
+\paragraph*{S5 Fig.}
+\label{S5_Fig}
+{\bf Proportion of peer reviewer team’s gender compositions by gender of the Reviewing Editor.} Compositions are determined while excluding the Reviewing Editor from team membership, if they are listed as a peer reviewer. 
+
+% Figure SI.6
+\paragraph*{S6 Fig.}
+\label{S6_Fig}
+{\bf Proportion of peer review teams containing at least one peer reviewer of each continent, by continent of Reviewing Editor.}  Compositions are determined while excluding the Reviewing Editor from team membership, if they are listed as a peer reviewer.
+
+\paragraph*{S1 Table.}
+\label{S1_Table}
+{\bf Summary demographic characteristics of distinct \textit{eLife} reviewers and editors.} The count of Senior Editors includes former editors, as well as the Deputy Editors and Editor-in-Chief, who also serve as Senior Editors. The count of BREs includes former editors and guest editors. Reviewers are only relevant for publications that were submitted for full review, thus leading to lower total counts. Includes all individuals involved in processing manuscripts at \textit{eLife} between 2012 and 2017.
+
+\begin{table}[!h]
+%\begin{adjustwidth}{-2.25in}{0in}
+\centering
+\begin{tabular}{l|rr|rr|rr|r}
+{\ul \textbf{Reviewership}} & \multicolumn{2}{c|}{{\ul \textbf{Female}}} & \multicolumn{2}{c|}{{\ul \textbf{Male}}} & \multicolumn{2}{c|}{{\ul \textbf{Unassigned}}} & \multicolumn{1}{c}{{\ul \textbf{}}} \\
+                            & \textbf{N}          & \textbf{\%}          & \textbf{N}         & \textbf{\%}         & \textbf{N}            & \textbf{\%}            & \textbf{All}                        \\
+\textbf{Senior Editors}     & 15                  & 26.3                 & 42                 & 73.7                & 0                     & 0                      & 57                                  \\
+\textbf{Reviewing Editors}  & 209                 & 24                   & 661                & 76                  & 0                     & 0\%                    & 870                                 \\
+\textbf{Peer Reviewers}     & 1,439               & 20.7                 & 5,266              & 75.7                & 256                   & 3.60\%                 & 6,961                              
+\end{tabular}
+%\end{adjustwidth}
+\end{table}
+
+\newpage
+\paragraph*{S2 Table.}
+\label{S2_Table}
+{\bf Summary nationality demographics of unique \textit{eLife} reviewers and editors.} The count of Senior Editors includes former editors, as well as the Deputy Editors and Editor-in-Chief, who also serve as Senior Editors. The count of BREs includes former editors and guest editors. Reviewers are only relevant for publications that were submitted for full review, thus leading to lower total counts. Includes all individuals involved in processing manuscripts at \textit{eLife} between 2012 and 2017. 
+
+\begin{table}[!h]
+\centering
+\begin{tabular}{l|rr|rr|rr}
+{\ul \textbf{Country}}  & \multicolumn{2}{l|}{{\ul \textbf{Senior Editor}}} & \multicolumn{2}{l|}{{\ul \textbf{Reviewing Editor}}} & \multicolumn{2}{l|}{{\ul \textbf{Peer Reviewer}}} \\
+\textbf{}               & \textbf{N}             & \textbf{\%}             & \textbf{N}               & \textbf{\%}              & \textbf{N}             & \textbf{\%}             \\
+\textbf{United States}  & 32                      & 56.1                    & 536                       & 62                       & 3648                    & 55.9                    \\
+\textbf{United Kingdom} & 7                       & 12.3                    & 88                        & 10.2                     & 707                     & 10.8                    \\
+\textbf{Germany}        & 6                       & 10.5                    & 69                        & 8                        & 469                     & 7.2                     \\
+\textbf{Canada}         & 3                       & 5.3                     & 22                        & 2.5                      & 249                     & 3.8                     \\
+\textbf{Switzerland}    & 2                       & 3.5                     & 19                        & 2.2                      & 166                     & 2.5                     \\
+\textbf{China}          & 2                       & 3.5                     & 10                        & 1.2                      & 61                      & 0.9                     \\
+\textbf{Israel}         & 1                       & 1.8                     & 19                        & 2.2                      & 89                      & 1.4                     \\
+\textbf{Netherlands}    & 1                       & 1.8                     & 11                        & 1.3                      & 114                     & 1.7                     \\
+\textbf{Spain}          & 1                       & 1.8                     & 10                        & 1.2                      & 78                      & 1.2                     \\
+\textbf{Japan}          & 1                       & 1.8                     & 9                         & 1                        & 128                     & 2                       \\
+\textbf{India}          & 1                       & 1.8                     & 6                         & 0.7                      & 20                      & 0.3                     \\
+\textbf{France}         & 0                       & 0                       & 21                        & 2.4                      & 245                     & 3.8                     \\
+\textbf{Australia}      & 0                       & 0                       & 7                         & 0.8                      & 87                      & 1.3                     \\
+\textbf{South Africa}   & 0                       & 0                       & 5                         & 0.6                      & 12                      & 0.2                     \\
+\textbf{Austria}        & 0                       & 0                       & 4                         & 0.5                      & 49                      & 0.8                     \\
+\textbf{Belgium}        & 0                       & 0                       & 3                         & 0.3                      & 37                      & 0.6                    
+\end{tabular}
+\end{table}
+
+\newpage
+\paragraph*{S3 Table.}
+\label{S3_Table}
+{\bf Submissions and proportion of author/gatekeeper homogeneity by country.} Includes number of full submissions submitted with corresponding authors from each of 20 countries, and proportion of these full submissions with the condition of author/reviewer homogeneity such that at least one involved gatekeeper from the same country. Countries listed are in order of the proportion of author/reviewer homogeneity, and contain the top 20 countries with the highest homogeneity. 
+
+\begin{table}[!ht]
+\centering
+\begin{tabular}{l|r|r}
+\textbf{Corr. Author Country} & \textbf{\# Submissions} & \textbf{Proportion Homogeneity} \\
+\textbf{United States}        & 3,605                   & 0.91                            \\
+\textbf{United Kingdom}       & 803                     & 0.3                             \\
+\textbf{Germany}              & 641                     & 0.25                            \\
+\textbf{Canada}               & 176                     & 0.11                            \\
+\textbf{South Korea}          & 45                      & 0.11                            \\
+\textbf{South Africa}         & 11                      & 0.09                            \\
+\textbf{France}               & 310                     & 0.08                            \\
+\textbf{Japan}                & 184                     & 0.08                            \\
+\textbf{Australia}            & 101                     & 0.07                            \\
+\textbf{China}                & 233                     & 0.06                            \\
+\textbf{Switzerland}          & 163                     & 0.06                            \\
+\textbf{India}                & 59                      & 0.05                            \\
+\textbf{Sweden}               & 70                      & 0.04                            \\
+\textbf{Israel}               & 127                     & 0.04                            \\
+\textbf{Spain}                & 91                      & 0.03                            \\
+\textbf{Denmark}              & 32                      & 0.03                            \\
+\textbf{Italy}                & 79                      & 0.03                            \\
+\textbf{Belgium}              & 41                      & 0.02                            \\
+\textbf{Austria}                       & 58                      & 0.02                            \\
+\textbf{Netherlands}          & 100                     & 0.01                           
+\end{tabular}
+\end{table}
+
+%
+% Acknowledgments
+%
+\section*{Acknowledgments}
+We are grateful for the editing and feedback provided by Susanna Richmond (Senior Editorial Assistant at \textit{eLife}), Mark Patterson (Executive Director at \textit{eLife}), Eve Marder, Anna Akhmanova, and Detlef Weigel (Deputy Editors at \textit{eLife}). We are also grateful for the work of James Gilbert (Production Editor at \textit{eLife}) for extracting the data used in this analysis. This work was partially supported by a grant from the National Science Foundation (SciSIP \#1561299). 
+
+%
+% Competing interests
+%
+\section*{Competing interests}
+Wei Mun Chan and Andy Collings are employed by \textit{eLife}. Jennifer Raymond and Cassidy R. Sugimoto are Reviewing Editors at \textit{eLife}. Andy Collings was employed by PLOS between 2005 and 2012.
+
+\nolinenumbers
+
+% Either type in your references using
+% \begin{thebibliography}{}
+% \bibitem{}
+% Text
+% \end{thebibliography}
+%
+% or
+%
+% Compile your BiBTeX database using our plos2015.bst
+% style file and paste the contents of your .bbl file
+% here. See http://journals.plos.org/plosone/s/latex for 
+% step-by-step instructions.
+% 
+
+
+
+%\begin{thebibliography}{10}
+
+%\bibliography{elife_bibtex}
+\newpage
+\begin{thebibliography}{100}
+
+\bibitem{merton_matthew_1968}
+Merton RK.
+\newblock The {Matthew} {Effect} in {Science}: {The} reward and communication
+  systems of science are considered.
+\newblock Science. 1968;159(3810):56--63.
+\newblock doi:{10.1126/science.159.3810.56}.
+
+\bibitem{walker_personal_2015}
+Walker R, Barros B, Conejo R, Neumann K, Telefont M.
+\newblock Personal attributes of authors and reviewers, social bias and the
+  outcomes of peer review: a case study.
+\newblock F1000Research. 2015;doi:{10.12688/f1000research.6012.2}.
+
+\bibitem{lee_bias_2013}
+Lee CJ, Sugimoto CR, Zhang G, Cronin B.
+\newblock Bias in peer review.
+\newblock Journal of the American Society for Information Science and
+  Technology. 2013;64(1):2--17.
+\newblock doi:{10.1002/asi.22784}.
+
+\bibitem{pinholster_journals_2016}
+Pinholster G.
+\newblock Journals and funders confront implicit bias in peer review.
+\newblock Science. 2016;352(6289):1067--1068.
+\newblock doi:{10.1126/science.352.6289.1067}.
+
+\bibitem{lariviere_bibliometrics:_2013}
+Larivi{\`e}re V, Ni C, Gingras Y, Cronin B, Sugimoto CR.
+\newblock Bibliometrics: {Global} gender disparities in science.
+\newblock Nature News. 2013;504(7479):211.
+\newblock doi:{10.1038/504211a}.
+
+\bibitem{noauthor_women_2017}
+Women, {Minorities}, and {Persons} with {Disabilities} in {Science} and
+  {Engineering}: 2017.
+\newblock Arlington, VA: National Science Foundation, National Center for
+  Science and Engineering Statistics.; 2017.
+
+\bibitem{noauthor_gender_2017}
+Gender in the {Global} {Research} {Landscape}.
+\newblock Elsevier; 2017.
+\newblock Available from:
+  \url{https://www.elsevier.com/__data/assets/pdf_file/0008/265661/ElsevierGenderReport_final_for-web.pdf}.
+
+\bibitem{west_role_2013}
+West JD, Jacquet J, King MM, Correll SJ, Bergstrom CT.
+\newblock The {Role} of {Gender} in {Scholarly} {Authorship}.
+\newblock PLOS ONE. 2013;8(7):e66212.
+\newblock doi:{10.1371/journal.pone.0066212}.
+
+\bibitem{lariviere_end_2017}
+Larivi{\`e}re V, Sugimoto CR. The end of gender disparities in science? {If}
+  only it were true...; 2017.
+\newblock Available from:
+  \url{https://www.cwts.nl:443/blog?article=n-q2z294&title=the-end-of-gender-disparities-in-science-if-only-it-were-true}.
+
+\bibitem{bendels_gender_2018}
+Bendels MHK, M{\"u}ller R, Brueggmann D, Groneberg DA.
+\newblock Gender disparities in high-quality research revealed by {Nature}
+  {Index} journals.
+\newblock PLOS ONE. 2018;13(1):e0189136.
+\newblock doi:{10.1371/journal.pone.0189136}.
+
+\bibitem{bernard_editorial:_2018}
+Bernard C.
+\newblock Editorial: {Gender} {Bias} in {Publishing}: {Double}-{Blind}
+  {Reviewing} as a {Solution}?
+\newblock eNeuro. 2018;5(3):ENEURO.0225--18.2018.
+\newblock doi:{10.1523/ENEURO.0225-18.2018}.
+
+\bibitem{shen_persistent_2018}
+Shen YA, Webster JM, Shoda Y, Fine I.
+\newblock Persistent {Underrepresentation} of {Women}'s {Science} in {High}
+  {Profile} {Journals}.
+\newblock bioRxiv. 2018; p. 275362.
+\newblock doi:{10.1101/275362}.
+
+\bibitem{noauthor_natures_2018}
+Nature{\textquoteright}s under-representation of women.
+\newblock Nature. 2018;558(7710):344.
+\newblock doi:{10.1038/d41586-018-05465-7}.
+
+\bibitem{king_scientific_2004}
+King DA.
+\newblock The scientific impact of nations.
+\newblock Nature. 2004;430:311.
+
+\bibitem{white_science_2017}
+White KE, Robbins C, Khan B, Freyman C.
+\newblock Science and {Engineering} {Publication} {Output} {Trends}: 2014
+  {Shows} {Rise} of {Developing} {Country} {Output} while {Developed}
+  {Countries} {Dominate} {Highly} {Cited} {Publications}.
+\newblock Arlington, VA: National Center for Science and Engineering
+  Statistics; 2017. NSF 18-300.
+
+\bibitem{wenneras_nepotism_1997}
+Wenner{\r a}s C, Wold A.
+\newblock Nepotism and sexism in peer-review.
+\newblock Nature. 1997;387:341.
+
+\bibitem{li_gender_2011}
+Li D. Gender {Bias} in {NIH} {Peer} {Review}: {Does} it {Exist} and {Does} it
+  {Matter}?; 2011.
+\newblock Available from:
+  \url{http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.571.8269&rep=rep1&type=pdf}.
+
+\bibitem{tamblyn_assessment_2018}
+Tamblyn R, Girard N, Qian CJ, Hanley J.
+\newblock Assessment of potential bias in research grant peer review in
+  {Canada}.
+\newblock CMAJ. 2018;190(16):E489--E499.
+\newblock doi:{10.1503/cmaj.170901}.
+
+\bibitem{witteman_female_2017}
+Witteman HO, Hendricks M, Straus S, Tannenbaum C.
+\newblock Female grant applicants are equally successful when peer reviewers
+  assess the science, but not when they assess the scientist.
+\newblock bioRxiv. 2017; p. 232868.
+\newblock doi:{10.1101/232868}.
+
+\bibitem{grant_no_1997}
+Grant J, Burden S, Breen G.
+\newblock No evidence of sexism in peer review.
+\newblock Nature. 1997;390(6659):438.
+\newblock doi:{10.1038/37213}.
+
+\bibitem{gilbert_is_1994}
+Gilbert JR, Williams ES, Lundberg GD.
+\newblock Is there gender bias in {JAMA}'s peer review process?
+\newblock JAMA. 1994;272(2):139--142.
+
+\bibitem{mutz_does_2012}
+Mutz R, Bornmann L, Daniel HD.
+\newblock Does {Gender} {Matter} in {Grant} {Peer} {Review}?: {An} {Empirical}
+  {Investigation} {Using} the {Example} of the {Austrian} {Science} {Fund}.
+\newblock Zeitschrift Fur Psychologie. 2012;220(2):121--129.
+\newblock doi:{10.1027/2151-2604/a000103}.
+
+\bibitem{beck_gender_2017}
+Beck R, Halloin V.
+\newblock Gender and research funding success: {Case} of the {Belgian}
+  {F}.{R}.{S}.-{FNRS}.
+\newblock Research Evaluation. 2017;26(2):115--123.
+\newblock doi:{10.1093/reseval/rvx008}.
+
+\bibitem{coates_language_2002}
+Coates R, Sturgeon B, Bohannan J, Pasini E.
+\newblock Language and publication in {Cardiovascular} {Research} articles.
+\newblock Cardiovascular Research. 2002;53(2):279--285.
+\newblock doi:{10.1016/S0008-6363(01)00530-2}.
+
+\bibitem{primack_bias_2008}
+Primack RB, Marrs R.
+\newblock Bias in the review process.
+\newblock Biological Conservation. 2008;141(12):2919--2920.
+\newblock doi:{10.1016/j.biocon.2008.09.016}.
+
+\bibitem{harris_explicit_2017}
+Harris M, Marti J, Watt H, Bhatti Y, Macinko J, Darzi AW.
+\newblock Explicit {Bias} {Toward} {High}-{Income}-{Country} {Research}: {A}
+  {Randomized}, {Blinded}, {Crossover} {Experiment} {Of} {English}
+  {Clinicians}.
+\newblock Health Affairs (Project Hope). 2017;36(11):1997--2004.
+\newblock doi:{10.1377/hlthaff.2017.0773}.
+
+\bibitem{primack_gender_2009}
+Primack RB, Ellwood E, Miller-Rushing AJ, Marrs R, Mulligan A.
+\newblock Do gender, nationality, or academic age affect review decisions? {An}
+  analysis of submissions to the journal {Biological} {Conservation}.
+\newblock Biological Conservation. 2009;142(11):2415--2418.
+\newblock doi:{10.1016/j.biocon.2009.06.021}.
+
+\bibitem{yousefi-nooraie_country_2006}
+Yousefi-Nooraie R, Shakiba B, Mortaz-Hejri S.
+\newblock Country development and manuscript selection bias: a review of
+  published studies.
+\newblock BMC Medical Research Methodology. 2006;6:37.
+\newblock doi:{10.1186/1471-2288-6-37}.
+
+\bibitem{berger_status_1977}
+Berger J, Fisek HF, Normal RZ, Zelditch N.
+\newblock Status characteristics and social interaction.
+\newblock New York: Elsevier; 1977.
+
+\bibitem{correll_expectation_2006}
+Correll SJ, Ridgeway CL.
+\newblock Expectation {States} {Theory}.
+\newblock In: Handbook of {Social} {Psychology}. Handbooks of {Sociology} and
+  {Social} {Research}. Springer, Boston, MA; 2006. p. 29--51.
+\newblock Available from:
+  \url{https://link.springer.com/chapter/10.1007/0-387-36921-X_2}.
+
+\bibitem{budden_double-blind_2008}
+Budden AE, Tregenza T, Aarssen LW, Koricheva J, Leimu R, Lortie CJ.
+\newblock Double-blind review favours increased representation of female
+  authors.
+\newblock Trends in Ecology \& Evolution. 2008;23(1):4--6.
+\newblock doi:{10.1016/j.tree.2007.07.008}.
+
+\bibitem{podolny_status_2008}
+Podolny JM.
+\newblock Status {Signals}: {A} {Sociological} {Study} of {Market}
+  {Competition}.
+\newblock Princeton, N.J Woodstock: Princeton University Press; 2008.
+
+\bibitem{long_scientific_1995}
+Long JS, Fox MF.
+\newblock Scientific {Careers}: {Universalism} and {Particularism}.
+\newblock Annual Review of Sociology. 1995;21:45--71.
+
+\bibitem{pfeffer_paradigm_1977}
+Pfeffer J, Leong A, Strehl K.
+\newblock Paradigm {Development} and {Particularism}: {Journal} {Publication}
+  in {Three} {Scientific} {Disciplines}.
+\newblock Social Forces. 1977;55(4):938--951.
+\newblock doi:{10.2307/2577563}.
+
+\bibitem{cole_hierarchy_1983}
+Cole S.
+\newblock The {Hierarchy} of the {Sciences}?
+\newblock American Journal of Sociology. 1983;89(1):111--139.
+\newblock doi:{10.1086/227835}.
+
+\bibitem{clauset_systematic_2015}
+Clauset A, Arbesman S, Larremore DB.
+\newblock Systematic inequality and hierarchy in faculty hiring networks.
+\newblock Science Advances. 2015;1(1):e1400005.
+\newblock doi:{10.1126/sciadv.1400005}.
+
+\bibitem{jacobs_gender_1999}
+Jacobs JA.
+\newblock Gender and the {Stratification} of {Colleges}.
+\newblock The Journal of Higher Education. 1999;70(2):161--187.
+\newblock doi:{10.2307/2649126}.
+
+\bibitem{weeden_degrees_2017}
+Weeden KA, Thebaud S, Gelbgiser D.
+\newblock Degrees of {Difference}: {Gender} {Segregation} of {U}.{S}.
+  {Doctorates} by {Field} and {Program} {Prestige}.
+\newblock Sociological Science. 2017;4:123--150.
+\newblock doi:{10.15195/v4.a6}.
+
+\bibitem{sheltzer_elite_2014}
+Sheltzer JM, Smith JC.
+\newblock Elite male faculty in the life sciences employ fewer women.
+\newblock Proceedings of the National Academy of Sciences.
+  2014;111(28):10107--10112.
+\newblock doi:{10.1073/pnas.1403334111}.
+
+\bibitem{travis_new_1991}
+Travis GDL, Collins HM.
+\newblock New {Light} on {Old} {Boys}: {Cognitive} and {Institutional}
+  {Particularism} in the {Peer} {Review} {System}.
+\newblock Science, Technology, \& Human Values. 1991;16(3):322--341.
+
+\bibitem{teplitskiy_sociology_2018}
+Teplitskiy M, Acuna D, Elamrani-Raoult A, K{\"o}rding K, Evans J.
+\newblock The sociology of scientific validity: {How} professional networks
+  shape judgement in peer review.
+\newblock Research Policy. 2018;doi:{10.1016/j.respol.2018.06.014}.
+
+\bibitem{demarest_reviewer_2014}
+Demarest B, Freeman G, Sugimoto CR.
+\newblock The reviewer in the mirror: examining gendered and ethnicized notions
+  of reciprocity in peer review.
+\newblock Scientometrics. 2014;101(1):717--735.
+\newblock doi:{10.1007/s11192-014-1354-z}.
+
+\bibitem{link_us_1998}
+Link AM.
+\newblock {US} and non-{US} submissions: an analysis of reviewer bias.
+\newblock JAMA. 1998;280(3):246--247.
+
+\bibitem{helmer_research:_2017}
+Helmer M, Schottdorf M, Neef A, Battaglia D.
+\newblock Research: {Gender} bias in scholarly peer review.
+\newblock eLife. 2017;6:e21718.
+\newblock doi:{10.7554/eLife.21718}.
+
+\bibitem{bagues_does_2017}
+Bagues M, Sylos-Labini M, Zinovyeva N.
+\newblock Does the {Gender} {Composition} of {Scientific} {Committees}
+  {Matter}?
+\newblock American Economic Review. 2017;107(4):1207--1238.
+\newblock doi:{10.1257/aer.20151211}.
+
+\bibitem{ceci_understanding_2011}
+Ceci SJ, Williams WM.
+\newblock Understanding current causes of women's underrepresentation in
+  science.
+\newblock Proceedings of the National Academy of Sciences.
+  2011;108(8):3157--3162.
+\newblock doi:{10.1073/pnas.1014871108}.
+
+\bibitem{ceci_women_2014}
+Ceci SJ, Ginther DK, Kahn S, Williams WM.
+\newblock Women in {Academic} {Science}: {A} {Changing} {Landscape}.
+\newblock Psychological Science in the Public Interest: A Journal of the
+  American Psychological Society. 2014;15(3):75--141.
+\newblock doi:{10.1177/1529100614541236}.
+
+\bibitem{niederle_gender_2011}
+Niederle M, Vesterlund L.
+\newblock Gender and {Competition}.
+\newblock Annual Review of Economics. 2011;3(1):601--630.
+\newblock doi:{10.1146/annurev-economics-111809-125122}.
+
+\bibitem{hengel_publishing_2017}
+Hengel E.
+\newblock Publishing while {Female}. {Are} women held to higher standards?
+  {Evidence} from peer review.
+\newblock Faculty of Economics, University of Cambridge; 2017. 1753.
+\newblock Available from: \url{https://ideas.repec.org/p/cam/camdae/1753.html}.
+
+\bibitem{may_scientific_1997}
+May RM.
+\newblock The {Scientific} {Wealth} of {Nations}.
+\newblock Science. 1997;275(5301):793--796.
+\newblock doi:{10.1126/science.275.5301.793}.
+
+\bibitem{quan_publish_2017}
+Quan W, Chen B, Shu F.
+\newblock Publish or impoverish: {An} investigation of the monetary reward
+  system of science in {China} (1999-2016).
+\newblock Aslib Journal of Information Management. 2017;69(5):486--502.
+\newblock doi:{10.1108/AJIM-01-2017-0014}.
+
+\bibitem{duszak_publishing_2008}
+Duszak A, Lewkowicz J.
+\newblock Publishing academic texts in {English}: {A} {Polish} perspective.
+\newblock Journal of English for Academic Purposes. 2008;7(2):108--120.
+\newblock doi:{10.1016/j.jeap.2008.03.001}.
+
+\bibitem{salager-meyer_scientific_2008}
+Salager-Meyer F.
+\newblock Scientific publishing in developing countries: {Challenges} for the
+  future.
+\newblock Journal of English for Academic Purposes. 2008;7(2):121--132.
+\newblock doi:{10.1016/j.jeap.2008.03.009}.
+
+\bibitem{yang_policy:_2016}
+Yang W.
+\newblock Policy: {Boost} basic research in {China}.
+\newblock Nature News. 2016;534(7608):467.
+\newblock doi:{10.1038/534467a}.
+
+\bibitem{tomkins_reviewer_2017}
+Tomkins A, Zhang M, Heavlin WD.
+\newblock Reviewer bias in single- versus double-blind peer review.
+\newblock Proceedings of the National Academy of Sciences. 2017; p. 201707323.
+\newblock doi:{10.1073/pnas.1707323114}.
+
+\bibitem{blank_effects_1991}
+Blank RM.
+\newblock The {Effects} of {Double}-{Blind} versus {Single}-{Blind}
+  {Reviewing}: {Experimental} {Evidence} from {The} {American} {Economic}
+  {Review}.
+\newblock The American Economic Review. 1991;81(5):1041--1067.
+
+\bibitem{okike_single-blind_2016}
+Okike K, Hug KT, Kocher MS, Leopold SS.
+\newblock Single-blind vs {Double}-blind {Peer} {Review} in the {Setting} of
+  {Author} {Prestige}.
+\newblock JAMA. 2016;316(12):1315--1316.
+\newblock doi:{10.1001/jama.2016.11014}.
+
+\bibitem{ware_peer_2008}
+Ware M.
+\newblock Peer {Review} in {Scholarly} {Journals}: {Perspective} of the
+  {Scholarly} {Community} - {Results} from an {International} {Study}.
+\newblock Inf Serv Use. 2008;28(2):109--112.
+
+\bibitem{kmietowicz_double_2008}
+Kmietowicz Z.
+\newblock Double blind peer reviews are fairer and more objective, say
+  academics.
+\newblock BMJ : British Medical Journal. 2008;336(7638):241.
+\newblock doi:{10.1136/bmj.39476.357280.DB}.
+
+\bibitem{mcgillivray_uptake_2018}
+McGillivray B, De~Ranieri E.
+\newblock Uptake and outcome of manuscripts in {Nature} journals by review
+  model and author characteristics.
+\newblock arXiv:180202188 [cs]. 2018;.
+
+\bibitem{langfeldt_decision-making_2001}
+Langfeldt L.
+\newblock The {Decision}-{Making} {Constraints} and {Processes} of {Grant}
+  {Peer} {Review}, and {Their} {Effects} on the {Review} {Outcome}.
+\newblock Social Studies of Science. 2001;31(6):820--841.
+\newblock doi:{10.1177/030631201031006002}.
+
+\bibitem{lamont_how_2009}
+Lamont M.
+\newblock How {Professors} {Think}: {Inside} the {Curious} {World} of
+  {Academic} {Judgment}.
+\newblock Cambridge: Harvard University Press; 2009.
+
+\bibitem{schekman_scientific_2013}
+Schekman R, Watt F, Weigel D.
+\newblock Scientific {Publishing}: {The} {eLife} approach to peer review.
+\newblock eLife. 2013;2:e00799.
+\newblock doi:{10.7554/eLife.00799}.
+
+\bibitem{king_peer_2017}
+King SR.
+\newblock Peer {Review}: {Consultative} review is worth the wait.
+\newblock eLife. 2017;6:e32012.
+\newblock doi:{10.7554/eLife.32012}.
+
+\bibitem{costas_age_2011}
+Costas R, Bordons M.
+\newblock Do age and professional rank influence the order of authorship in
+  scientific publications? {Some} evidence from a micro-level perspective.
+\newblock Scientometrics. 2011;88(1):145--161.
+\newblock doi:{10.1007/s11192-011-0368-z}.
+
+\bibitem{macaluso_is_2016}
+Macaluso B, Larivi{\`e}re V, Sugimoto T, Sugimoto CR.
+\newblock Is {Science} {Built} on the {Shoulders} of {Women}? {A} {Study} of
+  {Gender} {Differences} in {Contributorship}.
+\newblock Academic Medicine: Journal of the Association of American Medical
+  Colleges. 2016;91(8):1136--1142.
+\newblock doi:{10.1097/ACM.0000000000001261}.
+
+\bibitem{baerlocher_meaning_2007}
+Baerlocher MO, Newton M, Gautam T, Tomlinson G, Detsky AS.
+\newblock The meaning of author order in medical research.
+\newblock Journal of Investigative Medicine: The Official Publication of the
+  American Federation for Clinical Research. 2007;55(4):174--180.
+\newblock doi:{10.2310/6650.2007.06044}.
+
+\bibitem{tscharntke_author_2007}
+Tscharntke T, Hochberg ME, Rand TA, Resh VH, Krauss J.
+\newblock Author {Sequence} and {Credit} for {Contributions} in {Multiauthored}
+  {Publications}.
+\newblock PLOS Biology. 2007;5(1):e18.
+\newblock doi:{10.1371/journal.pbio.0050018}.
+
+\bibitem{kliewer_peer_2004}
+Kliewer MA, DeLong DM, Freed K, Jenkins CB, Paulson EK, Provenzale JM.
+\newblock Peer review at the {American} {Journal} of {Roentgenology}: how
+  reviewer and manuscript characteristics affected editorial decisions on 196
+  major papers.
+\newblock AJR American journal of roentgenology. 2004;183(6):1545--1550.
+\newblock doi:{10.2214/ajr.183.6.01831545}.
+
+\bibitem{ross_effect_2006}
+Ross JS, Gross CP, Desai MM, Hong Y, Grant AO, Daniels SR, et~al.
+\newblock Effect of blinded peer review on abstract acceptance.
+\newblock JAMA. 2006;295(14):1675--1680.
+\newblock doi:{10.1001/jama.295.14.1675}.
+
+\bibitem{amrein_women_2011}
+Amrein K, Langmann A, Fahrleitner-Pammer A, Pieber TR, Zollner-Schwetz I.
+\newblock Women {Underrepresented} on {Editorial} {Boards} of 60 {Major}
+  {Medical} {Journals}.
+\newblock Gender Medicine. 2011;8(6):378--387.
+\newblock doi:{10.1016/j.genm.2011.10.007}.
+
+\bibitem{cho_women_2014}
+Cho AH, Johnson SA, Schuman CE, Adler JM, Gonzalez O, Graves SJ, et~al.
+\newblock Women are underrepresented on the editorial boards of journals in
+  environmental biology and natural resource management.
+\newblock PeerJ. 2014;2:e542.
+\newblock doi:{10.7717/peerj.542}.
+
+\bibitem{mauleon_assessing_2013}
+Maule{\'o}n E, Hill{\'a}n L, Moreno L, G{\'o}mez I, Bordons M.
+\newblock Assessing gender balance among journal authors and editorial board
+  members.
+\newblock Scientometrics. 2013;95(1):87--114.
+\newblock doi:{10.1007/s11192-012-0824-4}.
+
+\bibitem{metz_gender_2009}
+Metz I, Harzing AW.
+\newblock Gender {Diversity} in {Editorial} {Boards} of {Management}
+  {Journals}.
+\newblock Academy of Management Learning \& Education. 2009;8(4):540--557.
+\newblock doi:{10.5465/amle.8.4.zqr540}.
+
+\bibitem{metz_update_2012}
+Metz I, Harzing AW.
+\newblock An update of gender diversity in editorial boards: a longitudinal
+  study of management journals.
+\newblock Personnel Review. 2012;41(3):283--300.
+\newblock doi:{10.1108/00483481211212940}.
+
+\bibitem{morton_women_2007}
+Morton MJ, Sonnad SS.
+\newblock Women on professional society and journal editorial boards.
+\newblock Journal of the National Medical Association. 2007;99(7):764--771.
+
+\bibitem{stegmaier_getting_2011}
+Stegmaier M, Palmer B, Assendelft Lv.
+\newblock Getting on the {Board}: {The} {Presence} of {Women} in {Political}
+  {Science} {Journal} {Editorial} {Positions}.
+\newblock PS: Political Science \&amp; Politics. 2011;44(4):799--804.
+\newblock doi:{10.1017/S1049096511001284}.
+
+\bibitem{topaz_gender_2016}
+Topaz CM, Sen S.
+\newblock Gender {Representation} on {Journal} {Editorial} {Boards} in the
+  {Mathematical} {Sciences}.
+\newblock PLOS ONE. 2016;11(8):e0161357.
+\newblock doi:{10.1371/journal.pone.0161357}.
+
+\bibitem{espin_persistent_2017}
+Espin J, Palmas S, Carrasco-Rueda F, Riemer K, Allen PE, Berkebile N, et~al.
+\newblock A persistent lack of international representation on editorial boards
+  in environmental biology.
+\newblock PLOS Biology. 2017;15(12):e2002760.
+\newblock doi:{10.1371/journal.pbio.2002760}.
+
+\bibitem{addis_editorial_2003}
+Addis E, Villa P.
+\newblock The {Editorial} {Boards} of {Italian} {Economics} {Journals}:
+  {Women}, {Gender}, and {Social} {Networking}.
+\newblock Feminist Economics. 2003;9(1):75--91.
+\newblock doi:{10.1080/1354570032000057062}.
+
+\bibitem{avin_homophily_2015}
+Avin C, Keller B, Lotker Z, Mathieu C, Peleg D, Pignolet YA.
+\newblock Homophily and the {Glass} {Ceiling} {Effect} in {Social} {Networks}.
+\newblock In: Proceedings of the 2015 {Conference} on {Innovations} in
+  {Theoretical} {Computer} {Science}. {ITCS} '15. New York, NY, USA: ACM; 2015.
+  p. 41--50.
+\newblock Available from: \url{http://doi.acm.org/10.1145/2688073.2688097}.
+
+\bibitem{szell_how_2013}
+Szell M, Thurner S.
+\newblock How women organize social networks different from men.
+\newblock Scientific Reports. 2013;3:1214.
+\newblock doi:{10.1038/srep01214}.
+
+\bibitem{lerback_journals_2017}
+Lerback J, Hanson B.
+\newblock Journals invite too few women to referee.
+\newblock Nature News. 2017;541(7638):455.
+\newblock doi:{10.1038/541455a}.
+
+\bibitem{tite_why_2007}
+Tite L, Schroter S.
+\newblock Why do peer reviewers decline to review? {A} survey.
+\newblock Journal of Epidemiology \& Community Health. 2007;61(1):9--12.
+\newblock doi:{10.1136/jech.2006.049817}.
+
+\bibitem{bol_matthew_2018}
+Bol T, Vaan Md, Rijt Avd.
+\newblock The {Matthew} effect in science funding.
+\newblock Proceedings of the National Academy of Sciences. 2018; p. 201719557.
+\newblock doi:{10.1073/pnas.1719557115}.
+
+\bibitem{obrien_academic_2012}
+O{\textquoteright}Brien KR, Hapgood KP.
+\newblock The academic jungle: ecosystem modelling reveals why women are driven
+  out of research.
+\newblock Oikos. 2012;121(7):999--1004.
+\newblock doi:{10.1111/j.1600-0706.2012.20601.x}.
+
+\bibitem{petersen_inequality_2014}
+Petersen AM, Penner O.
+\newblock Inequality and cumulative advantage in science careers: a case study
+  of high-impact journals.
+\newblock EPJ Data Science. 2014;3(1):24.
+\newblock doi:{10.1140/epjds/s13688-014-0024-y}.
+
+\bibitem{day_big_2015}
+Day TE.
+\newblock The big consequences of small biases: {A} simulation of peer review.
+\newblock Research Policy. 2015;44(6):1266--1270.
+\newblock doi:{10.1016/j.respol.2015.01.006}.
+
+\bibitem{valkonen_gender_2011}
+Valkonen L, Brooks J.
+\newblock Gender balance in {Cortex} acceptance rates.
+\newblock Cortex. 2011;47(7):763--770.
+\newblock doi:{10.1016/j.cortex.2011.04.004}.
+
+\bibitem{fox_editor_2015}
+Fox CW, Burns CS, Meyer JA, Thompson K.
+\newblock Editor and reviewer gender influence the peer review process but not
+  peer review outcomes at an ecology journal.
+\newblock Functional Ecology. 2015;30(1):140--153.
+\newblock doi:{10.1111/1365-2435.12529}.
+
+\bibitem{borsuk_name_2009}
+Borsuk RM, Aarssen LW, Budden AE, Koricheva J, Leimu R, Tregenza T, et~al.
+\newblock To {Name} or {Not} to {Name}: {The} {Effect} of {Changing} {Author}
+  {Gender} on {Peer} {Review}.
+\newblock BioScience. 2009;59(11):985--989.
+\newblock doi:{10.1525/bio.2009.59.11.10}.
+
+\bibitem{kassis_how_2017}
+Kassis T.
+\newblock How do research faculty in the biosciences evaluate paper authorship
+  criteria?
+\newblock PLOS ONE. 2017;12(8):e0183632.
+\newblock doi:{10.1371/journal.pone.0183632}.
+
+\bibitem{tregenza_gender_2002}
+Tregenza T.
+\newblock Gender bias in the refereeing process?
+\newblock Trends in Ecology \& Evolution. 2002;17(8):349--350.
+\newblock doi:{10.1016/S0169-5347(02)02545-4}.
+
+\bibitem{noauthor_women_2006}
+Women in neuroscience: a numbers game.
+\newblock Nature Neuroscience. 2006;9(7):853.
+\newblock doi:{10.1038/nn0706-853}.
+
+\bibitem{bedi_gender_2012}
+Bedi G, Van~Dam NT, Munafo M.
+\newblock Gender inequality in awarded research grants.
+\newblock Lancet (London, England). 2012;380(9840):474.
+\newblock doi:{10.1016/S0140-6736(12)61292-6}.
+
+\bibitem{gannon_searching_2001}
+Gannon F, Quirk S, Guest S.
+\newblock Searching for discrimination: {Are} women treated fairly in the
+  {EMBO} postdoctoral fellowship scheme?
+\newblock EMBO reports. 2001;2(8):655--657.
+\newblock doi:{10.1093/embo-reports/kve170}.
+
+\bibitem{lee_gender_2015}
+Lee Rvd, Ellemers N.
+\newblock Gender contributes to personal research funding success in {The}
+  {Netherlands}.
+\newblock Proceedings of the National Academy of Sciences.
+  2015;112(40):12349--12353.
+\newblock doi:{10.1073/pnas.1510159112}.
+
+\bibitem{shen_inequality_2013}
+Shen H.
+\newblock Inequality quantified: {Mind} the gender gap.
+\newblock Nature. 2013;495(7439):22--24.
+\newblock doi:{10.1038/495022a}.
+
+\bibitem{pohlhaus_sex_2011}
+Pohlhaus JR, Jiang H, Wagner RM, Schaffer WT, Pinn VW.
+\newblock Sex {Differences} in {Application}, {Success}, and {Funding} {Rates}
+  for {Nih} {Extramural} {Programs}.
+\newblock Academic Medicine. 2011;86(6):759--767.
+\newblock doi:{10.1097/ACM.0b013e31821836ff}.
+
+\bibitem{waisbren_gender_2008}
+Waisbren SE, Bowles H, Hasan T, Zou KH, Emans SJ, Goldberg C, et~al.
+\newblock Gender differences in research grant applications and funding
+  outcomes for medical school faculty.
+\newblock Journal of Women's Health (2002). 2008;17(2):207--214.
+\newblock doi:{10.1089/jwh.2007.0412}.
+
+\bibitem{marsh_gender_2011}
+Marsh HW, Jayasinghe UW, Bond NW.
+\newblock Gender differences in peer reviews of grant applications: {A}
+  substantive-methodological synergy in support of the null hypothesis model.
+\newblock Journal of Informetrics. 2011;5(1):167--180.
+\newblock doi:{10.1016/j.joi.2010.10.004}.
+
+\bibitem{lariviere_team_2014}
+Lariviere V, Sugimoto C, Tsou A, Gingras Y.
+\newblock Team size matters: {Collaboration} and scientific impact since 1900.
+\newblock arXiv:14108544 [cs]. 2014;.
+
+\bibitem{wuchty_increasing_2007}
+Wuchty S, Jones BF, Uzzi B.
+\newblock The {Increasing} {Dominance} of {Teams} in {Production} of
+  {Knowledge}.
+\newblock Science. 2007;doi:{10.1126/science.1136099}.
+
+\bibitem{lariviere_contributorship_2016}
+Larivi{\`e}re V, Desrochers N, Macaluso B, Mongeon P, Paul-Hus A, Sugimoto CR.
+\newblock Contributorship and division of labor in knowledge production.
+\newblock Social Studies of Science. 2016;46(3):417--435.
+\newblock doi:{10.1177/0306312716650046}.
+
+\bibitem{lloyd_gender_1990}
+Lloyd ME.
+\newblock Gender factors in reviewer recommendations for manuscript
+  publication.
+\newblock Journal of Applied Behavior Analysis. 1990;23(4):539--543.
+\newblock doi:{10.1901/jaba.1990.23-539}.
+
+\bibitem{wing_differences_2010}
+Wing DA, Benner RS, Petersen R, Newcomb R, Scott JR.
+\newblock Differences in editorial board reviewer behavior based on gender.
+\newblock Journal of Women's Health (2002). 2010;19(10):1919--1923.
+\newblock doi:{10.1089/jwh.2009.1904}.
+
+\bibitem{bornmann_gatekeepers_2007}
+Bornmann L, Daniel HD.
+\newblock Gatekeepers of science{\textemdash}{Effects} of external
+  reviewers{\textquoteright} attributes on the assessments of fellowship
+  applications.
+\newblock Journal of Informetrics. 2007;1(1):83--91.
+\newblock doi:{10.1016/j.joi.2006.09.005}.
+
+\bibitem{petty_review_1999}
+Petty RE, Fleming MA, Fabrigar LR.
+\newblock The {Review} {Process} at {PSPB}: {Correlates} of {Interreviewer}
+  {Agreement} and {Manuscript} {Acceptance}.
+\newblock Personality and Social Psychology Bulletin. 1999;25(2):188--203.
+\newblock doi:{10.1177/0146167299025002005}.
+
+\bibitem{zhang_effect_2012}
+Zhang X.
+\newblock Effect of reviewer's origin on peer review: {China} vs. non-{China}.
+\newblock Learned Publishing. 2012;25(4):265--270.
+\newblock doi:{10.1087/20120405}.
+
+\bibitem{gelman_difference_2006}
+Gelman A, Stern H.
+\newblock The {Difference} {Between}
+  {\textquotedblleft}{Significant}{\textquotedblright} and
+  {\textquotedblleft}{Not} {Significant}{\textquotedblright} is not {Itself}
+  {Statistically} {Significant}.
+\newblock The American Statistician. 2006;60(4):328--331.
+\newblock doi:{10.1198/000313006X152649}.
+
+\bibitem{adamo_attrition_2013}
+Adamo SA.
+\newblock Attrition of {Women} in the {Biological} {Sciences}: {Workload},
+  {Motherhood}, and {Other} {Explanations} {Revisited}.
+\newblock BioScience. 2013;63(1):43--48.
+\newblock doi:{10.1525/bio.2013.63.1.9}.
+
+\bibitem{ceci_womens_2009}
+Ceci SJ, Williams WM, Barnett SM.
+\newblock Women's underrepresentation in science: sociocultural and biological
+  considerations.
+\newblock Psychological Bulletin. 2009;135(2):218--261.
+\newblock doi:{10.1037/a0014412}.
+
+\bibitem{ceci_sex_2010}
+Ceci SJ, Williams WM.
+\newblock Sex {Differences} in {Math}-{Intensive} {Fields}.
+\newblock Current Directions in Psychological Science. 2010;19(5):275--279.
+\newblock doi:{10.1177/0963721410383241}.
+
+\bibitem{xie_sex_1998}
+Xie Y, Shauman KA.
+\newblock Sex {Differences} in {Research} {Productivity}: {New} {Evidence}
+  about an {Old} {Puzzle}.
+\newblock American Sociological Review. 1998;63(6):847--870.
+\newblock doi:{10.2307/2657505}.
+
+\bibitem{page_difference:_2008}
+Page SE.
+\newblock The {Difference}: {How} the {Power} of {Diversity} {Creates} {Better}
+  {Groups}, {Firms}, {Schools}, and {Societies}.
+\newblock Princeton: Princeton University Press; 2008.
+
+\bibitem{campbell_gender-heterogeneous_2013}
+Campbell LG, Mehtani S, Dozier ME, Rinehart J.
+\newblock Gender-{Heterogeneous} {Working} {Groups} {Produce} {Higher}
+  {Quality} {Science}.
+\newblock PLOS ONE. 2013;8(10):e79147.
+\newblock doi:{10.1371/journal.pone.0079147}.
+
+\bibitem{noauthor_science_2018}
+Science \& {Engineering} {Indicators} 2018.
+\newblock Alexandria, Virginia, United States: National Center for Science and
+  Engineering Statistics (NCSES); 2018. NSB-2018-1.
+
+\bibitem{giordan_effects_2016}
+Giordan M, Csikasz-Nagy A, Collings AM, Vaggi F.
+\newblock The effects of an editor serving as one of the reviewers during the
+  peer-review process.
+\newblock F1000Research. 2016;5:683.
+\newblock doi:{10.12688/f1000research.8452.1}.
+
+\bibitem{noauthor_peere_2017}
+{PEERE} policy on data sharing on peer review.
+\newblock PEERE; 2017.
+
+\bibitem{squazzoni_publishing:_2017}
+Squazzoni F, Grimaldo F, Maru{\v s}i{\'c} A.
+\newblock Publishing: {Journals} could share peer-review data.
+\newblock Nature. 2017;546:352.
+
+\bibitem{noauthor_nature_2015}
+Nature journals offer double-blind review.
+\newblock Nature News. 2015;518(7539):274.
+\newblock doi:{10.1038/518274b}.
+
+\bibitem{pulverer_transparent_2010}
+Pulverer B.
+\newblock A transparent black box.
+\newblock The EMBO Journal. 2010;29(23):3891--3892.
+\newblock doi:{10.1038/emboj.2010.307}.
+
+\bibitem{o_faolean_frontiers_2016}
+{\'O}~Faole{\'a}n G. Frontiers {Collaborative} {Peer} {Review}: criteria to
+  accept and reject manuscripts; 2016.
+\newblock Available from:
+  \url{https://blog.frontiersin.org/2016/09/20/the-review-process-making-decisions-on-manuscripts/}.
+
+\bibitem{merchant_plant_2016}
+Merchant S, Eckardt NA.
+\newblock The {Plant} {Cell} {Begins} {Opt}-in {Publishing} of {Peer} {Review}
+  {Reports}.
+\newblock The Plant Cell. 2016;28(10):2343.
+\newblock doi:{10.1105/tpc.16.00798}.
+
+\bibitem{pourquie_future_2016}
+Pourqui{\'e} O, Brown K.
+\newblock Future developments: your thoughts and our plans.
+\newblock Development (Cambridge, England). 2016;143(1):1--2.
+\newblock doi:{10.1242/dev.133355}.
+
+\bibitem{rodgers_peer_2017}
+Rodgers P.
+\newblock Peer {Review}: {Decisions}, decisions.
+\newblock eLife. 2017;6:e32011.
+\newblock doi:{10.7554/eLife.32011}.
+
+
+\end{thebibliography}
+
+
+
+\end{document}
+

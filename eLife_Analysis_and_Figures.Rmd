@@ -1,5 +1,5 @@
 ---
-title: 'Gender and international diversity improves equity in peer review: R Notebook, August 2018'
+title: 'Gender and international diversity improves equity in peer review'
 author: "Dakota Murray"
 output:
   html_document:
@@ -737,7 +737,7 @@ elife <- read.csv("formatted_data/formatted_elife.csv")
 
 Note: Figure 1 wa smade in an external program, *RawGraphics*, and so does not appear in this notebook. 
 
-> Figure 2. Left: Yearly count of initial submissions, encouraged initial submissions, and accepted full submissions to eLife between 2012 and 2016; Right: encourage rate of initial submissions, overall accept rate of initial submissions, and accept rate of full submissions between 2012 and 2016. Submissions during the year of 2017 were not included because we do not have sufficient data for full lifecycle of these manuscripts. 
+> Submissions and selectivity of eLife over time. Left: Yearly count of initial submissions, encouraged initial submissions, and accepted full submissions to eLife between 2012 and 2016; Right: rate of initial submissions encouraged (Encourage %), rate of full submissions accepted (% Full accepted) and rate of initial submissions accepted (Overall accept %) between 2012 and 2016. Submissions during the year of 2017 were excluded because we do not have sufficient data for full life-cycle of these manuscripts. 
 
 ```{r}
 d1 <- elife %>%
@@ -759,11 +759,11 @@ p1 <- d1 %>%
   theme_dakota() +
   labs(
     x = "Submission Year",
-    y = "Count of Manuscripts"
+    y = "# Manuscripts"
   ) +
-  scale_color_manual(labels = c("accept_count" = "#Accepted", "encourage_count" = "#Encouraged", "paper_count" = "#Submitted"), values = c("black", "blue", "red")) +
-  scale_shape_discrete(labels = c("accept_count" = "#Accepted", "encourage_count" = "#Encouraged", "paper_count" = "#Submitted")) +
-  scale_linetype_discrete(labels = c("accept_count" = "#Accepted", "encourage_count" = "#Encouraged", "paper_count" = "#Submitted"))
+  scale_color_manual(labels = c("accept_count" = "# Accepted", "encourage_count" = "# Encouraged", "paper_count" = "# Submitted"), values = c("black", "blue", "red")) +
+  scale_shape_discrete(labels = c("accept_count" = "# Accepted", "encourage_count" = "# Encouraged", "paper_count" = "# Submitted")) +
+  scale_linetype_discrete(labels = c("accept_count" = "# Accepted", "encourage_count" = "# Encouraged", "paper_count" = "# Submitted"))
   
   
 d2 <- elife %>%
@@ -778,7 +778,7 @@ d2 <- elife %>%
   ) %>%
   gather(measure_key, value = measurement, encourage_rate, accept_rate, encourage_accept_rate) %>%
   mutate(
-    measure_key = factor(measure_key, levels = c("encourage_rate", "accept_rate", "encourage_accept_rate"))
+    measure_key = factor(measure_key, levels = c("encourage_rate", "encourage_accept_rate", "accept_rate"))
   ) %>%
   filter(submission_year < 2017)
   
@@ -790,18 +790,18 @@ p2 <- d2 %>%
   theme_dakota() +
   labs(
     x = "Submission Year",
-    y = "Rate"
+    y = "%"
   ) +
-  scale_color_manual(labels = c("accept_rate" = "Overall Accept %", "encourage_rate" = "Encourage %", "encourage_accept_rate" = "Accept %"), 
-                     values = c("blue", "red", "purple")) +
-  scale_shape_manual(labels = c("accept_rate" = "Overall Accept %", "encourage_rate" = "Encourage %", "encourage_accept_rate" = "Accept %"),
+  scale_color_manual(labels = c("accept_rate" = "Overall accept %", "encourage_rate" = "Encourage %", "encourage_accept_rate" = "% Full accepted"), 
+                     values = c("blue", "purple", "red")) +
+  scale_shape_manual(labels = c("accept_rate" = "Overall accept %", "encourage_rate" = "Encourage %", "encourage_accept_rate" = "% Full accepted"),
                      values = c(17, 15, 18)) +
-  scale_linetype_manual(labels = c("accept_rate" = "Overall Accept %", "encourage_rate" = "Encourage %", "encourage_accept_rate" = "Accept %"), 
+  scale_linetype_manual(labels = c("accept_rate" = "Overall accept %", "encourage_rate" = "Encourage %", "encourage_accept_rate" = "% Full accepted"), 
                           values = c("dotted", "dashed", "dotdash"))
 
 fig2 <- grid.arrange(p1, p2, ncol = 2)
-ggsave("figures/main/fig_2.tiff", plot = fig2, height = 4, width = 7)
-ggsave("figures/main/fig_2.png", plot = fig2, height = 4, width = 7)
+ggsave("figures/main/fig_2.tiff", plot = fig2, height = 4, width = 7.5)
+ggsave("figures/main/fig_2.png", plot = fig2, height = 4, width = 7.5)
 
 write.csv(d1, "formatted_data/figure2_leftpanel_data.csv")
 write.csv(d2, "formatted_data/figure2_rightpanel_data.csv")
@@ -872,14 +872,17 @@ p1 <- people %>%
   left_join(expected, by = "gender") %>%
   left_join(sig_df, by = c("gender", "type")) %>%
   mutate(
-    type = factor(type, levels = c("Gatekeeper", "Corr. Author", "First Author", "Last Author"))
+    type = factor(type, 
+                  levels = c("Gatekeeper", "Corr. Author", "First Author", "Last Author"),
+                  labels = c("Gatekeeper" = "Gatekeeper", "Corr. Author" = "Corresponding", "First Author" = "First", "Last Author" = "Last")),
+    sig = as.character(sig)
   ) %>%
   # start ggplot
   ggplot(aes(x = gender, y = prop, fill = gender)) +
   geom_bar(stat = "identity", alpha = 0.8, color = "black") +
   geom_bar(stat = "identity", aes(y = expected_prop), alpha = 0, color = "black", fill = "white", size = 0.5, linetype = "dashed") +
   #geom_text(aes(label = paste0(round(prop, 3) * 100, "%"), y = 0.1), size = 3) +
-  geom_text(aes(label = sig, x = 1.5, y = 0.9)) +
+  geom_text(aes(label = ifelse(sig == "N/A", "", sig), x = 1.5, y = 0.9)) +
   geom_segment(aes(x = 1, xend = 2, y = ifelse(sig != "N/A", 0.85, 1.1), yend = ifelse(sig != "N/A", 0.85, 1.1)), color = "black") +
   facet_wrap(~type, nrow = 1) +
   theme_dakota() +
@@ -934,15 +937,18 @@ p2 <- people %>%
   left_join(expected, by = "continent") %>%
   left_join(sig_df, by = c("continent", "type")) %>%
   mutate(
-    type = factor(type, levels = c("Gatekeeper", "Corr. Author", "First Author", "Last Author")),
-    continent = reorder(continent, -prop)
+    type = factor(type, 
+                  levels = c("Gatekeeper", "Corr. Author", "First Author", "Last Author"),
+                  labels = c("Gatekeeper" = "Gatekeeper", "Corr. Author" = "Corresponding", "First Author" = "First", "Last Author" = "Last")),
+    continent = reorder(continent, -prop),
+    sig = as.character(sig)
   ) %>%
   # start ggplot
   ggplot(aes(x = continent, y = prop, fill = continent)) +
   geom_bar(stat = "identity", alpha = 0.8, color = "black") +
   geom_bar(stat = "identity", aes(y = expected_prop), alpha = 0, color = "black", fill = "white", size = 0.5, linetype = "dashed") +
   #geom_text(aes(label = paste0(round(prop, 3) * 100, "%"), y = 0.05), size = 2) +
-  geom_text(aes(label = sig, x = 3.5, y = 0.92)) +
+  geom_text(aes(label = ifelse(sig == "N/A", "", sig), x = 3.5, y = 0.92)) +
   geom_segment(aes(x = 1, xend = 6, y = ifelse(sig != "N/A", 0.85, 1.1), yend = ifelse(sig != "N/A", 0.85, 1.1)), color = "black") +
   facet_wrap(~type, nrow = 1) +
   theme_dakota() +
@@ -1094,7 +1100,7 @@ data_fig4 <- elife %>%
   mutate(
     author_key = factor(author_key,
                         levels = c("ca_gender", "fa_gender", "la_gender"),
-                        labels = c("ca_gender" = "Corresponding Author", "fa_gender" = "First Author", "la_gender" = "Last Author")
+                        labels = c("ca_gender" = "Corresponding", "fa_gender" = "First", "la_gender" = "Last")
                         ),
     measure_key = factor(measure_key, 
                          labels = c("submit_rate" = "Submissions", "encourage_rate" = "Enc %", "accept_rate" = "Overall Acc %", "encourage_accept_rate" = "Accept %"),
@@ -1346,9 +1352,9 @@ data_fig5_p1 <- elife %>%
   gather(prop_key, value = prop, prop_of_initial, prop_of_full, prop_of_accepted) %>%
   mutate(prop_key = factor(prop_key, 
                            levels = c("prop_of_initial", "prop_of_full", "prop_of_accepted"),
-                           labels = c("prop_of_initial" = "Prop. of Initial Submissions", 
-                                      "prop_of_full" = "Prop. of Full Submissions", 
-                                      "prop_of_accepted" = "Prop. of Accepted Submissions")),
+                           labels = c("prop_of_initial" = "Prop. of initial submissions", 
+                                      "prop_of_full" = "Prop. of full submissions", 
+                                      "prop_of_accepted" = "Prop. of accepted submissions")),
          ca_country = reorder(ca_country, paper_count)
   ) 
 
@@ -1389,13 +1395,13 @@ data_fig5_p2 <- elife %>%
   ungroup() %>%
   top_n(8, totals) %>%
   mutate(
-    ca_country = reorder(ca_country, encourage_accept_rate)
+    ca_country = reorder(ca_country, encourage_rate)
   ) %>%
   gather(measure_key, value = measurement, encourage_rate, accept_rate, encourage_accept_rate) %>%
   mutate(measure_key = factor(measure_key, 
-                           levels = c("encourage_accept_rate", "encourage_rate", "accept_rate"),
-                           labels = c("encourage_accept_rate" = "% of full submissions accepted",
-                                      "encourage_rate" = "% of initial submissions encouraged", 
+                           levels = c("encourage_rate", "encourage_accept_rate", "accept_rate"),
+                           labels = c("encourage_rate" = "% of initial submissions encouraged", 
+                                      "encourage_accept_rate" = "% of full submissions accepted",
                                       "accept_rate" = "% of initial submissions accepted"
                                       ))
   ) %>%
@@ -1421,8 +1427,8 @@ p2 <- data_fig5_p2 %>%
   )
 
 fig6 <- grid.arrange(p1, p2)
-ggsave("figures/main/fig_6.tiff", plot = fig6, height = 6, width = 8)
-ggsave("figures/main/fig_6.png", plot = fig6, height = 6, width = 8)
+ggsave("figures/main/fig_6.tiff", plot = fig6, height = 6, width = 7.5)
+ggsave("figures/main/fig_6.png", plot = fig6, height = 6, width = 7.5)
 ```
 
 ### Data to produce figure 5, the top panel
@@ -1500,7 +1506,7 @@ fig7.A <- elife %>%
   ggplot(aes(x = ca_country_homophily, y = encourage_accept_rate, fill = ca_country_homophily)) +
   geom_bar(stat = "identity", position = position_dodge(), color = "black", alpha = 0.8) +
   geom_errorbar(aes(ymin = lower, ymax = upper), color = "black", width = 0.2) +
-  geom_text(aes(label = paper_count, y = 0.1), size = 2.5) +
+  geom_text(aes(label = paper_count, y = 0.075), size = 2.5) +
   geom_text(aes(label = sig, x = 1.5, y = 0.95)) +
   geom_segment(aes(x = 1, xend = 2, y = ifelse(sig != "N/A", 0.85, 1.1), yend = ifelse(sig != "N/A", 0.85, 1.1)), color = "black") +
   facet_wrap(~ca_country, nrow = 2, ncol = 4) +
@@ -1613,7 +1619,7 @@ fig7.B <- d1.summ %>%
   ggplot(aes(x = ca_country_homophily, y = encourage_accept_rate, fill = ca_country_homophily)) +
   geom_bar(stat = "identity", position = position_dodge(), color = "black", alpha = 0.8) +
   geom_errorbar(aes(ymin = lower, ymax = upper), color = "black", width = 0.2) +
-  geom_text(aes(label = paper_count, y = 0.35), size = 2.5) +
+  geom_text(aes(label = paper_count, y = 0.32), size = 2.5) +
   geom_text(aes(label = sig, x = 1.5, y = 0.65)) +
   geom_segment(aes(x = 1, xend = 2, y = ifelse(sig != "N/A", 0.6, 1.1), yend = ifelse(sig != "N/A", 0.6, 1.1)), color = "black") +
   facet_wrap(~type, nrow = 3) +
@@ -1629,8 +1635,8 @@ fig7.B <- d1.summ %>%
 
 fig7 <- grid.arrange(fig7.B, fig7.A, ncol = 2, widths = 1:2)
 
-ggsave("figures/main/fig_7.tiff", plot = fig7, height = 4, width = 7)
-ggsave("figures/main/fig_7.png", plot = fig7, height = 4, width = 7)
+ggsave("figures/main/fig_7.tiff", plot = fig7, height = 5, width = 7.5)
+ggsave("figures/main/fig_7.png", plot = fig7, height = 5, width = 7.5)
 ```
 
 
@@ -1679,6 +1685,7 @@ fig_SI.1.A <- elife %>%
   summarize(
     avg_revisions = mean(num_revisions)
   ) %>%
+  mutate(la_country = factor(sapply(as.character(la_country), simpleCap))) %>% # capitalize first letter of country stirngs
   ggplot(aes(x = reorder(la_country, -avg_revisions), y = avg_revisions)) +
   geom_bar(stat = "identity", fill = "dodgerblue4", alpha = 0.8, color = "black") +
   theme_dakota() +
@@ -1697,11 +1704,15 @@ fig_SI.1.B <- elife %>%
   summarize(
     avg_revisions = mean(num_revisions)
   ) %>%
+  mutate(
+    la_gender = ifelse(la_gender == "M", "Male", "Female")
+  ) %>%
   ggplot(aes(x = la_gender, y = avg_revisions, fill = la_gender)) +
   geom_bar(stat = "identity", alpha = 0.8, color = "black") +
   theme_dakota() +
   labs(x = "Gender of last author",
-       y = "Average number of revisions", 
+       #y = "Average number of revisions", 
+       y = "",
        title = "Avg. revisions by gender") +
   guides(fill = FALSE) +
   coord_cartesian(ylim = c(0.5, 0.85)) +
@@ -1791,11 +1802,11 @@ fig_SI.2 <- elife %>%
   mutate(
     author_key = factor(author_key,
                         levels = c("ca_gender", "fa_gender", "la_gender"),
-                        labels = c("ca_gender" = "Corr. Author", "fa_gender" = "First Author", "la_gender" = "Last Author")
+                        labels = c("ca_gender" = "Corresponding", "fa_gender" = "First", "la_gender" = "Last")
                         ),
     measure_key = factor(measure_key, 
-                         labels = c("submit_rate" = "Submissions", "encourage_rate" = "Enc %", "accept_rate" = "Overall Acc %", "encourage_accept_rate" = "Accept %"),
-                         levels = c("submit_rate", "encourage_rate", "accept_rate", "encourage_accept_rate")),
+                         labels = c("submit_rate" = "Submissions", "encourage_rate" = "Encourage %", "encourage_accept_rate" = "% Full accepted", "accept_rate" = "Overall accept %"),
+                         levels = c("submit_rate", "encourage_rate", "encourage_accept_rate", "accept_rate")),
     gender = ifelse(gender == "F", "Female", "Male"),
     standard_error = 1.96 * sqrt( (measurement * (1 - measurement)) / paper_count),
     lower = measurement - standard_error,
@@ -1804,18 +1815,19 @@ fig_SI.2 <- elife %>%
   ggplot(aes(x = gender, y = measurement, color = factor(gender), shape = factor(gender), fill = factor(gender))) +
   geom_bar(stat = "identity", alpha = 0.8, color = "black") +
   #geom_text(aes(y = 0.08, label = paper_count), size = 2.5, color = "black") +
-  #geom_text(aes(x = gender, y = 0.1, label = round(measurement, 3) * 100 ), color = "black") +
+  geom_text(aes(x = gender, y = measurement + 0.1, label = ifelse(sig %in% c("*", "**"), round(measurement, 3) * 100, "")), color = "black", size = 2.5) +
   #facet_grid(measure_key ~ author_key) +
   geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2, color = "black") +
-  geom_text(aes(x = 1.5, y = 0.95, label = ifelse(measure_key == "Submissions", "", as.character(sig))), color = "black") +
-  geom_segment(aes(x = 1, xend = 2, y = ifelse(sig != "N/A", 0.90, 1.1), yend = ifelse(sig != "N/A", 0.90, 1.1)), color = "black") +
+  # Plot the text for signif check. For final publication we decided to not draw text for N/A 
+  geom_text(aes(x = 1.5, y = ifelse(sig == "N/A", 1.1, 0.95), label = ifelse(measure_key == "Submissions", "", as.character(sig))), color = "black") +
+  geom_segment(aes(x = 1, xend = 2, y = ifelse(sig != "N/A", 0.85, 1.1), yend = ifelse(sig != "N/A", 0.85, 1.1)), color = "black") +
   facet_grid(author_key ~ measure_key) +
   coord_cartesian(ylim = c(0, 1)) +
   theme_dakota() +
   guides(fill = F) +
   labs(
     x = "Gender of Author",
-    y = "% accepted of full submissions"
+    y = ""
   )
 
 fig_SI.2
@@ -1868,13 +1880,16 @@ fig_SI.3 <- elife %>%
                         levels = c("ca_gender", "fa_gender", "la_gender"),
                         labels = c("ca_gender" = "Corresponding", "fa_gender" = "First", "la_gender" = "Last"))
     ,
-    gender = ifelse(gender == "M", "Male", "Female")
+    gender = ifelse(gender == "M", "Male", "Female"),
+    composition = factor(composition,
+                         labels = c("All men" = "All-male reviewers", "All women" = "All-female reviewers", 
+                                    "Mixed" = "Mixed-gender reviewers", "Uncertain" = "Uncertain composition"))
   ) %>%
   # Start ggplot
   ggplot(aes(x = gender, y = acceptance_rate, fill = gender)) +
   geom_bar(stat = "identity", alpha = 0.8, color = "black") +
   geom_text(aes(y = 0.1, label = paper_count), size = 2.5, color = "black") +
-  #geom_text(aes(y = 0.1, label = paste0(round(acceptance_rate, 3) * 100, "%")), size = 2.5, color = "black", position = position_dodge(0.87)) +
+  geom_text(aes(y = acceptance_rate + 0.125, label = ifelse(sig %in% c("*", "**"), paste0(round(acceptance_rate, 3) * 100, "%"), "")), size = 2.5, color = "black", position = position_dodge(0.87)) +
   geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2, color = "black", alpha = 0.8) +
   geom_text(aes(x = 1.5, y = 0.90, label = sig), color = "black") +
   #geom_text(aes(x = gender, y = 0.1, label = round(acceptance_rate, 3) * 100 ), color = "black") +
@@ -1883,7 +1898,7 @@ fig_SI.3 <- elife %>%
   ylim(0, 1) +
   theme_dakota() +
   guides(fill = F) +
-  labs(y = "Encourage-Acceptance Rate",
+  labs(y = "% of full submissions accepted",
        x = "Gender of Author"
   ) 
 
@@ -1891,9 +1906,6 @@ fig_SI.3
 ggsave("figures/supp/fig_SI3.tiff", plot = fig_SI.3, height = 4, width = 7)
 ggsave("figures/supp/fig_SI3.png", plot = fig_SI.3, height = 4, width = 7)
 ```
-
-
-
 
 
 ## Figure SI.4
@@ -1930,9 +1942,9 @@ p1 <- elife %>%
   gather(prop_key, value = prop, prop_of_initial, prop_of_full, prop_of_accepted) %>%
   mutate(prop_key = factor(prop_key, 
                            levels = c("prop_of_initial", "prop_of_full", "prop_of_accepted"),
-                           labels = c("prop_of_initial" = "Prop. of Initial Submissions", 
-                                      "prop_of_full" = "Prop. of Full Submissions", 
-                                      "prop_of_accepted" = "Prop. of Accepted Submissions")),
+                           labels = c("prop_of_initial" = "Prop. of initial submissions", 
+                                      "prop_of_full" = "Prop. of full submissions", 
+                                      "prop_of_accepted" = "Prop. of accepted submissions")),
          ca_country = reorder(ca_country, paper_count)
   ) %>%
   # Start ggplot
@@ -1975,11 +1987,12 @@ p2 <- elife %>%
   ) %>%
   gather(measure_key, value = measurement, encourage_rate, accept_rate, encourage_accept_rate) %>%
   mutate(measure_key = factor(measure_key, 
-                           levels = c("encourage_accept_rate", "encourage_rate", "accept_rate"),
-                           labels = c("encourage_accept_rate" = "% accepted of full submissions",
-                                      "encourage_rate" = "% encouraged of initial submissions", 
-                                      "accept_rate" = "%accepted of initial submissions"
-                                      ))
+                           levels = c("encourage_rate", "encourage_accept_rate", "accept_rate"),
+                           labels = c("encourage_rate" = "% of initial submissions encouraged", 
+                                      "encourage_accept_rate" = "% of full submissions accepted",
+                                      "accept_rate" = "% of initial submissions accepted"
+                                      )
+                           ) # end factor
   ) %>%
   group_by(measure_key) %>%
   mutate(
@@ -1989,20 +2002,20 @@ p2 <- elife %>%
   ) %>%
   ggplot(aes(x = ca_country, y = measurement)) +
   geom_bar(stat = "identity", color = "black", fill = "dodgerblue4", alpha = 0.8) +
-  geom_text(aes(y = measurement, label = paste0(round(measurement, 3) * 100, "%")), size = 2.5, hjust = -0.4, family = "Times") +
+  geom_text(aes(y = upper, label = paste0(round(measurement, 3) * 100, "%")), size = 2.5, hjust = -0.4, family = "Times") +
   geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
   facet_wrap(~measure_key, labeller = labeller(key = labels)) +
   theme_dakota() +
   labs(y = "%") +
   coord_flip() +
-  ylim(0, 0.7) +
+  ylim(0, 0.75) +
   theme(
     axis.title.y = element_blank()
   )
 
 fig_SI.4 <- grid.arrange(p1, p2)
-ggsave("figures/supp/fig_SI4.tiff", plot = fig_SI.4, height = 4, width = 7)
-ggsave("figures/supp/fig_SI4.png", plot = fig_SI.4, height = 4, width = 7)
+ggsave("figures/supp/fig_SI4.tiff", plot = fig_SI.4, height = 5, width = 7.5)
+ggsave("figures/supp/fig_SI4.png", plot = fig_SI.4, height = 5, width = 7.5)
 ```
 
 
@@ -2014,7 +2027,13 @@ ggsave("figures/supp/fig_SI4.png", plot = fig_SI.4, height = 4, width = 7)
 fig_SI.5 <- elife %>%
   filter(bre_gender %in% c("M", "F")) %>%
   mutate(
-    bre_gender = ifelse(bre_gender == "M", "Male Reviewing Editor", "Female Reviewing Editor")
+    bre_gender = ifelse(bre_gender == "M", "Male Reviewing Editor", "Female Reviewing Editor"),
+    composition_adj = factor(composition_adj, 
+                             labels = c("All Men" = "All male",
+                                        "All Women" = "All female",
+                                        "Mixed" = "Mixed",
+                                        "Unvertain" = "Uncertain")
+                             )
     ) %>%
   group_by(bre_gender) %>%
   mutate(total = n()) %>%
@@ -2036,7 +2055,7 @@ fig_SI.5 <- elife %>%
   guides(fill = F) +
   ylim(0, 0.7) +
   labs(y = "Proportion",
-       x = "Composition of invited peer reviewers"
+       x = "Composition of invited peer reviewer teams"
        )
 
 fig_SI.5
@@ -2094,13 +2113,13 @@ fig_SI.6 <- elife %>%
     axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)
   ) +
   labs(y = "Proportion",
-       x = "Composition of invited peer reviewers"
+       x = "Composition of invited peer reviewer teams"
        )
 
 
 fig_SI.6
-ggsave("figures/supp/fig_SI6.tiff", plot = fig_SI.6, height = 4, width = 7)
-ggsave("figures/supp/fig_SI6.png", plot = fig_SI.6, height = 4, width = 7)
+ggsave("figures/supp/fig_SI6.tiff", plot = fig_SI.6, height = 4, width = 7.5)
+ggsave("figures/supp/fig_SI6.png", plot = fig_SI.6, height = 4, width = 7.5)
 ```
 
 
@@ -2111,6 +2130,7 @@ ggsave("figures/supp/fig_SI6.png", plot = fig_SI.6, height = 4, width = 7)
 
 ```{r}
 fig_SI.7 <- elife %>%
+  mutate(ca_country = factor(sapply(as.character(ca_country), simpleCap))) %>% # capitalize first letter of country stirngs
   group_by(ca_country) %>%
   mutate(total = n()) %>%
   filter(total > 200) %>%
