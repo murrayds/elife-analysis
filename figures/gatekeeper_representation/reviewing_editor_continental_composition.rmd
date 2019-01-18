@@ -1,0 +1,125 @@
+---
+title: "National reviewer team composition by continent of reviewing editor"
+author: "Dakota Murray"
+output: html_notebook
+---
+
+### Set parameters for the name and extension of the figure
+```{r}
+figure_name <- "fig_si6"
+figure_extension <- ".png"
+
+path_to_data <- "https://www.dropbox.com/s/5doa2khbrs7nuyx/formatted_elife.csv?dl=1"
+```
+
+```{r message=FALSE, warning=FALSE}
+# Load required packages
+library(tidyverse)
+library(grid)
+library(gridExtra)
+
+# setup theme
+theme_dakota <- function () { 
+    theme_bw(base_size=10, base_family="Times") %+replace% 
+        theme(
+            strip.background = element_blank(),
+            strip.text = element_text(face = "bold"),
+            plot.title = element_text(size = 11, face = "bold"),
+            axis.text.x = element_text(size = 9, margin = margin(t = 5, b = 5)),
+            legend.title = element_blank(),
+            legend.position = "bottom"
+        )
+}
+
+# converts a provided p-value into a representation that is easier to visualize
+sig2ast <- function(p) { ifelse(p <= 0.0001, "****", 
+                                ifelse(p <= 0.001, "***", 
+                                       ifelse(p <= 0.01, "**", 
+                                              ifelse(p <= 0.05, "*", 
+                                                     ifelse(p < 0.1, ".", "ns")
+                                              )
+                                       )
+                                )
+                          )
+}
+
+# I copied the below function from a stack overflow question. It should capitalize the first letter of each work in a string
+# https://stackoverflow.com/questions/6364783/capitalize-the-first-letter-of-both-words-in-a-two-word-string
+simpleCap <- function(x) {
+  s <- strsplit(x, " ")[[1]]
+  paste(toupper(substring(s, 1,1)), substring(s, 2),
+      sep="", collapse=" ")
+}
+```
+
+### Load the required data
+```{r message=FALSE, warning=FALSE}
+elife <- read_csv(path_to_data)
+head(elife)
+```
+
+
+## Continental composition of review teams by the reviewing editor continnet
+
+> Proportion of peer review teams containing at least one peer reviewer of each continent, by continent of Reviewing Editor. Compositions are determined while excluding the Reviewing Editor from team membership, if they are listed as a peer reviewer.
+
+```{r}
+continental_composition <- elife %>%
+  filter(has_full_submission & full_decision_made & !is.na(bre_continent)) %>%
+  group_by(MSNO) %>%
+  mutate(
+    num_africa = sum(na.omit(c(reviewer1_continent, reviewer2_continent, reviewer3_continent, reviewer4_continent)) == 1),
+    contains_africa = ifelse(bre_is_reviewer & bre_continent == "Africa", num_africa > 1, num_africa > 0),
+    num_asia = sum(na.omit(c(reviewer1_continent, reviewer2_continent, reviewer3_continent, reviewer4_continent)) == 2),
+    contains_asia = ifelse(bre_is_reviewer & bre_continent == "Asia", num_asia > 1, num_asia > 0),
+    num_na = sum(na.omit(c(reviewer1_continent, reviewer2_continent, reviewer3_continent, reviewer4_continent)) == 4),
+    contains_na = ifelse(bre_is_reviewer & bre_continent == "North America", num_na > 1, num_na > 0),
+    num_eu = sum(na.omit(c(reviewer1_continent, reviewer2_continent, reviewer3_continent, reviewer4_continent)) == 3),
+    contains_eu = ifelse(bre_is_reviewer & bre_continent == "Europe", num_eu > 1, num_eu > 0),
+    num_sa = sum(na.omit(c(reviewer1_continent, reviewer2_continent, reviewer3_continent, reviewer4_continent)) == 6),
+    contains_sa = ifelse(bre_is_reviewer & bre_continent == "South America", num_sa > 1, num_sa > 0),
+    num_oceania = sum(na.omit(c(reviewer1_continent, reviewer2_continent, reviewer3_continent, reviewer4_continent)) == 5),
+    contains_oceania = ifelse(bre_is_reviewer & bre_continent == "Oceania", num_oceania > 1, num_oceania > 0)
+  ) %>%
+  group_by(bre_continent) %>%
+  mutate(total = n()) %>%
+  gather(contains_key, contains, contains_africa, contains_asia, contains_na, contains_eu, contains_sa, contains_oceania) %>%
+  group_by(contains_key, contains, bre_continent) %>%
+  summarize(
+    prop = n() / total[1]
+  ) %>%
+  ungroup() %>%
+  mutate(
+    bre_continent = factor(bre_continent, levels = c("North America", "Europe", "Asia", "Oceania", "South America", "Africa")),
+    contains_key = factor(contains_key, 
+                          levels = c("contains_na", "contains_eu", "contains_asia", "contains_oceania", "contains_sa", "contains_africa"),
+                          labels = c("contains_na" = "North America", "contains_eu" = "Europe", 
+                                     "contains_asia" = "Asia", "contains_oceania" = "Oceania", 
+                                     "contains_sa" = "South America", "contains_africa" = "Africa"))
+  ) %>%
+  filter(contains == T) %>%
+  ggplot(aes(x = contains_key, y = prop, fill = contains_key)) +
+  geom_bar(stat = "identity", color = "black", alpha = 0.8) +
+  facet_wrap(~bre_continent, ncol = 6) +
+  geom_text(aes(label = paste0(round(prop, 3) * 100, "%"), y = prop + 0.025), size = 2) +
+  theme_dakota() +
+  scale_fill_brewer(palette = "Blues", direction = -1) +
+  ylim(0, 1.0) +
+   guides(fill = F) +
+  theme(
+    axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)
+  ) +
+  labs(y = "Proportion",
+       x = "Composition of invited peer reviewer teams"
+       )
+
+
+continental_composition
+```
+
+### Save the file
+```{r}
+## Save the file
+name <- paste0("~/Dropbox/eLife/elife-analysis/figures/supp/", figure_name, figure_extension)
+ggsave(name, plot = continental_composition, height = 6, width = 10)
+```
