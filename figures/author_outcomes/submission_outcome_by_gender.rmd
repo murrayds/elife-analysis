@@ -1,12 +1,12 @@
 ---
-title: "Submissions Outcomes by Gender"
+title: "Submissions Outcomes by Author"
 author: "Dakota Murray"
 output: html_notebook
 ---
 
 ### Set parameters for the name and extension of the figure
 ```{r}
-figure_name <- "fig_4"
+figure_name <- "fig_5"
 figure_extension <- ".png"
 
 path_to_data <- "https://www.dropbox.com/s/5doa2khbrs7nuyx/formatted_elife.csv?dl=1"
@@ -41,6 +41,14 @@ sig2ast <- function(p) { ifelse(p <= 0.0001, "****",
                                        )
                                 )
                           )
+}
+
+# I copied the below function from a stack overflow question. It should capitalize the first letter of each work in a string
+# https://stackoverflow.com/questions/6364783/capitalize-the-first-letter-of-both-words-in-a-two-word-string
+simpleCap <- function(x) {
+  s <- strsplit(x, " ")[[1]]
+  paste(toupper(substring(s, 1,1)), substring(s, 2),
+      sep="", collapse=" ")
 }
 ```
 
@@ -162,11 +170,7 @@ gender_outcomes <- data %>%
 gender_outcomes
 ```
 
-## Save the file
-```{r}
-name <- paste0("~/Dropbox/eLife/elife-analysis/figures/main/", figure_name, figure_extension)
-ggsave(name, plot = gender_outcomes, height = 6, width = 7)
-```
+
 
 
 ## Misc. information
@@ -230,3 +234,165 @@ full %>%
     prop = freq / dim(full)[1]
   )
 ```
+
+
+## Submissions and outcomes by country
+
+> Figure 6. Top: proportion of all initial submissions, encouraged initial submissions, and accepted full submissions comprised by the national affiliation of the corresponding author for the top eight most prolific countries in terms of initial submissions. Bottom: Encourage rate of initial submissions, acceptance rate of initial submissions, and acceptance rate of full submissions by national affiliation of the corresponding author for the top eight more prolific countries in terms of initial submissions. Error bars on bottom panel indicate standard error of proportion of encouraged initial submissions and accepted initial and full submissions for each country. This same graph with the top 16 most prolific nations can be found in Figure SI.4
+
+```{r message=FALSE, warning=FALSE}
+# Its easiest and most efficient to calculate these total values outside of the dplyr chain below
+total_submissions <- length(unique(elife$MSNO))
+total_full_submissions <- sum(!elife$full_decision_date_isNA, na.rm = T)
+total_encouraged <- with(elife, sum(initial_decision_made & encouraged, na.rm = T))
+total_accepted <- with(elife, sum(full_decision_made & accepted == T, na.rm = T))
+
+# Firs the first plot, this one will show the proportion that each countrie constitutes the total number of submitted, encouraged, and accepted manuscripts
+data_national_p1 <- elife %>%
+  filter(initial_decision_made & (full_decision_made | full_decision_date_isNA) & !is.na(ca_country)) %>%
+  mutate(ca_country = factor(sapply(as.character(ca_country), simpleCap))) %>% # capitalize first letter of country stirngs
+  group_by(ca_country) %>%
+  summarize(
+    paper_count = n(),
+    accept_count = sum(accepted == TRUE, na.rm = T),
+    encourage_count = sum(encouraged == TRUE, na.rm = T),
+    full_submissions = sum(has_full_submission),
+    prop_of_full =  full_submissions / total_full_submissions,
+    prop_of_initial = paper_count / total_submissions,
+    prop_of_encouraged = encourage_count / total_encouraged,
+    prop_of_accepted = accept_count / total_accepted
+  ) %>%
+  group_by(ca_country) %>%
+  mutate(totals = sum(paper_count)) %>%
+  ungroup() %>%
+  top_n(8, totals) %>%
+  gather(prop_key, value = prop, prop_of_initial, prop_of_full, prop_of_accepted) %>%
+  mutate(prop_key = factor(prop_key, 
+                           levels = c("prop_of_initial", "prop_of_full", "prop_of_accepted"),
+                           labels = c("prop_of_initial" = "Prop. of initial submissions", 
+                                      "prop_of_full" = "Prop. of full submissions", 
+                                      "prop_of_accepted" = "Prop. of accepted submissions")),
+         ca_country = reorder(ca_country, paper_count)
+  ) 
+
+p1 <- data_national_p1 %>%
+  # Start ggplot
+  ggplot(aes(x = ca_country, y = prop)) +
+  geom_bar(stat = "identity", color = "black", alpha = 0.8, fill = "dodgerblue4", position = position_dodge(1)) +
+  geom_text(aes(y = prop, label = paste0(round(prop, 3) * 100, "%")), size = 2.5, hjust = -0.2, family = "Times", position = position_dodge(1)) +
+  scale_y_continuous(limits = c(0, 1)) +
+  facet_wrap(~prop_key, labeller = labeller(key = labels)) +
+  theme_dakota() +
+  coord_flip() +
+  ylim(0, 0.7) +
+  labs(y = "") +
+  theme(
+    strip.background = element_blank(),
+    text = element_text(size = 10, family = "Times"),
+    plot.title = element_text(size = 12),
+    strip.text = element_text(face = "bold"),
+    axis.title.y = element_blank()
+  )
+  
+
+data_national_p2 <- elife %>%
+  filter(initial_decision_made & (full_decision_made | full_decision_date_isNA) & !is.na(ca_country)) %>%
+  mutate(ca_country = factor(sapply(as.character(ca_country), simpleCap))) %>% # capitalize first letter of country stirngs
+  group_by(ca_country) %>%
+  summarize(
+    paper_count = n(),
+    accept_count = sum(accepted == TRUE, na.rm = T),
+    encourage_count = sum(encouraged == TRUE, na.rm = T),
+    encourage_rate = encourage_count / paper_count,
+    accept_rate = accept_count / sum(!has_full_submission | full_decision_made, na.rm = T),
+    encourage_accept_rate = accept_count / sum(has_full_submission & full_decision_made, na.rm = T)
+  ) %>%
+  group_by(ca_country) %>%
+  mutate(totals = sum(paper_count)) %>%
+  ungroup() %>%
+  top_n(8, totals) %>%
+  mutate(
+    ca_country = reorder(ca_country, encourage_rate)
+  ) %>%
+  gather(measure_key, value = measurement, encourage_rate, accept_rate, encourage_accept_rate) %>%
+  mutate(measure_key = factor(measure_key, 
+                           levels = c("encourage_rate", "encourage_accept_rate", "accept_rate"),
+                           labels = c("encourage_rate" = "% of initial submissions encouraged", 
+                                      "encourage_accept_rate" = "% of full submissions accepted",
+                                      "accept_rate" = "% of initial submissions accepted"
+                                      ))
+  ) %>%
+  group_by(measure_key) %>%
+  mutate(
+    se = 1.96 * sqrt(measurement * (1 - measurement) / paper_count),
+    lower = measurement - se,
+    upper = measurement + se
+  ) 
+
+p2 <- data_national_p2 %>%
+  ggplot(aes(x = ca_country, y = measurement)) +
+  geom_bar(stat = "identity", color = "black", fill = "dodgerblue4", alpha = 0.8) +
+  geom_text(aes(y = measurement, label = paste0(round(measurement, 3) * 100, "%")), size = 2.5, hjust = -0.6, family = "Times") +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+  facet_wrap(~measure_key, labeller = labeller(key = labels)) +
+  theme_dakota() +
+  labs(y = "%") +
+  coord_flip() +
+  ylim(0, 0.7) +
+  theme(
+    axis.title.y = element_blank()
+  )
+
+national_outcomes <- grid.arrange(p1, p2)
+
+national_outcomes
+```
+
+
+### Data to produce figure 5, the top panel
+```{r}
+data_table <- data_national_p1 %>%
+  spread(prop_key, prop)
+
+data_table
+```
+
+### Proportion of intiial submissions constituted by top 8 counties
+```{r}
+sum(data_table$`Prop. of initial submissions`)
+```
+
+### Proportion of full submissions constituted by top 8 counties
+```{r}
+sum(data_table$`Prop. of full submissions`)
+```
+
+### Proportion of accepted submissions constituted by top 8 counties
+```{r}
+sum(data_table$`Prop. of accepted submissions`)
+```
+
+###Data used to produce figure 5, bottom panel
+```{r rows.print = 24}
+data_table <- data_national_p2 %>%
+  select(-se, -lower, -upper)
+
+data_table
+```
+
+## Combine figures
+
+Construct a combined figure
+```{r}
+g <- grid.arrange(gender_outcomes, national_outcomes, ncol = 2, widths = 1:2)
+plot(g)
+```
+
+
+## Save the file
+```{r}
+name <- paste0("~/Dropbox/eLife/elife-analysis/figures/main/", figure_name, figure_extension)
+ggsave(name, plot = g, height = 8, width = 12)
+```
+
+

@@ -2468,16 +2468,67 @@ stargazer(all_data, type = &quot;html&quot;)</code></pre>
 <p>###Gender distribution of gender-identified correpsonding authors of full submissions</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuaWRlbnRpZmllZCA8LSBmdWxsICU+JSBmaWx0ZXIoY2FfZ2VuZGVyICE9IFwiVU5LXCIpXG50YWJsZShpZGVudGlmaWVkJGNhX2dlbmRlcilcbmBgYCJ9 -->
+<pre class="r"><code>identified &lt;- full %&gt;% filter(ca_gender != &quot;UNK&quot;)
+table(identified$ca_gender)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiXG4gICBGICAgIE0gXG4xNjA3IDQ2NDggXG4ifQ== -->
+<pre><code>
+   F    M 
+1607 4648 </code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucHJvcC50YWJsZSh0YWJsZShpZGVudGlmaWVkJGNhX2dlbmRlcikpXG5gYGAifQ== -->
+<pre class="r"><code>prop.table(table(identified$ca_gender))</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiXG4gICAgICAgIEYgICAgICAgICBNIFxuMC4yNTY5MTQ1IDAuNzQzMDg1NSBcbiJ9 -->
+<pre><code>
+        F         M 
+0.2569145 0.7430855 </code></pre>
+<!-- rnb-output-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <p>###Gender distribution of gender-identified first authors of full submissions</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuaWRlbnRpZmllZCA8LSBmdWxsICU+JSBmaWx0ZXIoZmFfZ2VuZGVyICE9IFwiVU5LXCIpXG50YWJsZShpZGVudGlmaWVkJGZhX2dlbmRlcilcbmBgYCJ9 -->
+<pre class="r"><code>identified &lt;- full %&gt;% filter(fa_gender != &quot;UNK&quot;)
+table(identified$fa_gender)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiXG4gICBGICAgIE0gXG4yMjI0IDM4MTAgXG4ifQ== -->
+<pre><code>
+   F    M 
+2224 3810 </code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucHJvcC50YWJsZSh0YWJsZShpZGVudGlmaWVkJGZhX2dlbmRlcikpXG5gYGAifQ== -->
+<pre class="r"><code>prop.table(table(identified$fa_gender))</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiXG4gICAgICAgIEYgICAgICAgICBNIFxuMC4zNjg1NzgxIDAuNjMxNDIxOSBcbiJ9 -->
+<pre><code>
+        F         M 
+0.3685781 0.6314219 </code></pre>
+<!-- rnb-output-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <p>###Gender distribution of gender-identified last authors of full submissions</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuaWRlbnRpZmllZCA8LSBmdWxsICU+JSBmaWx0ZXIobGFfZ2VuZGVyICE9IFwiVU5LXCIpXG50YWJsZShpZGVudGlmaWVkJGxhX2dlbmRlcilcbmBgYCJ9 -->
+<pre class="r"><code>identified &lt;- full %&gt;% filter(la_gender != &quot;UNK&quot;)
+table(identified$la_gender)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiXG4gICBGICAgIE0gXG4xNTEzIDUwNjcgXG4ifQ== -->
+<pre><code>
+   F    M 
+1513 5067 </code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucHJvcC50YWJsZSh0YWJsZShpZGVudGlmaWVkJGxhX2dlbmRlcikpXG5gYGAifQ== -->
+<pre class="r"><code>prop.table(table(identified$la_gender))</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiXG4gICAgICAgIEYgICAgICAgICBNIFxuMC4yMjk5MzkyIDAuNzcwMDYwOCBcbiJ9 -->
+<pre><code>
+        F         M 
+0.2299392 0.7700608 </code></pre>
+<!-- rnb-output-end -->
 <!-- rnb-chunk-end -->
 </div>
 
