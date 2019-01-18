@@ -1,0 +1,177 @@
+---
+title: "Submissions and outcomes—16 countries"
+author: "Dakota Murray"
+output: html_notebook
+---
+
+### Set parameters for the name and extension of the figure
+```{r}
+figure_name <- "fig_si2"
+figure_extension <- ".png"
+
+path_to_data <- "https://www.dropbox.com/s/5doa2khbrs7nuyx/formatted_elife.csv?dl=1"
+```
+
+```{r message=FALSE, warning=FALSE}
+# Load required packages
+library(tidyverse)
+library(grid)
+library(gridExtra)
+
+# setup theme
+theme_dakota <- function () { 
+    theme_bw(base_size=10, base_family="Times") %+replace% 
+        theme(
+            strip.background = element_blank(),
+            strip.text = element_text(face = "bold"),
+            plot.title = element_text(size = 11, face = "bold"),
+            axis.text.x = element_text(size = 9, margin = margin(t = 5, b = 5)),
+            legend.title = element_blank(),
+            legend.position = "bottom"
+        )
+}
+
+# converts a provided p-value into a representation that is easier to visualize
+sig2ast <- function(p) { ifelse(p <= 0.0001, "****", 
+                                ifelse(p <= 0.001, "***", 
+                                       ifelse(p <= 0.01, "**", 
+                                              ifelse(p <= 0.05, "*", 
+                                                     ifelse(p < 0.1, ".", "ns")
+                                              )
+                                       )
+                                )
+                          )
+}
+
+# I copied the below function from a stack overflow question. It should capitalize the first letter of each work in a string
+# https://stackoverflow.com/questions/6364783/capitalize-the-first-letter-of-both-words-in-a-two-word-string
+simpleCap <- function(x) {
+  s <- strsplit(x, " ")[[1]]
+  paste(toupper(substring(s, 1,1)), substring(s, 2),
+      sep="", collapse=" ")
+}
+```
+
+### Load the required data
+```{r message=FALSE, warning=FALSE}
+elife <- read_csv(path_to_data)
+head(elife)
+```
+
+
+## Figure SI.4
+
+>Figure SI.4 Top: proportion of all initial submissions, encouraged initial submissions, and accepted full submissions comprised by the national affiliation of the corresponding author for the top sixteen most prolific countries in terms of initial submissions. Bottom: acceptance rate of full submissions, encourage rate of full submissions, and overall accept rate of full submissions by national affiliation of the corresponding author for the top eight more prolific countries in terms of initial submissions. Error bars on bottom panel indicate standard error of proportion of encouraged initial submissions and accepted initial and full submissions for each country.
+
+
+```{r message=FALSE, warning=FALSE}
+# Its easiest and most efficient to calculate these total values outside of the dplyr chain below
+total_submissions <- length(unique(elife$MSNO))
+total_full_submissions <- sum(!elife$full_decision_date_isNA, na.rm = T)
+total_encouraged <- with(elife, sum(initial_decision_made & encouraged, na.rm = T))
+total_accepted <- with(elife, sum(full_decision_made & accepted == T, na.rm = T))
+
+# Firs the first plot, this one will show the proportion that each countrie constitutes the total number of submitted, encouraged, and accepted manuscripts
+p1 <- elife %>%
+  filter(initial_decision_made & (full_decision_made | full_decision_date_isNA) & !is.na(ca_country)) %>%
+  mutate(ca_country = factor(sapply(as.character(ca_country), simpleCap))) %>% # capitalize first letter of country stirngs
+  group_by(ca_country) %>%
+  summarize(
+    paper_count = n(),
+    accept_count = sum(accepted == TRUE, na.rm = T),
+    encourage_count = sum(encouraged == TRUE, na.rm = T),
+    full_submissions = sum(has_full_submission),
+    prop_of_full =  full_submissions / total_full_submissions,
+    prop_of_initial = paper_count / total_submissions,
+    prop_of_encouraged = encourage_count / total_encouraged,
+    prop_of_accepted = accept_count / total_accepted
+  ) %>%
+  group_by(ca_country) %>%
+  mutate(totals = sum(paper_count)) %>%
+  ungroup() %>%
+  top_n(16, totals) %>%
+  gather(prop_key, value = prop, prop_of_initial, prop_of_full, prop_of_accepted) %>%
+  mutate(prop_key = factor(prop_key, 
+                           levels = c("prop_of_initial", "prop_of_full", "prop_of_accepted"),
+                           labels = c("prop_of_initial" = "Prop. of initial submissions", 
+                                      "prop_of_full" = "Prop. of full submissions", 
+                                      "prop_of_accepted" = "Prop. of accepted submissions")),
+         ca_country = reorder(ca_country, paper_count)
+  ) %>%
+  # Start ggplot
+  ggplot(aes(x = ca_country, y = prop)) +
+  geom_bar(stat = "identity", color = "black", alpha = 0.8, fill = "dodgerblue4", position = position_dodge(1)) +
+  geom_text(aes(y = prop, label = paste0(round(prop, 3) * 100, "%")), size = 2.5, hjust = -0.2, family = "Times", position = position_dodge(1)) +
+  scale_y_continuous(limits = c(0, 1)) +
+  facet_wrap(~prop_key, labeller = labeller(key = labels)) +
+  theme_dakota() +
+  coord_flip() +
+  ylim(0, 0.7) +
+  labs(y = "") +
+  theme(
+    strip.background = element_blank(),
+    text = element_text(size = 10, family = "Times"),
+    plot.title = element_text(size = 12),
+    strip.text = element_text(face = "bold"),
+    axis.title.y = element_blank()
+  )
+  
+
+p2 <- elife %>%
+  filter(initial_decision_made & (full_decision_made | full_decision_date_isNA) & !is.na(ca_country)) %>%
+  mutate(ca_country = factor(sapply(as.character(ca_country), simpleCap))) %>% # capitalize first letter of country stirngs
+  group_by(ca_country) %>%
+  summarize(
+    paper_count = n(),
+    accept_count = sum(accepted == TRUE, na.rm = T),
+    encourage_count = sum(encouraged == TRUE, na.rm = T),
+    encourage_rate = encourage_count / paper_count,
+    accept_rate = accept_count / sum(!has_full_submission | full_decision_made, na.rm = T),
+    encourage_accept_rate = accept_count / sum(has_full_submission & full_decision_made, na.rm = T)
+  ) %>%
+  group_by(ca_country) %>%
+  mutate(totals = sum(paper_count)) %>%
+  ungroup() %>%
+  top_n(16, totals) %>%
+  mutate(
+    ca_country = reorder(ca_country, encourage_rate)
+  ) %>%
+  gather(measure_key, value = measurement, encourage_rate, accept_rate, encourage_accept_rate) %>%
+  mutate(measure_key = factor(measure_key, 
+                           levels = c("encourage_rate", "encourage_accept_rate", "accept_rate"),
+                           labels = c("encourage_rate" = "% of initial submissions encouraged", 
+                                      "encourage_accept_rate" = "% of full submissions accepted",
+                                      "accept_rate" = "% of initial submissions accepted"
+                                      )
+                           ) # end factor
+  ) %>%
+  group_by(measure_key) %>%
+  mutate(
+    se = 1.96 * sqrt(measurement * (1 - measurement) / paper_count),
+    lower = measurement - se,
+    upper = measurement + se
+  ) %>%
+  ggplot(aes(x = ca_country, y = measurement)) +
+  geom_bar(stat = "identity", color = "black", fill = "dodgerblue4", alpha = 0.8) +
+  geom_text(aes(y = upper, label = paste0(round(measurement, 3) * 100, "%")), size = 2.5, hjust = -0.4, family = "Times") +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+  facet_wrap(~measure_key, labeller = labeller(key = labels)) +
+  theme_dakota() +
+  labs(y = "%") +
+  coord_flip() +
+  ylim(0, 0.75) +
+  theme(
+    axis.title.y = element_blank()
+  )
+
+countries_16 <- grid.arrange(p1, p2)
+plot(countries_16)
+```
+
+
+### Save the file
+```{r}
+## Save the file
+name <- paste0("~/Dropbox/eLife/elife-analysis/figures/supp/", figure_name, figure_extension)
+ggsave(name, plot = countries_16, height = 6, width = 10)
+```
