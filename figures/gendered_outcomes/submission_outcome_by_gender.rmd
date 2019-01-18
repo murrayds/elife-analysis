@@ -1,0 +1,232 @@
+---
+title: "Submissions Outcomes by Gender"
+author: "Dakota Murray"
+output: html_notebook
+---
+
+### Set parameters for the name and extension of the figure
+```{r}
+figure_name <- "fig_4"
+figure_extension <- ".png"
+
+path_to_data <- "https://www.dropbox.com/s/5doa2khbrs7nuyx/formatted_elife.csv?dl=1"
+```
+
+```{r message=FALSE, warning=FALSE}
+# Load required packages
+library(tidyverse)
+library(grid)
+library(gridExtra)
+
+# setup theme
+theme_dakota <- function () { 
+    theme_bw(base_size=10, base_family="Times") %+replace% 
+        theme(
+            strip.background = element_blank(),
+            strip.text = element_text(face = "bold"),
+            plot.title = element_text(size = 11, face = "bold"),
+            axis.text.x = element_text(size = 9, margin = margin(t = 5, b = 5)),
+            legend.title = element_blank(),
+            legend.position = "bottom"
+        )
+}
+
+# converts a provided p-value into a representation that is easier to visualize
+sig2ast <- function(p) { ifelse(p <= 0.0001, "****", 
+                                ifelse(p <= 0.001, "***", 
+                                       ifelse(p <= 0.01, "**", 
+                                              ifelse(p <= 0.05, "*", 
+                                                     ifelse(p < 0.1, ".", "ns")
+                                              )
+                                       )
+                                )
+                          )
+}
+```
+
+### Load the required data
+```{r message=FALSE, warning=FALSE}
+elife <- read_csv(path_to_data)
+head(elife)
+```
+
+## Figure 4
+
+> Figure 4. Percentage of full submissions that were accepted, shown by the gender of the corresponding author, first author, and last author. Authors whose gender is unknown are excluded from analysis. See Figure SI.2 for an extension of this figure including submission rates, encourage rates, and overall acceptance races. Vertical error bars indicate 95th confidence intervals of the proportion of submitted, encouraged, and accepted initial and full submissions. Asterisks indicate significance level of X2 tests of independence of frequency of encourage and acceptance by gender; “\*” = p < 0.05; “ns” = p > 0.05.
+
+Note: There is a lot of extra code with this figure, because this figure originally showed informastion for submission rates and encourage and acceptance rates of initial submissions. Now we only show acceptance rates of full submissions. See figure SI.### for the expanded figure. 
+
+```{r message=FALSE, warning=FALSE}
+# First, I'll go through and run all the tests to get signif. values. I toyed around with ways to do this more programatically, but I think that this
+# manual method is perhaps the simplest
+
+# First, test the encourage rate diffs
+s <- subset(elife, initial_decision_made)
+t <- table("ca_gender" = s$ca_gender, "encouraged" = s$encouraged)[1:2,]
+ca_encouraged <- chisq.test(t[, 1:2])
+
+# Difference in acceptance rates by gender of corresponding author
+s <- subset(elife, initial_decision_made & (!has_full_submission | full_decision_made))
+t <- table("ca_gender" = s$ca_gender, "accepted" = s$accepted)[1:2,]
+ca_accepted <- chisq.test(t[, 1:2])
+
+# Difference in encourage-acceptance rates by gender of corresponding author
+s <- subset(elife, initial_decision_made & full_decision_made)
+t <- table("ca_gender" = s$ca_gender, "accepted" = s$accepted)[1:2,]
+ca_ea <- chisq.test(t[, 1:2])
+
+# Difference in encourage-acceptance rates by gender of first author
+s <- subset(elife, initial_decision_made & full_decision_made)
+t <- table("fa_gender" = s$fa_gender, "accepted" = s$accepted)[1:2,]
+fa_ea <- chisq.test(t[, 1:2])
+
+# Difference in encourage-acceptance rates by gender of last author
+s <- subset(elife, initial_decision_made & full_decision_made)
+t <- table("la_gender" = s$la_gender, "accepted" = s$accepted)[1:2,]
+la_ea <- chisq.test(t[, 1:2])
+
+# Now we use the results of these tests to construct a table
+measurements <- c(rep("submit_rate", 3), rep("encourage_rate", 3), rep("accept_rate", 3), rep("encourage_accept_rate", 3))
+author <- rep(c("ca_gender", "fa_gender", "la_gender"), 4)
+
+sig <- c("N/A", "N/A", "N/A", # submit rates, all NA since we don't really compare this
+         sig2ast(ca_encouraged$p.value), "N/A", "N/A", # encourage rate
+         sig2ast(ca_accepted$p.value), "N/A", "N/A", 
+         sig2ast(ca_ea$p.value), sig2ast(fa_ea$p.value), sig2ast(la_ea$p.value)
+         )
+sig_df <- data.frame(measure_key = factor(measurements), author_key = factor(author), sig = sig)
+
+# Now lets save these test results for later
+sig_list <- list("Corresponding author enc. rate" = ca_encouraged, 
+                   "Corresponding author acc. rate" = ca_accepted, 
+                   "Corresponding author enc-acc rate" = ca_ea, 
+                   "First author enc-acc rate" = fa_ea, 
+                   "last author enc-acc rate" = la_ea)
+
+
+data <- elife %>%
+  filter(initial_decision_made) %>%
+  gather(author_key, value = gender, ca_gender, la_gender, fa_gender) %>%
+  filter(gender %in% c('M', 'F')) %>%
+  group_by(author_key) %>%
+  mutate(
+    # if not ocnsidering the corr. author, then the count is all full submissions, ie: for when a submission ia made
+    total_papers = ifelse(author_key == "ca_gender", n(), sum(has_full_submission))
+    )%>%
+  group_by(author_key, gender) %>%
+  summarize(
+        paper_count = n(),
+        accept_count = sum(accepted == TRUE, na.rm = T),
+        encourage_count = sum(encouraged == TRUE),
+        encourage_rate = ifelse(author_key[1] == "ca_gender", encourage_count / n(), NA),
+        # this accept rate is the number of accepted papers / number of initial + full submissions
+        accept_rate = ifelse(author_key[1] == "ca_gender", accept_count / sum(!has_full_submission | full_decision_made, na.rm = T), NA),
+        submit_rate = n() / total_papers[1],
+        # this is the number of accepted papers divided by all papers 
+        encourage_accept_rate = accept_count / sum(has_full_submission & full_decision_made, na.rm = T)
+  ) %>%
+  ungroup() %>%
+  gather(measure_key, value = measurement, encourage_accept_rate) %>%
+  left_join(sig_df, by = c("measure_key", "author_key")) %>%
+  mutate(
+    author_key = factor(author_key,
+                        levels = c("ca_gender", "fa_gender", "la_gender"),
+                        labels = c("ca_gender" = "Corresponding", "fa_gender" = "First", "la_gender" = "Last")
+                        ),
+    measure_key = factor(measure_key, 
+                         labels = c("submit_rate" = "Submissions", "encourage_rate" = "Enc %", "accept_rate" = "Overall Acc %", "encourage_accept_rate" = "Accept %"),
+                         levels = c("submit_rate", "encourage_rate", "accept_rate", "encourage_accept_rate")),
+    gender = ifelse(gender == "F", "Female", "Male"),
+    standard_error = 1.96 * sqrt( (measurement * (1 - measurement)) / paper_count),
+    lower = measurement - standard_error,
+    upper = measurement + standard_error
+  )
+  
+  
+gender_outcomes <- data %>%
+  ggplot(aes(x = gender, y = measurement, color = factor(gender), shape = factor(gender), fill = factor(gender))) +
+  geom_bar(stat = "identity", alpha = 0.8, color = "black") +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2, color = "black") +
+  geom_text(aes(x = 1.5, y = 0.89, label = ifelse(measure_key == "Submissions", "", as.character(sig))), color = "black") +
+  geom_segment(aes(x = 1, xend = 2, y = ifelse(sig != "N/A", 0.85, 1.1), yend = ifelse(sig != "N/A", 0.85, 1.1)), color = "black") +
+  #facet_grid(author_key ~ measure_key) +
+  facet_wrap(~author_key) +
+  coord_cartesian(ylim = c(0, 1.0)) +
+  theme_dakota() +
+  guides(fill = F) +
+  labs(
+    x = "Gender of Author",
+    y = "% of full submissions accepted"
+  )
+
+gender_outcomes
+```
+
+## Save the file
+```{r}
+name <- paste0("~/Dropbox/eLife/elife-analysis/figures/main/", figure_name, figure_extension)
+ggsave(name, plot = gender_outcomes, height = 6, width = 7)
+```
+
+
+## Misc. information
+
+Signif. test results for figure 4
+```{r}
+fig4_sig_table <- data.frame(
+  test = names(sig_list),
+  p.value = sapply(sig_list, function(x) x$p.value),
+  n = sapply(sig_list, function(x) sum(x$observed)),
+  statistic = sapply(sig_list, function(x) x$statistic),
+  df = sapply(sig_list, function(x) x$parameter)
+)
+
+rownames(fig4_sig_table)<- NULL
+fig4_sig_table
+```
+
+### Data used to produce figure 4
+```{r rows.print=15}
+data %>%
+  select(-sig, -lower, -upper, -standard_error) %>%
+  spread(measure_key, measurement)
+```
+
+## Gender distirbution of gender-identified authors on full submissions at eLife, at manuscript level, includes duplicate authors
+```{r}
+full <- elife %>% 
+  filter(has_full_submission)
+```
+
+Of correpsonding authors
+```{r}
+full %>% 
+  filter(ca_gender %in% c("M", "F")) %>%
+  group_by(ca_gender) %>% 
+  summarize(
+    freq = n(), 
+    prop = freq / dim(full)[1]
+  )
+```
+
+First authors...
+```{r}
+full %>% 
+  filter(fa_gender %in% c("M", "F")) %>%
+  group_by(fa_gender) %>% 
+  summarize(
+    freq = n(), 
+    prop = freq / dim(full)[1]
+  )
+```
+
+And last authors
+```{r}
+full %>% 
+  filter(la_gender %in% c("M", "F")) %>%
+  group_by(la_gender) %>% 
+  summarize(
+    freq = n(), 
+    prop = freq / dim(full)[1]
+  )
+```
