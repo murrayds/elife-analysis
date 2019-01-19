@@ -17,13 +17,13 @@ This notebook documents the analysis of the dataset on peer review outcomes by e
 ## Setup
 The first step is to set up the environment. We import all the required pacakges and setup our custom ggplot theme. We also define here a simple function that is used to convert p-balues to a series of astericks, and another function that capitalizes the first letter of a word, used for capitalizing place names. 
 ```{r, message=FALSE, warning=FALSE}
-library(ggplot2)
-library(dplyr)
 library(readr)
 library(readxl)
 library(gridExtra)
 library(grid)
-library(tidyr)
+library(geosphere)
+library(tidyverse)
+
 
 theme_dakota <- function () { 
     theme_bw(base_size=10, base_family="Times") %+replace% 
@@ -82,17 +82,22 @@ Next we import the data. This version of the dataset was compiled from a seried 
 18. Create variables representing country homophily between each type of authorship and any member of the reviewer team 
 19. Remove potentially sensitive information, such as individual names, institutions, countries, submission dates, etc. 
 
-```{r message=FALSE}
+```{r message=FALSE, warning=FALSE}
 # Load the main eLife data file
 elife <- read_excel("~/Dropbox/eLife/data/elife_datafile.xlsx")
+## What do we have to do to get this to work?
 
+# Two solutions:
+# The first is that we do the matching as normal, and then simply lookup the information later
+# The second is that we load everything into the tbale at once, and have a different variable name for each
 
-# exclude the article type "Scientific Correspondance"
-elife <- elife %>% filter(type.x != "RE")
-
+# I will try to get the first to work. 
+#
 # Load the country infomration .csv file, which was manually created and available along with this file
-country_mapping <- read_csv("~/Dropbox/eLife/data/elife_countries.csv")
+institution_mapping <- read_csv("https://www.dropbox.com/s/5pcbzhb3v9prwhu/elife_institutions.csv?dl=1")[, 2:3]
+country_data <- read_csv("https://www.dropbox.com/s/o2t6724ugp8dzev/country_data_coords.csv?dl=1")
 
+country_mapping <- country_data %>% select(Country, continent, name) %>% rename(Mapping = name, Continent = continent)
 
 # Get a single list of all the peer reviewers, which presently are represented as separate variables on each row. This method
 # is ugly and can be improved, but it is simple and works, so I won't bother changing it
@@ -223,7 +228,7 @@ elife <- elife %>%
   mutate(
     reviewer3_country = Mapping,
     reviewer3_continent = Continent
-  ) %>%
+  ) %>% 
   select(-Mapping, -Continent) %>%
   left_join(country_mapping, by = c("reviewer4_country" = "Country")) %>%
   mutate(
@@ -231,6 +236,46 @@ elife <- elife %>%
     reviewer4_continent = Continent
   ) %>%
   select(-Mapping, -Continent) %>%
+  left_join(institution_mapping, by = c("ca_institution" = "elife_institution")) %>%
+  mutate(
+    ca_institution_rank = THE_rank
+  ) %>% 
+  select(-THE_rank) %>%
+  left_join(institution_mapping, by = c("fa_institution" = "elife_institution")) %>%
+  mutate(
+    fa_institution_rank = THE_rank
+  ) %>% 
+  select(-THE_rank) %>%
+  left_join(institution_mapping, by = c("la_institution" = "elife_institution")) %>%
+  mutate(
+    la_institution_rank = THE_rank
+  ) %>% 
+  select(-THE_rank) %>%
+  left_join(institution_mapping, by = c("se_institution" = "elife_institution")) %>%
+  mutate(
+    se_institution_rank = THE_rank
+  ) %>% 
+  select(-THE_rank) %>%
+  left_join(institution_mapping, by = c("reviewer1_institution" = "elife_institution")) %>%
+  mutate(
+    reviewer1_institution_rank = THE_rank
+  ) %>% 
+  select(-THE_rank) %>%
+  left_join(institution_mapping, by = c("reviewer2_institution" = "elife_institution")) %>%
+  mutate(
+    reviewer2_institution_rank = THE_rank
+  ) %>% 
+  select(-THE_rank) %>%
+  left_join(institution_mapping, by = c("reviewer3_institution" = "elife_institution")) %>%
+  mutate(
+    reviewer3_institution_rank = THE_rank
+  ) %>% 
+  select(-THE_rank) %>%
+  left_join(institution_mapping, by = c("reviewer4_institution" = "elife_institution")) %>%
+  mutate(
+    reviewer4_institution_rank = THE_rank
+  ) %>% 
+  select(-THE_rank) %>%
   # Now I will turn towards the other variables that we will be working with. 
   mutate(
     # convert NA assignments in gender assignment to a value of "Unknown" as well as setup factor levels
@@ -257,7 +302,7 @@ elife <- elife %>%
     has_full_submission = !is.na(full_submission_date),
     
     # Flag data if full submission has been submitted, but no decision has been made (ie: still in revision or decision stage)
-    full_decision_made = !is.na(full_submission_date) & last(na.omit(c(full_decision, rev1_decision, rev2_decision))) != "Revise",
+    full_decision_made = has_full_submission & dplyr::last(na.omit(c(full_decision, rev1_decision, rev2_decision))) != "Revise",
     
     # Flag the data if it was appealed at any state during its process
     appealed_any_stage = any(c(appeal_state1, appeal_state2, appeal_state3) == 4) & any(!is.na(c(appeal_state1, appeal_state2, appeal_state3))),
@@ -305,6 +350,7 @@ elife <- elife %>%
     reviewer_genders = list(na.omit(c(bre_gender, reviewer1_gender, reviewer2_gender, reviewer3_gender, reviewer4_gender))),
     reviewer_countries = list(tolower(na.omit(c(bre_country, reviewer1_country, reviewer2_country, reviewer3_country, reviewer4_country)))),
     reviewer_continents = list(tolower(na.omit(c(bre_continent, reviewer1_continent, reviewer2_continent, reviewer3_continent, reviewer4_continent)))),
+    reviewer_institutions = list(tolower(na.omit(c(bre_institution, reviewer1_institution, reviewer2_institution, reviewer3_institution, reviewer4_institution)))),
     
     reviewer_names_nobre = list(tolower(na.omit(c(reviewer1_name, reviewer2_name, reviewer3_name, reviewer4_name)))),
     reviewer_genders_nobre = list(na.omit(c(reviewer1_gender, reviewer2_gender, reviewer3_gender, reviewer4_gender))),
@@ -350,12 +396,53 @@ elife <- elife %>%
     # The first author is from the same country as at least one reviewer
     fa_continent_homophily = !is.na(fa_continent) & tolower(fa_continent) %in% unlist(reviewer_continents),
     
+    # Geographic distance between the country of the corresponding author and the senior editor
+    ca_se_dist = distm(c(subset(country_data, name == ca_country)$Longitude[1], subset(country_data, name == ca_country)$Latitude[1]),
+                       c(subset(country_data, name == se_country)$Longitude[1], subset(country_data, name == se_country)$Latitude[1]))[1],
+    
+    la_bre_dist = distm(c(subset(country_data, name == la_country)$Longitude[1], subset(country_data, name == la_country)$Latitude[1]),
+                       c(subset(country_data, name == bre_country)$Longitude[1], subset(country_data, name == bre_country)$Latitude[1]))[1],
+    
+    # Mean geographic distance between country of last author and each of the countries of associated reviewers
+    la_reviewer_dist = sum(unlist(sapply(unlist(reviewer_countries), function(rev_country) {
+        #print(rev_country)
+        if(is.na(rev_country) | is.na(la_country)) return(NA)
+        
+        la_coords = c(subset(country_data, name == la_country)$Longitude[1], subset(country_data, name == la_country)$Latitude[1])
+        rev_coords = c(subset(country_data, tolower(name) == rev_country)$Longitude[1], subset(country_data, tolower(name) == rev_country)$Latitude[1])
+        return(distm(la_coords, rev_coords)[1])
+    })), na.rm = T),
+    
+    # Mean geographic distance between country of first author and each of the countries of associated reviewers
+    fa_reviewer_dist = sum(unlist(sapply(unlist(reviewer_countries), function(rev_country) {
+        if(is.na(rev_country) | is.na(fa_country)) return(NA)
+        
+        la_coords = c(subset(country_data, name == fa_country)$Longitude[1], subset(country_data, name == fa_country)$Latitude[1])
+        rev_coords = c(subset(country_data, tolower(name) == rev_country)$Longitude[1], subset(country_data, tolower(name) == rev_country)$Latitude[1])
+        return(distm(la_coords, rev_coords)[1])
+    })), na.rm = T),
+    
+    # Indicator variables about whether or not any of the above distances are zero
+    ca_se_dist_zero = ifelse(is.na(ca_se_dist), NA, ifelse(ca_se_dist == 0, T, F)),
+    la_reviewer_dist_zero = ifelse(is.na(la_reviewer_dist), NA, ifelse(la_reviewer_dist == 0, T, F)),
+    fa_reviewer_dist_zero = ifelse(is.na(fa_reviewer_dist), NA, ifelse(fa_reviewer_dist == 0, T, F)),
+    
+    any_reviewer_from_africa = any(unlist(reviewer_continents) == "africa"),
+    any_reviewer_from_north_america = any(unlist(reviewer_continents) == "north america"),
+    any_reviewer_from_south_america = any(unlist(reviewer_continents) == "south america"),
+    any_reviewer_from_europe = any(unlist(reviewer_continents) == "europe"),
+    any_reviewer_from_asia = any(unlist(reviewer_continents) == "asia"),
+    
     # The BRE is also listed as a reviewer
     bre_is_reviewer = tolower(bre_name) %in% unlist(reviewer_names_nobre),
     
     ca_bre_country_homophily = bre_country == ca_country,
     
+    la_bre_country_homophily = bre_country == la_country,
+    
     ca_bre_continent_homophily = bre_continent == ca_continent,
+    
+    la_bre_continent_homophily = bre_continent == la_continent,
     
     # A short series of variables specifying if the first and last authors are the same, or if the CA is also the first/last author
     ca_is_first = tolower(ca_name) == tolower(fa_name),
@@ -380,7 +467,6 @@ elife <- elife %>%
   ) %>%
   filter(submission_type != "RE")
 ```
-
 
 
 
@@ -642,6 +728,16 @@ prop.table(table(people$gender))
 ```
 
 
+```{r}
+full <- elife %>% 
+  filter(has_full_submission & final_decision_made) %>%
+  filter(la_gender %in% c("M", "F")) %>%
+  filter(composition != "Uncertain")
+
+summary(glm(accepted ~ la_gender * composition, data = full, family = "binomial"))
+```
+
+
 ## Table SI.2
 
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE}
@@ -700,26 +796,27 @@ prop.table(table(identified$la_gender))
 bres <- peer_reviewers <- editors <- revs <- ca_authors <- fa_authors <- la_authors <-  NULL
 reviewer1 <- reviewer2 <- reviewer3 <- reviewer4 <- reviewers <- NULL
 
-elife <-elife %>%
+elife <- elife %>%
   # Now lets remove any identifying information, ie: names and institutions. We also remove country/continent for gatekeepers, as the population is smaller
   # We also remove all dates and times, because thees could probably be used to identify information about a particular manuscript
   # Also, lets remove variables that we will not prefently be working with, just to keep the table clean
-  select(-c(ca_name, la_name, fa_name,  se_name, bre_name, reviewer1_name, reviewer2_name, reviewer3_name, reviewer4_name, 
+  select(-c(
+         ca_name, la_name, fa_name,  se_name, bre_name, reviewer1_name, reviewer2_name, reviewer3_name, reviewer4_name, 
          ca_institution, la_institution, fa_institution, se_institution, bre_institution, 
          reviewer1_institution, reviewer2_institution, reviewer3_institution, reviewer4_institution,
-         se_country, bre_country, se_continent, reviewer1_country, reviewer2_country, reviewer3_country, reviewer4_country,
+         se_country, bre_country, reviewer1_country, reviewer2_country, reviewer3_country, reviewer4_country,
          initial_submission_time, full_submission_date, rev1_submission_date, rev2_submission_date,
          initial_decision_time, full_decision_date, rev1_decision_date, rev2_decision_date, submission_month,
          deltatime_initial_submission_decision,	deltatime_full_submission_decision,	deltatime_initial_submission_to_accept,	deltatime_full_submission_to_accept,
          deltatime_rev1,	deltatime_rev2,	revision_time,	deltatime_final,
-         prop_male_reviewers, prop_female_reviewers, appeal_state1, appeal_state2, appeal_state3, type.x, type.y, 
-         reviewer_names, reviewer_countries, reviewer_continents, reviewer_genders, full_decisions,
+         prop_male_reviewers, prop_female_reviewers, appeal_state1, appeal_state2, appeal_state3, type.x, type.y,
+         reviewer_names, reviewer_countries, reviewer_continents, reviewer_genders, full_decisions, reviewer_institutions,
          reviewer_names_nobre, reviewer_genders_nobre))
 
 # write this file as output, so that future analysis can start from this file as a checkpoint
-write.csv(elife, "formatted_data/formatted_elife.csv")
+write.csv(elife, "~/Dropbox/eLife/formatted_data/formatted_elife.csv")
 
-write.csv(people, "formatted_data/elife_people.csv")
+write.csv(people, "~/Dropbox/eLife/formatted_data/elife_people.csv")
 
 # clean the namespace
 country_mapping <- NULL
@@ -729,7 +826,7 @@ country_mapping <- NULL
 ## Checkpoint
 Here we load the data that was manipulated in the previous code chunk. Skip to here if the original (non-anonymized) data is not available.
 ```{r}
-elife <- read.csv("formatted_data/formatted_elife.csv")
+elife <- read.csv("~/Dropbox/eLife/formatted_data/formatted_elife.csv")
 ```
 
 
@@ -1003,7 +1100,7 @@ people %>%
   summarize(
     freq = n(),
     prop = freq / total[1]
-    )
+  )
 ```
 
 ### Frequencies of author and gatekepeer continental affilaitions at eLife
@@ -1116,11 +1213,11 @@ fig4 <- data_fig4 %>%
   ggplot(aes(x = gender, y = measurement, color = factor(gender), shape = factor(gender), fill = factor(gender))) +
   geom_bar(stat = "identity", alpha = 0.8, color = "black") +
   geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2, color = "black") +
-  geom_text(aes(x = 1.5, y = 0.59, label = ifelse(measure_key == "Submissions", "", as.character(sig))), color = "black") +
-  geom_segment(aes(x = 1, xend = 2, y = ifelse(sig != "N/A", 0.58, 1.1), yend = ifelse(sig != "N/A", 0.58, 1.1)), color = "black") +
+  geom_text(aes(x = 1.5, y = 0.89, label = ifelse(measure_key == "Submissions", "", as.character(sig))), color = "black") +
+  geom_segment(aes(x = 1, xend = 2, y = ifelse(sig != "N/A", 0.85, 1.1), yend = ifelse(sig != "N/A", 0.85, 1.1)), color = "black") +
   #facet_grid(author_key ~ measure_key) +
   facet_wrap(~author_key) +
-  coord_cartesian(ylim = c(0.4, 0.6)) +
+  coord_cartesian(ylim = c(0, 1.0)) +
   theme_dakota() +
   guides(fill = F) +
   labs(
@@ -1242,7 +1339,7 @@ data_fig5 <- elife %>%
                         labels = c("ca_gender" = "Corresponding", "fa_gender" = "First", "la_gender" = "Last"))
     ,
     gender = ifelse(gender == "M", "Male", "Female"),
-    composition = factor(composition, labels = c("All Men" = "All-male reviewers", "All Women" = "All-female reviewers", "Mixed" = "Mixed-gender reviewers", "Uncertain" = "Uncertain"))
+    composition = factor(composition, labels = c("All Men" = "All-male", "All Women" = "All-female", "Mixed" = "Mixed-gender", "Uncertain" = "Uncertain"))
   ) %>%
   filter(composition != "Uncertain")
 
@@ -1250,14 +1347,14 @@ data_fig5 <- elife %>%
 fig5 <- data_fig5 %>% 
   ggplot(aes(x = gender, y = acceptance_rate, fill = gender)) +
   geom_bar(stat = "identity", alpha = 0.8, color = "black") +
-  geom_text(aes(y = 0.31, label = paper_count), size = 3.5, color = "black") +
+  geom_text(aes(y = 0.05, label = paper_count), size = 3.5, color = "black") +
   #geom_text(aes(y = 0.1, label = paste0(round(acceptance_rate, 3) * 100, "%")), size = 2.5, color = "black", position = position_dodge(0.87)) +
   geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2, color = "black", alpha = 0.8) +
-  geom_text(aes(x = 1.5, y = 0.76, label = sig), color = "black") +
+  geom_text(aes(x = 1.5, y = 0.89, label = sig), color = "black") +
   #geom_text(aes(x = gender, y = 0.1, label = round(acceptance_rate, 3) * 100 ), color = "black") +
-  geom_segment(aes(x = 1.1, xend = 1.9, y = ifelse(sig != "N/A", 0.74, 1.1), yend = ifelse(sig != "N/A", 0.74, 1.1)), color = "black") +
+  geom_segment(aes(x = 1.1, xend = 1.9, y = ifelse(sig != "N/A", 0.85, 1.1), yend = ifelse(sig != "N/A", 0.85, 1.1)), color = "black") +
   facet_wrap( ~composition) +
-  coord_cartesian(ylim = c(0.30, 0.8)) +
+  coord_cartesian(ylim = c(0.0, 1.0)) +
   theme_dakota() +
   guides(fill = F) +
   labs(y = "% of full submissions accepted",
@@ -1431,6 +1528,14 @@ ggsave("figures/main/fig_6.tiff", plot = fig6, height = 6, width = 7.5)
 ggsave("figures/main/fig_6.png", plot = fig6, height = 6, width = 7.5)
 ```
 
+
+```{r}
+g <- grid.arrange(fig4, fig6, ncol = 2, widths = 1:2)
+
+ggsave("~/Desktop/combined_figure.png", g,  width = 12, height = 6)
+```
+
+
 ### Data to produce figure 5, the top panel
 ```{r}
 data_table <- data_fig5_p1 %>%
@@ -1441,17 +1546,17 @@ data_table
 
 ### Proportion of intiial submissions constituted by top 8 counties
 ```{r}
-sum(data_table$`Prop. of Initial Submissions`)
+sum(data_table$`Prop. of initial submissions`)
 ```
 
 ### Proportion of full submissions constituted by top 8 counties
 ```{r}
-sum(data_table$`Prop. of Full Submissions`)
+sum(data_table$`Prop. of full submissions`)
 ```
 
 ### Proportion of accepted submissions constituted by top 8 counties
 ```{r}
-sum(data_table$`Prop. of Accepted Submissions`)
+sum(data_table$`Prop. of accepted submissions`)
 ```
 
 ###Data used to produce figure 5, bottom panel
@@ -1470,9 +1575,11 @@ data_table
 Note: this figure is constructed in multiple parts
 
 ```{r message=FALSE, warning=FALSE}
-countries <- c("canada", "china", "france", "germany", "japan", "switzerland", "united kingdom", "united states")
+countries <- c("Canada", "China", "France", "Germany", "Japan", "Switzerland", "United Kingdom", "United States")
 sig_list <- list()
+
 for (country in countries) {
+  print(country)
   s <- subset(elife, full_decision_made == T & has_full_submission & ca_country == country)
   t <- table(s$ca_country_homophily, s$accepted)
   test = chisq.test(t[, 1:2])
@@ -1525,6 +1632,67 @@ fig7.A <- elife %>%
 
 fig7.A
 ```
+
+
+```{r message=FALSE, warning=FALSE}
+countries <- c("Canada", "China", "France", "Germany", "Japan", "Switzerland", "United Kingdom", "United States")
+sig_list <- list()
+
+for (country in countries) {
+  print(country)
+  s <- subset(elife, full_decision_made == T & has_full_submission & ca_country == country)
+  t <- table(s$ca_country_homophily, s$accepted)
+  test = chisq.test(t[, 1:2])
+  sig_list[length(sig_list) + 1] <- list(country = test)
+}
+
+sig_df <- data.frame(
+  ca_country = countries,
+  sig = sapply(sig_list, function(l) {sig2ast(l$p.value) })
+)
+
+elife %>%
+  filter(full_decision_made & has_full_submission & ca_country %in% countries & !is.na(ca_bre_country_homophily)) %>%
+  group_by(ca_country, ca_bre_country_homophily) %>%
+  summarize(
+    paper_count = n(),
+    accept_count = sum(accepted == TRUE, na.rm = T),
+    encourage_accept_rate = accept_count / paper_count,
+    se = 1.96 * sqrt( (encourage_accept_rate * (1 - encourage_accept_rate)) / paper_count),
+    lower = encourage_accept_rate - se,
+    upper = encourage_accept_rate + se,
+    upper = ifelse(upper > 1, 1, upper)
+  ) %>%
+  group_by(ca_country) %>%
+  mutate(totals = sum(paper_count)) %>%
+  ungroup() %>%
+  left_join(sig_df) %>%
+  #top_n(16, totals) %>% # 8 countries, 3 authorship types per country, therefore first 24 rows
+  mutate(ca_country = factor(sapply(as.character(ca_country), simpleCap))) %>%
+  # Start ggplot
+  ggplot(aes(x = ca_bre_country_homophily, y = encourage_accept_rate, fill = ca_bre_country_homophily)) +
+  geom_bar(stat = "identity", position = position_dodge(), color = "black", alpha = 0.8) +
+  geom_errorbar(aes(ymin = lower, ymax = upper), color = "black", width = 0.2) +
+  geom_text(aes(label = paper_count, y = 0.075), size = 2.5) +
+  geom_text(aes(label = sig, x = 1.5, y = 0.95)) +
+  geom_segment(aes(x = 1, xend = 2, y = ifelse(sig != "N/A", 0.85, 1.1), yend = ifelse(sig != "N/A", 0.85, 1.1)), color = "black") +
+  facet_wrap(~ca_country, nrow = 2, ncol = 4) +
+  ylim(0, 1) +
+  theme_dakota() +
+  guides(fill = FALSE) +
+  scale_fill_brewer(palette = "Oranges", labels = c("No Homogeneity", "Homogeneity")) +
+  scale_x_discrete(labels = c("No Homogeneity", "Homogeneity")) +
+  labs(
+    x = "",
+    y = "% of full submissions accepted"
+  ) +
+  theme(
+    axis.text.x = element_text(angle = 20, vjust = 1, hjust = 1)
+  )
+
+```
+
+
 
 And here are the results from the tests used in the graph above
 ```{r}
@@ -1613,7 +1781,7 @@ fig7.B <- d1.summ %>%
   left_join(sig_df, by = "type") %>%
   mutate(type = factor(type, 
                        levels = c("all", "no us", "no founder"),
-                       labels = c("All Countries", "Excluding U.S.", "Excluding Founding Nations")
+                       labels = c("All Countries", "Excluding U.S.", "Excluding U.S., U.K., and Germany")
                        )
          ) %>%
   ggplot(aes(x = ca_country_homophily, y = encourage_accept_rate, fill = ca_country_homophily)) +
@@ -1632,11 +1800,13 @@ fig7.B <- d1.summ %>%
     x = "",
     y = "% of full submissions accepted"
   )
+```
 
-fig7 <- grid.arrange(fig7.B, fig7.A, ncol = 2, widths = 1:2)
 
-ggsave("figures/main/fig_7.tiff", plot = fig7, height = 5, width = 7.5)
-ggsave("figures/main/fig_7.png", plot = fig7, height = 5, width = 7.5)
+```{r}
+g <- grid.arrange(fig5, fig7.A, ncol = 2, widths = 1:2)
+
+ggsave("~/Desktop/combined_figure2.png", g,  width = 12, height = 6)
 ```
 
 
@@ -1983,7 +2153,7 @@ p2 <- elife %>%
   ungroup() %>%
   top_n(16, totals) %>%
   mutate(
-    ca_country = reorder(ca_country, encourage_accept_rate)
+    ca_country = reorder(ca_country, encourage_rate)
   ) %>%
   gather(measure_key, value = measurement, encourage_rate, accept_rate, encourage_accept_rate) %>%
   mutate(measure_key = factor(measure_key, 
@@ -2174,4 +2344,5 @@ decisions
 
 write.csv(decisions, "~/desktop/decisions.csv")
 ```
+
 
