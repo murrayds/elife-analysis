@@ -1,0 +1,119 @@
+---
+title: "Average number of revisions"
+author: "Dakota Murray"
+output: html_notebook
+---
+
+### Set parameters for the name and extension of the figure
+```{r}
+figure_name <- "fig_si1"
+figure_extension <- ".png"
+
+path_to_data <- "https://www.dropbox.com/s/5doa2khbrs7nuyx/formatted_elife.csv?dl=1"
+```
+
+```{r message=FALSE, warning=FALSE}
+# Load required packages
+library(tidyverse)
+library(grid)
+library(gridExtra)
+
+# setup theme
+theme_dakota <- function () { 
+    theme_bw(base_size=10, base_family="Times") %+replace% 
+        theme(
+            strip.background = element_blank(),
+            strip.text = element_text(face = "bold"),
+            plot.title = element_text(size = 11, face = "bold"),
+            axis.text.x = element_text(size = 9, margin = margin(t = 5, b = 5)),
+            legend.title = element_blank(),
+            legend.position = "bottom"
+        )
+}
+
+# I copied the below function from a stack overflow question. It should capitalize the first letter of each work in a string
+# https://stackoverflow.com/questions/6364783/capitalize-the-first-letter-of-both-words-in-a-two-word-string
+simpleCap <- function(x) {
+  s <- strsplit(x, " ")[[1]]
+  paste(toupper(substring(s, 1,1)), substring(s, 2),
+      sep="", collapse=" ")
+}
+```
+
+### Load the required data
+```{r message=FALSE, warning=FALSE}
+elife <- read_csv(path_to_data)
+head(elife)
+```
+
+## Average revisions
+
+> Figure SI.1 Average number of revisions a full submissions undergoes before a final decision of accept or reject is made. In this case, zero revisions occurs when a full submission is accepted or rejected without a request for any revisions. The dataset records at maximum two revisions, though only a small number of manuscripts remain in revision after two submissions (see figure 1). For this figure, we only include manuscripts for which a final decision is made after zero, one, or two revisions. The left panel shows differences in the average number of revisions by the country of the last author. The right shows the average revisions by the gender of the last author. 
+
+```{r}
+countries <- c("Canada", "China", "France", "Germany", "Japan", "Switzerland", "United Kingdom", "United States")
+
+plot.A <- elife %>%
+  filter(full_decision_made & has_full_submission & la_country %in% countries) %>%
+  group_by(la_country) %>%
+  summarize(
+    avg_revisions = mean(num_revisions),
+    ci = 1.96 * sd(num_revisions, na.rm=TRUE) / sqrt(n())
+  ) %>%
+  mutate(la_country = factor(sapply(as.character(la_country), simpleCap))) %>% # capitalize first letter of country stirngs
+  ggplot(aes(x = reorder(la_country, -avg_revisions), y = avg_revisions)) +
+  geom_point(color = "dodgerblue4", alpha = 0.9, color = "black", size = 5) +
+  geom_errorbar(aes(ymin = avg_revisions - ci, ymax = avg_revisions + ci), width = 0.2) +
+  theme_dakota() +
+  labs(x = "Country of last author",
+       y = "Average number of revisions",
+       title = "Avg. revisions by country") +
+  coord_cartesian(ylim = c(0, 1)) +
+  theme(
+    plot.title = element_text(size = 12, margin = margin(0, 0, 2, 0)),
+    axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1)
+  )
+
+plot.A
+```
+
+
+```{r}
+plot.B <- elife %>%
+  filter(full_decision_made & has_full_submission & la_gender %in% c("M", "F")) %>%
+  group_by(la_gender) %>%
+  summarize(
+    avg_revisions = mean(num_revisions),
+    ci = 1.96 * sd(num_revisions, na.rm=TRUE) / sqrt(n())
+  ) %>%
+  mutate(
+    la_gender = ifelse(la_gender == "M", "Male", "Female")
+  ) %>%
+  ggplot(aes(x = la_gender, y = avg_revisions, color = la_gender)) +
+  geom_point(alpha = 0.9, size = 8) +
+  geom_errorbar(aes(ymin = avg_revisions - ci, ymax = avg_revisions + ci), color = "black", width = 0.2) +
+  theme_dakota() +
+  labs(x = "Gender of last author",
+       #y = "Average number of revisions", 
+       y = "",
+       title = "Avg. revisions by gender") +
+  guides(color = FALSE) +
+  coord_cartesian(ylim = c(0, 1)) +
+  theme(plot.title = element_text(size = 12, margin = margin(0, 0, 2, 0)))
+
+plot.B
+```
+
+
+
+
+```{r}
+g <- grid.arrange(plot.A, plot.B, ncol = 2, widths = 2:1)
+plot(g)
+```
+
+```{r}
+## Save the file
+name <- paste0("~/Dropbox/eLife/elife-analysis/figures/supp/", figure_name, figure_extension)
+ggsave(name, plot = g, height = 6, width = 10)
+```

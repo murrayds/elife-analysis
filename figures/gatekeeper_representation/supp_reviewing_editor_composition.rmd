@@ -1,0 +1,97 @@
+---
+title: "Reviewing editor and team composition"
+author: "Dakota Murray"
+output: html_notebook
+---
+
+### Set parameters for the name and extension of the figure
+```{r}
+figure_name <- "fig_si5"
+figure_extension <- ".png"
+
+path_to_data <- "https://www.dropbox.com/s/5doa2khbrs7nuyx/formatted_elife.csv?dl=1"
+```
+
+```{r message=FALSE, warning=FALSE}
+# Load required packages
+library(tidyverse)
+library(grid)
+library(gridExtra)
+
+# setup theme
+theme_dakota <- function () { 
+    theme_bw(base_size=10, base_family="Times") %+replace% 
+        theme(
+            strip.background = element_blank(),
+            strip.text = element_text(face = "bold"),
+            plot.title = element_text(size = 11, face = "bold"),
+            axis.text.x = element_text(size = 9, margin = margin(t = 5, b = 5)),
+            legend.title = element_blank(),
+            legend.position = "bottom"
+        )
+}
+
+# I copied the below function from a stack overflow question. It should capitalize the first letter of each work in a string
+# https://stackoverflow.com/questions/6364783/capitalize-the-first-letter-of-both-words-in-a-two-word-string
+simpleCap <- function(x) {
+  s <- strsplit(x, " ")[[1]]
+  paste(toupper(substring(s, 1,1)), substring(s, 2),
+      sep="", collapse=" ")
+}
+```
+
+### Load the required data
+```{r message=FALSE, warning=FALSE}
+elife <- read_csv(path_to_data)
+head(elife)
+```
+
+
+##Figure SI.5
+
+> Figure SI.5. Proportion of peer reviewer team’s gender compositions by gender of the reviewing editor. Compositions are determined while excluding the reviewing editor from team membership, if they are listed as a peer reviewer. 
+
+```{r}
+rev_editor_composition <- elife %>%
+  filter(bre_gender %in% c("M", "F")) %>%
+  mutate(
+    bre_gender = ifelse(bre_gender == "M", "Male Reviewing Editor", "Female Reviewing Editor"),
+    composition_adj = factor(composition_adj, 
+                             labels = c("All Men" = "All male",
+                                        "All Women" = "All female",
+                                        "Mixed" = "Mixed",
+                                        "Unvertain" = "Uncertain")
+                             )
+    ) %>%
+  group_by(bre_gender) %>%
+  mutate(total = n()) %>%
+  group_by(composition_adj, bre_gender) %>%
+  summarize(
+    prop = n() / total[1]
+  ) %>%
+  ungroup() %>%
+  mutate(
+    composition_adj = reorder(composition_adj, -prop)
+  ) %>%
+  #arrange(prop) %>%
+  ggplot(aes(x = composition_adj, y = prop, fill = composition_adj)) +
+  geom_bar(stat = "identity", color = "black", alpha = 0.8) +
+  facet_wrap(~bre_gender) +
+  geom_text(aes(label = paste0(round(prop, 3) * 100, "%"), y = prop + 0.025), size = 2.5) +
+  theme_dakota() +
+  scale_fill_brewer(palette = "Accent") +
+  guides(fill = F) +
+  ylim(0, 0.7) +
+  labs(y = "Proportion",
+       x = "Composition of invited peer reviewer teams"
+       )
+
+rev_editor_composition
+```
+
+### Save the file
+```{r}
+## Save the file
+name <- paste0("~/Dropbox/eLife/elife-analysis/figures/supp/", figure_name, figure_extension)
+ggsave(name, plot = countries_16, height = 6, width = 10)
+```

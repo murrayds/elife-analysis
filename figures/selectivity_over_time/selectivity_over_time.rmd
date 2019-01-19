@@ -1,0 +1,132 @@
+---
+title: "Submissions and selectivity of *eLife* over time."
+author: "Dakota Murray"
+output: html_notebook
+---
+
+### Set parameters for the name and extension of the figure
+```{r}
+figure_name <- "fig_2"
+figure_extension <- ".png"
+
+path_to_data <- "https://www.dropbox.com/s/5doa2khbrs7nuyx/formatted_elife.csv?dl=1"
+```
+
+```{r message=FALSE, warning=FALSE}
+# Load required packages
+library(tidyverse)
+library(grid)
+library(gridExtra)
+
+# setup theme
+theme_dakota <- function () { 
+    theme_bw(base_size=10, base_family="Times") %+replace% 
+        theme(
+            strip.background = element_blank(),
+            strip.text = element_text(face = "bold"),
+            plot.title = element_text(size = 11, face = "bold"),
+            axis.text.x = element_text(size = 9, margin = margin(t = 5, b = 5)),
+            legend.title = element_blank(),
+            legend.position = "bottom"
+        )
+}
+```
+
+### Load the required data
+```{r message=FALSE, warning=FALSE}
+elife <- read_csv(path_to_data)
+head(elife)
+```
+
+
+### Plot the figure
+
+Note: Figure 1 wa smade in an external program, *RawGraphics*, and so does not appear in this notebook. 
+
+> Submissions and selectivity of eLife over time. Left: Yearly count of initial submissions, encouraged initial submissions, and accepted full submissions to eLife between 2012 and 2016; Right: rate of initial submissions encouraged (Encourage %), rate of full submissions accepted (% Full accepted) and rate of initial submissions accepted (Overall accept %) between 2012 and 2016. Submissions during the year of 2017 were excluded because we do not have sufficient data for full life-cycle of these manuscripts. 
+
+```{r}
+d1 <- elife %>%
+  group_by(submission_year) %>%
+  summarize(
+        paper_count = n(),
+        accept_count = sum(accepted == TRUE, na.rm = T),
+        encourage_count = sum(encouraged == TRUE, na.rm = T)
+  ) %>%
+  gather(measure_key, value = measurement, paper_count, encourage_count, accept_count) %>%
+  mutate(measure_key = factor(measure_key, levels = c("paper_count", "encourage_count", "accept_count"))) %>%
+  filter(submission_year != "2017")
+  
+  
+p1 <- d1 %>%
+  ggplot(aes(x = submission_year, y = measurement, linetype = measure_key, color = measure_key, shape = measure_key)) +
+  geom_line() +
+  geom_point(size = 2) +
+  theme_dakota() +
+  labs(
+    x = "Submission Year",
+    y = "# Manuscripts"
+  ) +
+  scale_color_manual(labels = c("accept_count" = "# Accepted", "encourage_count" = "# Encouraged", "paper_count" = "# Submitted"), values = c("black", "blue", "red")) +
+  scale_shape_discrete(labels = c("accept_count" = "# Accepted", "encourage_count" = "# Encouraged", "paper_count" = "# Submitted")) +
+  scale_linetype_discrete(labels = c("accept_count" = "# Accepted", "encourage_count" = "# Encouraged", "paper_count" = "# Submitted"))
+  
+  
+d2 <- elife %>%
+  group_by(submission_year) %>%
+  summarize(
+        paper_count = n(),
+        accept_count = sum(accepted == TRUE, na.rm = T),
+        encourage_count = sum(encouraged == TRUE, na.rm = T),
+        encourage_rate = encourage_count / paper_count,
+        accept_rate = accept_count / paper_count,
+        encourage_accept_rate = accept_count / sum(!is.na(full_decision_made) & full_decision_made)
+  ) %>%
+  gather(measure_key, value = measurement, encourage_rate, accept_rate, encourage_accept_rate) %>%
+  mutate(
+    measure_key = factor(measure_key, levels = c("encourage_rate", "encourage_accept_rate", "accept_rate"))
+  ) %>%
+  filter(submission_year < 2017)
+  
+p2 <- d2 %>%
+  ggplot(aes(x = submission_year, y = measurement, linetype = measure_key, color = measure_key, shape = measure_key)) +
+  geom_line() +
+  geom_point(size = 2) +
+  ylim(0, 1) +
+  theme_dakota() +
+  labs(
+    x = "Submission Year",
+    y = "%"
+  ) +
+  scale_color_manual(labels = c("accept_rate" = "Overall accept %", "encourage_rate" = "Encourage %", "encourage_accept_rate" = "% Full accepted"), 
+                     values = c("blue", "purple", "red")) +
+  scale_shape_manual(labels = c("accept_rate" = "Overall accept %", "encourage_rate" = "Encourage %", "encourage_accept_rate" = "% Full accepted"),
+                     values = c(17, 15, 18)) +
+  scale_linetype_manual(labels = c("accept_rate" = "Overall accept %", "encourage_rate" = "Encourage %", "encourage_accept_rate" = "% Full accepted"), 
+                          values = c("dotted", "dashed", "dotdash"))
+
+selectivity_over_time <- grid.arrange(p1, p2, ncol = 2)
+selectivity_over_time
+```
+
+### Save the figure and associated data
+```{r}
+name <- paste0("~/Dropbox/eLife/elife-analysis/figures/main/", figure_name, figure_extension)
+ggsave(name, plot = selectivity_over_time, height = 4, width = 7.5)
+
+name_csv1 <- paste0("~/Dropbox/eLife/elife-analysis/formatted_data/", figure_name, "_leftpanel_data.csv")
+name_csv2 <- paste0("~/Dropbox/eLife/elife-analysis/formatted_data/", figure_name, "_rightpanel_data.csv")
+write.csv(d1, name_csv1)
+write.csv(d2, name_csv2)
+```
+
+### Data to construct figure 2, right panel, including enocurage, overall accept, and accept rates
+```{r}
+d2 %>% 
+  spread(measure_key, measurement) %>%
+  rename(
+    overall_accept_rate = accept_rate,
+    accept_rate = encourage_accept_rate
+    )
+```
+
