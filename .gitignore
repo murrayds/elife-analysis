@@ -2,10 +2,13 @@
 .DS_Store
 
 # Ignore images
-.png
-.pdf
-.eps
-.tiff
+*.png
+*.pdf
+*.eps
+*.tiff
+
+# ignore data files
+*.csv
 
 # History files
 .Rhistory
