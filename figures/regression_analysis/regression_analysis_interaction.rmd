@@ -1,0 +1,26 @@
+---
+title: "Regression Analysis—Interactions"
+author: "Dakota Murray"
+output: html_notebook
+---
+
+### Set parameters for the name and extension of the figure
+```{r}
+figure_name <- "fig_si2"
+figure_extension <- ".png"
+
+path_to_data <- "https://www.dropbox.com/s/5doa2khbrs7nuyx/formatted_elife.csv?dl=1"
+```
+
+```{r message=FALSE, warning=FALSE}
+# Load required packages
+library(tidyverse)
+library(grid)
+library(gridExtra)
+```
+
+### Load the required data
+```{r message=FALSE, warning=FALSE}
+elife <- read_csv(path_to_data)
+head(elife)
+```
