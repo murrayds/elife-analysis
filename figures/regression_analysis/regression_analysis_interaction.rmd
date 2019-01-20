@@ -6,21 +6,214 @@ output: html_notebook
 
 ### Set parameters for the name and extension of the figure
 ```{r}
-figure_name <- "fig_si2"
+figure_name <- "fig_7"
 figure_extension <- ".png"
 
-path_to_data <- "https://www.dropbox.com/s/5doa2khbrs7nuyx/formatted_elife.csv?dl=1"
+path_to_data <- "https://www.dropbox.com/s/97im2cayb1trlax/formatted_elife.csv?dl=1"
 ```
 
 ```{r message=FALSE, warning=FALSE}
 # Load required packages
 library(tidyverse)
+library(lmtest)
+library(tidyr)
+library(stargazer)
+library(sjPlot)
+library(sjlabelled)
+library(sjmisc)
 library(grid)
 library(gridExtra)
 ```
 
 ### Load the required data
 ```{r message=FALSE, warning=FALSE}
-elife <- read_csv(path_to_data)
-head(elife)
+# Replace this string 
+elife <- read.csv(path_to_data)
+
+elife$ca_continent <- relevel(elife$ca_continent, ref = "North America")
+elife$fa_continent <- relevel(elife$fa_continent, ref = "North America")
+elife$la_continent <- relevel(elife$la_continent, ref = "North America")
+elife$se_continent <- relevel(elife$se_continent, ref = "North America")
+
+elife$composition <- relevel(elife$composition, ref = "Mixed")
+
+elife$la_institution_rank <- with(elife, ifelse(la_institution_rank == "Top", "Top", "Sandard/Unranked/Unknown"))
+elife$ca_institution_rank <- with(elife, ifelse(ca_institution_rank == "Top", "Top", "Sandard/Unranked/Unknown"))
+
+elife$submission_year <- elife$submission_year - 2012
+dim(elife)
+```
+
+### Define initial and full submissions
+```{r}
+# First, filter the data by removing the observations from Antarctica 
+# add a variable for "included"
+initial_submissions <- elife %>% filter(initial_decision_made)
+initial_submissions$included <- with(initial_submissions, initial_decision_made & ca_continent != "Antarctica" & !is.na(ca_institution_rank) & !is.na(ca_gender) & !is.na(ca_se_dist) & !is.na(se_gender))
+
+
+full_submissions <- elife %>% filter(full_decision_made)
+full_submissions$included <- with(full_submissions, la_continent != "Antarctica" & fa_continent != "Antarctica" & !is.na(la_gender) & la_gender != "UNK" & composition != "Uncertain" & !is.na(la_reviewer_dist) & !is.na(la_reviewer_dist_zero) & !is.na(la_institution_rank) & !is.na(la_continent) & !is.na(fa_gender))
+```
+
+### Construct the initial submissions model
+```{r}
+initial_model <- glm(encouraged ~ submission_year + submission_type + ca_gender +  ca_institution_rank + ca_continent + I(ca_se_dist / 1000000) + ca_se_dist_zero + ca_se_dist_zero, data = subset(initial_submissions, included), family = "binomial")
+summary(initial_model)
+```
+
+### Construct a regression table for the 
+```{r}
+initial.cov.labels = c("submission_year" = "Submission Year", 
+               "submission_typeSR" = "Submission Type = SR", 
+               "submission_typeTR" = "Submission Type = TR", 
+               "ca_genderM" = "Corr. Author is Male",
+               "ca_genderUNK" = "Corr. Author Gender UNK",
+               "ca_institution_rankTop" = "Corr. Author Inst. Top 50",
+               "ca_institution_rankStandard/Unranked/Unknown" = "Corr. Author Inst. Below 200",
+               "ca_continentAfrica" = "Corr. author from Africa",
+               "ca_continentAsia" = "Corr. author from Asia",
+               "ca_continentEurope" = "Corr. author from Europe",
+               "ca_continentOceania" = "Corr. author from Oceania",
+               "ca_continentSouth America" = "Corr. author from South America",
+               "se_genderM" = "Senior Editor is Male",
+               "I(ca_se_dist/1e+06)" = "Geographic distance (1000s km)",
+               "ca_se_dist_zeroTRUE" = "Geographic distance is zero",
+               "ca_genderM:se_genderM" = "Corr. author male * Senior editor male",
+               "ca_genderUNK:se_genderM" = "Corr. author UNK * Senior editor male"
+               
+               )
+
+out <- capture.output(stargazer(initial_model, 
+                                ci = T, 
+                                align = T, 
+                                covariate.labels = initial.cov.labels, 
+                                model.names = T,
+                                style = "ajs"
+                                ))
+
+#cat(paste(out, collapse = "\n"), "\n", file="~/Desktop/encourage_model.txt", append=F)
+out
+```
+
+### Construct the initial regression plot
+```{r}
+initial_reg_plot <- plot_model(initial_model, 
+           vline.color = "black", 
+           sort.est = TRUE, 
+           show.values = TRUE, 
+           value.offset = .3, 
+           axis.labels = initial.cov.labels,
+           wrap.labels = 100, # basically, don't wrap the labels, squeeze them all in
+           title = "Encouragement of initial submissions",
+           axis.lim = c(0.1, 10)) +
+  theme_bw()
+
+initial_reg_plot
+```
+
+
+### Construct the interaction variable
+```{r}
+assign_interaction_term = function(la_gender, composition) {
+  if (la_gender == "M") {
+    if (composition == "All Men") {
+      return("Male Author, All Men")
+    } else if (composition == "All Women") {
+      return("Male Author, All Women")
+    } else if (composition == "Mixed") {
+      return("Male Author, Mixed")
+    } else {
+      return(NA)
+    }
+  } else if (la_gender == "F") {
+    if (composition == "All Men") {
+      return("Female Author, All Men")
+    } else if (composition == "All Women") {
+      return("Female Author, All Women")
+    } else if (composition == "Mixed") {
+      return("Female Author, Mixed")
+    } else {
+      return(NA)
+    }
+  } else {
+    return(NA)
+  }
+}
+
+full_with_inter <- full_submissions %>%
+  filter(composition != "Uncertain") %>%
+  rowwise() %>%
+  mutate(
+    author_reviewer_interaction = assign_interaction_term(la_gender, composition)
+  ) %>%
+  ungroup() %>%
+  mutate(author_reviewer_interaction = as.factor(author_reviewer_interaction))
+
+table(full_with_inter$author_reviewer_interaction)
+```
+
+
+### Construct the model for full submissions with interactions
+```{r}
+full_model <- glm(accepted ~ submission_year + submission_type + fa_gender + la_institution_rank + la_continent + I(la_reviewer_dist/ 1000000) + la_reviewer_dist_zero + author_reviewer_interaction, data = subset(full_with_inter, included), family = "binomial")
+summary(full_model)
+```
+
+
+### Run ANOVA on the model...
+```{r}
+anova(full_model, test = "Chisq")
+```
+
+### Construct the plot for full submissions
+```{r}
+full.cov.labels = c("submission_year" = "Submission Year", 
+               "submission_typeSR" = "Submission Type = SR", 
+               "submission_typeTR" = "Submission Type = TR", 
+               "fa_genderM" = "First Author is Male",
+               "fa_genderUNK" = "First Author is Unknown Gender",
+               "la_institution_rankStandard/Unranked/Unknown" = "Last Author Inst. Below 200",
+               "la_institution_rankTop" = "Last Author Inst. Top 50",
+               "la_continentAfrica" = "Last author from Africa",
+               "la_continentAsia" = "Last author from Asia",
+               "la_continentEurope" = "Last author from Europe",
+               "la_continentOceania" = "Last author from Oceania",
+               "la_continentSouth America" = "Last author from South America",
+               "I(la_reviewer_dist/1e+06)" = "Sum of geographic distance (1000s km)",
+               "la_reviewer_dist_zeroTRUE" = "Sum of geographic distance is zero",
+               "author_reviewer_interactionFemale Author, All Women" = "Last author female - all reviewers female",
+               "author_reviewer_interactionFemale Author, Mixed" = "Last author female - mixed reviewers",
+               "author_reviewer_interactionMale Author, All Men" = "Last author male - all reviewers men",
+               "author_reviewer_interactionMale Author, All Women" = "Last author male - all reviewers female",
+               "author_reviewer_interactionMale Author, Mixed" = "Last author male - mixed reviewers"
+               )
+
+
+full_reg_plot <- plot_model(full_model, 
+           vline.color = "black", 
+           rm.terms = c("fa_genderUNK"),
+           sort.est = TRUE, 
+           show.values = TRUE, 
+           value.offset = .3, 
+           axis.labels = full.cov.labels,
+           wrap.labels = 100, # basically, don't wrap the labels, squeeze them all in
+           title = "Acceptance of full submissions",
+           axis.lim = c(0.1, 10)) +
+  theme_bw()
+
+full_reg_plot
+```
+
+
+### Arrange the plots
+```{r}
+regressions_interactions <- grid.arrange(initial_reg_plot, full_reg_plot, ncol = 2)
+plot(regressions_interactions)
+```
+
+### Save the plot
+```{r}
+name <- paste0("~/Dropbox/eLife/elife-analysis/figures/main/", figure_name, figure_extension)
+ggsave(name, plot = regressions_interactions, height = 5, width = 10)
 ```
