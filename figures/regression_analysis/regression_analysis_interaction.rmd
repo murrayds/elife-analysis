@@ -209,7 +209,6 @@ full_reg_plot
 ### Arrange the plots
 ```{r}
 regressions_interactions <- grid.arrange(initial_reg_plot, full_reg_plot, ncol = 2)
-plot(regressions_interactions)
 ```
 
 ### Save the plot

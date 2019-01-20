@@ -176,7 +176,6 @@ full_reg_plot
 ### Arrange graphs
 ```{r}
 regressions_simple <- grid.arrange(initial_reg_plot, full_reg_plot, ncol = 2)
-plot(regressions_simple)
 ```
 
 ### Save the output
