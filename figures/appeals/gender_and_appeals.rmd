@@ -1,0 +1,104 @@
+---
+title: "Gender and Appeals"
+author: "Dakota Murray"
+output: html_notebook
+---
+
+### Set parameters for the name and extension of the figure
+```{r}
+figure_name <- "fig_si7"
+figure_extension <- ".png"
+
+path_to_data <- "https://www.dropbox.com/s/97im2cayb1trlax/formatted_elife.csv?dl=1"
+```
+
+```{r message=FALSE, warning=FALSE}
+# Load required packages
+library(tidyverse)
+library(grid)
+library(gridExtra)
+
+# setup theme
+theme_dakota <- function () { 
+    theme_bw(base_size=10, base_family="Times") %+replace% 
+        theme(
+            strip.background = element_blank(),
+            strip.text = element_text(face = "bold"),
+            plot.title = element_text(size = 11, face = "bold"),
+            axis.text.x = element_text(size = 9, margin = margin(t = 5, b = 5)),
+            legend.title = element_blank(),
+            legend.position = "bottom"
+        )
+}
+```
+
+### Load the required data
+```{r message=FALSE, warning=FALSE}
+elife <- read_csv(path_to_data)
+
+full_submissions <- elife %>% filter(full_decision_made)
+full_submissions$included <- with(full_submissions, la_continent != "Antarctica" & fa_continent != "Antarctica" & !is.na(la_gender) & la_gender != "UNK" & composition != "Uncertain" & !is.na(la_reviewer_dist) & !is.na(la_reviewer_dist_zero) & !is.na(la_institution_rank) & !is.na(la_continent) & !is.na(fa_gender))
+  
+head(full_submissions)
+```
+
+
+```{r}
+p_senior <- full_submissions %>%
+  filter(included & !is.na(se_gender) & !is.na(la_gender)) %>%
+  mutate(
+    se_gender = factor(se_gender, labels = c("F" = "Female Senior Editor", "M" = "Male Senior Editor"))
+  ) %>%
+  group_by(la_gender, se_gender) %>%
+  summarize(
+    num = n(),
+    num_appealed = sum(appealed_any_stage),
+    appealed = sum(appealed_any_stage) / n(),
+    ci = 1.96 * sqrt(appealed * (1 - appealed) / num)
+  ) %>%
+  ggplot(aes(x = la_gender, y = appealed, color = la_gender)) + 
+  geom_point(size = 16, alpha = 0.5) +
+  #geom_segment(aes(xend = la_gender, y = 0, yend = appealed - 0.0135)) +
+  geom_errorbar(aes(ymin = appealed - ci, ymax = appealed + ci), width = 0.3) +
+  facet_wrap(~se_gender) +
+  guides(color = F, xend = F) +
+  geom_label( aes(label = num_appealed)) +
+  ylim(0, 0.15) +
+  theme_bw() +
+  labs(x = "Last Author Gender",
+       y = "% of full submissions appealed",
+       title = "Full Submissions appealed by gender of last author and senior editor")
+
+p_reviewing <- full_submissions %>%
+  filter(included & !is.na(bre_gender) & bre_gender != "UNK" & !is.na(la_gender)) %>%
+  mutate(
+    bre_gender = factor(bre_gender, labels = c("F" = "Female Reviewing Editor", "M" = "Male Reviewing Editor"))
+  ) %>%
+  group_by(la_gender, bre_gender) %>%
+  summarize(
+    num = n(),
+    num_appealed = sum(appealed_any_stage),
+    appealed = sum(appealed_any_stage) / n(),
+    ci = 1.96 * sqrt(appealed * (1 - appealed) / num)
+  ) %>%
+  ggplot(aes(x = la_gender, y = appealed, color = la_gender)) + 
+  geom_point(size = 16, alpha = 0.5) +
+  geom_errorbar(aes(ymin = appealed - ci, ymax = appealed + ci), width = 0.3) +
+  facet_wrap(~bre_gender) +
+  guides(color = F, xend = F) +
+  geom_label( aes(label = num_appealed)) +
+  ylim(0, 0.20) +
+  theme_bw() +
+  labs(x = "Last Author Gender",
+       y = "% of full submissions appealed",
+       title = "Full Submissions appealed by gender of last author and reviewing editor")
+
+g_appealed <- grid.arrange(p_senior, p_reviewing)
+```
+
+
+### Save the file
+```{r}
+name <- paste0("~/Dropbox/eLife/elife-analysis/figures/supp/", figure_name, figure_extension)
+ggsave(name, plot = g_appealed, height = 7, width = 7)
+```
