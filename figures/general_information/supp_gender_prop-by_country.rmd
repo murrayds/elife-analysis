@@ -1,0 +1,80 @@
+---
+title: "Country and Gender Demographics"
+author: "Dakota Murray"
+output: html_notebook
+---
+
+### Set parameters for the name and extension of the figure
+```{r}
+figure_name <- "fig_si7"
+figure_extension <- ".pdf"
+
+path_to_data <- "https://www.dropbox.com/s/97im2cayb1trlax/formatted_elife.csv?dl=1"
+```
+
+
+```{r message=FALSE, warning=FALSE}
+# Load required packages
+library(tidyverse)
+library(grid)
+library(gridExtra)
+
+# setup theme
+theme_dakota <- function () { 
+    theme_bw(base_size=10, base_family="Times") %+replace% 
+        theme(
+            strip.background = element_blank(),
+            strip.text = element_text(face = "bold"),
+            plot.title = element_text(size = 11, face = "bold"),
+            axis.text.x = element_text(size = 9, margin = margin(t = 5, b = 5)),
+            legend.title = element_blank(),
+            legend.position = "bottom"
+        )
+}
+```
+
+### Load the required data
+```{r message=FALSE, warning=FALSE}
+elife <- read_csv(path_to_data)
+
+#full_submissions <- elife %>% filter(full_decision_made)
+#full_submissions$included <- with(full_submissions, la_continent != "Antarctica" & fa_continent != "Antarctica" & !is.na(la_gender) & la_gender != "UNK" & composition != "Uncertain" & !is.na(la_reviewer_dist) & !is.na(la_reviewer_dist_zero) & !is.na(la_institution_rank) & !is.na(la_continent) & !is.na(fa_gender))
+  
+head(full_submissions)
+```
+
+### 
+```{r}
+gender_by_country <- elife %>%
+  mutate(ca_country = factor(sapply(as.character(ca_country), simpleCap))) %>% # capitalize first letter of country stirngs
+  group_by(ca_country) %>%
+  mutate(total = n()) %>%
+  filter(total > 200) %>%
+  filter(ca_gender == "F") %>%
+  group_by(ca_country) %>%
+  summarize(
+    prop = n() / total[1]
+  ) %>%
+  mutate(
+    ca_country = reorder(ca_country, -prop)
+  ) %>%
+  ggplot(aes(x = ca_country, y = prop)) +
+  geom_bar(stat = "identity", alpha = 0.8, fill = "orange") +
+  ylim(0, 0.5) +
+  coord_flip() +
+  theme_dakota() +
+  theme(
+    axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)
+  ) +
+  labs(x = "Country of corresponding author",
+       y = "Proportion of initial submissions with a female correpsonding author") +
+  scale_fill_discrete(labels = c("F" = "Female", "M" = "Male"))
+
+gender_by_country
+```
+
+### Save the file
+```{r}
+name <- paste0("~/Dropbox/eLife/elife-analysis/figures/supp/", figure_name, figure_extension)
+ggsave(name, plot = gender_by_country, height = 4, width = 7)
+```

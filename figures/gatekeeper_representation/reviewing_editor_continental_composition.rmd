@@ -7,9 +7,9 @@ output: html_notebook
 ### Set parameters for the name and extension of the figure
 ```{r}
 figure_name <- "fig_si6"
-figure_extension <- ".png"
+figure_extension <- ".pdf"
 
-path_to_data <- "https://www.dropbox.com/s/5doa2khbrs7nuyx/formatted_elife.csv?dl=1"
+path_to_data <- "https://www.dropbox.com/s/97im2cayb1trlax/formatted_elife.csv?dl=1"
 ```
 
 ```{r message=FALSE, warning=FALSE}
@@ -68,17 +68,17 @@ continental_composition <- elife %>%
   filter(has_full_submission & full_decision_made & !is.na(bre_continent)) %>%
   group_by(MSNO) %>%
   mutate(
-    num_africa = sum(na.omit(c(reviewer1_continent, reviewer2_continent, reviewer3_continent, reviewer4_continent)) == 1),
+    num_africa = sum(na.omit(c(reviewer1_continent, reviewer2_continent, reviewer3_continent, reviewer4_continent)) == "Africa"),
     contains_africa = ifelse(bre_is_reviewer & bre_continent == "Africa", num_africa > 1, num_africa > 0),
-    num_asia = sum(na.omit(c(reviewer1_continent, reviewer2_continent, reviewer3_continent, reviewer4_continent)) == 2),
+    num_asia = sum(na.omit(c(reviewer1_continent, reviewer2_continent, reviewer3_continent, reviewer4_continent)) == "Asia"),
     contains_asia = ifelse(bre_is_reviewer & bre_continent == "Asia", num_asia > 1, num_asia > 0),
-    num_na = sum(na.omit(c(reviewer1_continent, reviewer2_continent, reviewer3_continent, reviewer4_continent)) == 4),
+    num_na = sum(na.omit(c(reviewer1_continent, reviewer2_continent, reviewer3_continent, reviewer4_continent)) == "North America"),
     contains_na = ifelse(bre_is_reviewer & bre_continent == "North America", num_na > 1, num_na > 0),
-    num_eu = sum(na.omit(c(reviewer1_continent, reviewer2_continent, reviewer3_continent, reviewer4_continent)) == 3),
+    num_eu = sum(na.omit(c(reviewer1_continent, reviewer2_continent, reviewer3_continent, reviewer4_continent)) == "Europe"),
     contains_eu = ifelse(bre_is_reviewer & bre_continent == "Europe", num_eu > 1, num_eu > 0),
-    num_sa = sum(na.omit(c(reviewer1_continent, reviewer2_continent, reviewer3_continent, reviewer4_continent)) == 6),
+    num_sa = sum(na.omit(c(reviewer1_continent, reviewer2_continent, reviewer3_continent, reviewer4_continent)) == "South America"),
     contains_sa = ifelse(bre_is_reviewer & bre_continent == "South America", num_sa > 1, num_sa > 0),
-    num_oceania = sum(na.omit(c(reviewer1_continent, reviewer2_continent, reviewer3_continent, reviewer4_continent)) == 5),
+    num_oceania = sum(na.omit(c(reviewer1_continent, reviewer2_continent, reviewer3_continent, reviewer4_continent)) == "Oceania"),
     contains_oceania = ifelse(bre_is_reviewer & bre_continent == "Oceania", num_oceania > 1, num_oceania > 0)
   ) %>%
   group_by(bre_continent) %>%

@@ -16,13 +16,13 @@ library(readxl)
 # Define save paths
 #
 # First, the path to save the "people" file, contianing info on name/role combinations in the datase
-path_to_save_people = "~/Dropbox/eLife/formatted_data/elife_people.csv"
+path_to_save_people = "~/Dropbox/eLife/elife-analysis/formatted_data/elife_people.csv"
 
 # Save the non-anonymized version of the data
 path_to_save_non_anonymous = "~/Dropbox/eLife/data/non_anonymous_data.csv"
 
 # Save the anaonymized version of the data
-path_to_save_anonymous = "~/Dropbox/eLife/formatted_data/formatted_elife.csv"
+path_to_save_anonymous = "~/Dropbox/eLife/elife-analysis/formatted_data/formatted_elife.csv"
 
 #
 # Define load paths

@@ -8,7 +8,7 @@ output: html_notebook
 ### Set parameters for the name and extension of the figure
 ```{r}
 figure_name <- "fig_6"
-figure_extension <- ".png"
+figure_extension <- ".pdf"
 
 path_to_data <- "https://www.dropbox.com/s/97im2cayb1trlax/formatted_elife.csv?dl=1"
 ```
@@ -68,36 +68,33 @@ summary(initial_model)
 
 
 ```{r}
-initial.cov.labels = c("submission_year" = "Submission Year", 
+initial.cov.labels = c(
+               "submission_year" = "Submission Year", 
                "submission_typeSR" = "Submission Type = SR", 
                "submission_typeTR" = "Submission Type = TR", 
                "ca_genderM" = "Corr. Author is Male",
                "ca_genderUNK" = "Corr. Author Gender UNK",
-               "ca_institution_rankTop" = "Corr. Author Inst. Top 50",
-               "ca_institution_rankStandard/Unranked/Unknown" = "Corr. Author Inst. Below 200",
+               "ca_institution_rankTop" = "Corr. Author Inst. Top",
                "ca_continentAfrica" = "Corr. author from Africa",
                "ca_continentAsia" = "Corr. author from Asia",
                "ca_continentEurope" = "Corr. author from Europe",
                "ca_continentOceania" = "Corr. author from Oceania",
-               "ca_continentSouth America" = "Corr. author from South America",
-               "se_genderM" = "Senior Editor is Male",
-               "I(ca_se_dist/1e+06)" = "Geographic distance (1000s km)",
-               "ca_se_dist_zeroTRUE" = "Geographic distance is zero",
-               "ca_genderM:se_genderM" = "Corr. author male * Senior editor male",
-               "ca_genderUNK:se_genderM" = "Corr. author UNK * Senior editor male"
-               
+               "ca_continentSouth America" = "Corr. author from South America"
                )
 
 
-out <- capture.output(stargazer(initial_model, 
-                                ci = T, 
-                                align = T,
-                                covariate.labels = initial.cov.labels, 
-                                model.names = T,
-                                style = "ajs"
-                                ))
+stargazer(initial_model, 
+          ci = T, 
+          align = T,
+          t.auto = F,
+          p.auto = F,
+          apply.coef = exp,
+          covariate.labels = initial.cov.labels, 
+          model.names = T,
+          style = "ajs",
+          type = "latex"
+          )
 
-out
 #cat(paste(out, collapse = "\n"), "\n", file="~/Desktop/encourage_model.txt", append=F)
 ```
 
@@ -134,7 +131,7 @@ full.cov.labels = c("submission_year" = "Submission Year",
                "fa_genderM" = "First Author is Male",
                "fa_genderUNK" = "First Author is Unknown Gender",
                "la_genderM" = "Last Author is Male",
-               "la_institution_rankTop" = "Last Author Inst. Top 50",
+               "la_institution_rankTop" = "Last Author Inst. Top",
                "la_continentAfrica" = "Last author from Africa",
                "la_continentAsia" = "Last author from Asia",
                "la_continentEurope" = "Last author from Europe",
@@ -143,16 +140,20 @@ full.cov.labels = c("submission_year" = "Submission Year",
                )
                
 
-out <- capture.output(stargazer(full_model, 
-                                ci = T, 
-                                align = T, 
-                                covariate.labels = full.cov.labels, 
-                                model.names = T,
-                                style = "ajs",
-                                font.size = "scriptsize"
-                                ))
+stargazer(full_model, 
+          ci = T, 
+          align = T, 
+          t.auto = F,
+          p.auto = F,
+          apply.coef = exp,
+          covariate.labels = full.cov.labels, 
+          model.names = T,
+          style = "ajs",
+          font.size = "scriptsize",
+          type = "latex"
+          )
 
-out
+#out
 #cat(paste(out, collapse = "\n"), "\n", file="~/Desktop/accept_model.txt", append=TRUE)
 ```
 
@@ -181,6 +182,6 @@ regressions_simple <- grid.arrange(initial_reg_plot, full_reg_plot, ncol = 2)
 ### Save the output
 ```{r}
 name <- paste0("~/Dropbox/eLife/elife-analysis/figures/main/", figure_name, figure_extension)
-ggsave(name, plot = regressions_simple, height = 5, width = 10)
+ggsave(name, plot = regressions_simple, height = 6, width = 10)
 ```
   

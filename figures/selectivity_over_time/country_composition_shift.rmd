@@ -1,0 +1,109 @@
+---
+title: "Country Submissions Over Time"
+author: "Dakota Murray"
+output: html_notebook
+---
+
+### Set parameters for the name and extension of the figure
+```{r}
+figure_name <- "fig_si9"
+figure_extension <- ".pdf"
+
+path_to_data <- "https://www.dropbox.com/s/97im2cayb1trlax/formatted_elife.csv?dl=1"
+```
+
+
+
+```{r message=FALSE, warning=FALSE}
+# Load required packages
+library(tidyverse)
+library(grid)
+library(gridExtra)
+
+# setup theme
+theme_dakota <- function () { 
+    theme_bw(base_size=10, base_family="Times") %+replace% 
+        theme(
+            strip.background = element_blank(),
+            strip.text = element_text(face = "bold"),
+            plot.title = element_text(size = 11, face = "bold"),
+            axis.text.x = element_text(size = 9, margin = margin(t = 5, b = 5)),
+            legend.title = element_blank(),
+            legend.position = "bottom"
+        )
+}
+
+# converts a provided p-value into a representation that is easier to visualize
+sig2ast <- function(p) { ifelse(p <= 0.0001, "****", 
+                                ifelse(p <= 0.001, "***", 
+                                       ifelse(p <= 0.01, "**", 
+                                              ifelse(p <= 0.05, "*", 
+                                                     ifelse(p < 0.1, ".", "ns")
+                                              )
+                                       )
+                                )
+                          )
+}
+
+# I copied the below function from a stack overflow question. It should capitalize the first letter of each work in a string
+# https://stackoverflow.com/questions/6364783/capitalize-the-first-letter-of-both-words-in-a-two-word-string
+simpleCap <- function(x) {
+  s <- strsplit(x, " ")[[1]]
+  paste(toupper(substring(s, 1,1)), substring(s, 2),
+      sep="", collapse=" ")
+}
+```
+
+### Load the required data
+```{r message=FALSE, warning=FALSE}
+elife <- read_csv(path_to_data)
+head(elife)
+```
+
+
+```{r}
+country_over_time <- elife %>%
+  #mutate(submission_year = submission_year + 2012) %>%
+  filter(submission_year <= 2016 & !is.na(ca_continent)) %>%
+  group_by(submission_year, ca_continent) %>%
+  summarize(
+    count = n()
+  ) %>%
+  ggplot(aes(x = submission_year, y = count, color = ca_continent, shape = ca_continent)) +
+  geom_line() +
+  geom_point() +
+  theme_dakota() +
+  labs(x = "Year",
+       y = "# Submissions")
+
+country_over_time
+```
+
+
+```{r}
+country_over_time <- elife %>%
+  filter(has_full_submission) %>%
+  #mutate(submission_year = submission_year + 2012) %>%
+  filter(submission_year <= 2016 & !is.na(ca_continent)) %>%
+  group_by(submission_year, ca_continent) %>%
+  summarize(
+    count = n()
+  ) %>%
+  ggplot(aes(x = submission_year, y = count, color = ca_continent, shape = ca_continent)) +
+  geom_line() +
+  geom_point() +
+  theme_dakota() +
+  labs(x = "Year",
+       y = "# Submissions")
+
+country_over_time
+```
+
+
+
+### Save the file
+```{r}
+## Save the file
+name <- paste0("~/Dropbox/eLife/elife-analysis/figures/supp/", figure_name, figure_extension)
+ggsave(name, plot = country_over_time, height = 6, width = 10)
+```
