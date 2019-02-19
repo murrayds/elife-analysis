@@ -7,7 +7,7 @@ output: html_notebook
 ## Script settings
 ```{r}
 path_to_data_elife <- "https://www.dropbox.com/s/dmvmzz57m7t4xtq/non_anonymous_data.csv?dl=1"
-path_to_data_people <- "https://www.dropbox.com/s/c8r7goz9pdsr4hd/elife_people.csv?dl=1"
+path_to_data_people <- "https://www.dropbox.com/s/ic2b17xp3wo0255/elife_people.csv?dl=1"
 ```
 
 ```{r message=FALSE, warning=FALSE}
@@ -206,6 +206,14 @@ gatekeepers <- people %>% filter(type == "Gatekeeper")
 dim(gatekeepers)[1]
 ```
 
+### Number of distinct authors among all first, last, and corresponding authors
+```{r}
+authors <- (c(la_authors$la_name, fa_authors$fa_name, ca_authors$ca_name))
+length(authors)
+length(unique(authors))
+```
+
+
 ### Gender distirbution of distinct gatekeepers involved in processing full submissions at elife_not_anon, includes senior editors, reviewing editors, and invited peer reviewers
 ```{r}
 table(gatekeepers$gender)
@@ -271,7 +279,6 @@ dim(people)[1]
 ```{r}
 sum(people$gender != "UNK")
 sum(people$gender != "UNK") / dim(people)[1]
-
 ```
 
 
@@ -328,10 +335,28 @@ names(peer_reviewers) <- c("gender", "name", "country")
 editors <- subset(editors, !duplicated(name, country))
 
 
-reviewers <- subset(reviewers, !duplicated(reviewer_name, reviewer_country))
-bres <- subset(bres, !duplicated(name, country))
+peer_reviewers <- subset(peer_reviewers, !duplicated(name, gender))
+bres <- subset(bres, !duplicated(name, country) & !is.na(name))
+```
+
+### Gender distirbution of reviewing editors
+```{r}
+table(bres$gender)
+prop.table(table(bres$gender))
+```
 
 
+### Gender distirbution of invited peer reviewers
+```{r}
+table(peer_reviewers$gender)
+prop.table(table(peer_reviewers$gender))
+```
+
+
+
+## Table SI.2
+
+```{r}
 t1 <- data.frame(table(editors$country), prop.table(table(editors$country)))
 t2 <- data.frame(table(reviewers$reviewer_country), prop.table(table(reviewers$reviewer_country)))
 t3 <- data.frame(table(bres$country), prop.table(table(bres$country)))
@@ -348,7 +373,10 @@ ord <- with(all_data, order(-se.freq, -bre.freq))
 
 all_data <- all_data[ord, ]
 
-stargazer(all_data, type = "html")
+names(all_data) <- c("Country", "# Peer Rev.", "% Peer Rev.", "# Rev. Editor", "% Rev. Editor",
+                         "# Sen. Editor", "% Sen. Editor")
+
+stargazer(all_data, type = "latex", summary = FALSE, rownames = FALSE, font.size = "scriptsize", column.sep.width = "0.5pt")
 ```
 
 ###Gender distribution of gender-identified correpsonding authors of full submissions
@@ -370,4 +398,14 @@ prop.table(table(identified$fa_gender))
 identified <- full %>% filter(la_gender != "UNK")
 table(identified$la_gender)
 prop.table(table(identified$la_gender))
+```
+
+### Gender distribution of distinct reviewing editors at eLife
+```{r}
+bres <- elife_not_anon %>%
+  group_by(bre_name) %>%
+  slice(1)
+
+table(bres$bre_gender)
+
 ```

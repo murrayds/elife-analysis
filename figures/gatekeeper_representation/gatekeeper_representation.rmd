@@ -7,9 +7,9 @@ output: html_notebook
 ### Set parameters for the name and extension of the figure
 ```{r}
 figure_name <- "fig_3"
-figure_extension <- ".png"
+figure_extension <- ".pdf"
 
-path_to_data <- "https://www.dropbox.com/s/5doa2khbrs7nuyx/formatted_elife.csv?dl=1"
+path_to_data <- "https://www.dropbox.com/s/u5lmsyri359mvr9/formatted_elife.csv?dl=1"
 ```
 
 ```{r message=FALSE, warning=FALSE}
@@ -46,7 +46,7 @@ sig2ast <- function(p) { ifelse(p <= 0.0001, "****",
 
 ### Load the required data
 ```{r message=FALSE, warning=FALSE}
-people <- read_csv("https://www.dropbox.com/s/c8r7goz9pdsr4hd/elife_people.csv?dl=1")
+people <- read_csv("https://www.dropbox.com/s/ic2b17xp3wo0255/elife_people.csv?dl=1")
 head(people)
 ```
 
@@ -235,25 +235,37 @@ fig3_bottom_sig_table
 
 ### Frequencies of author and gatekeeper genders at eLife
 ```{r rows.print=15}
-people %>% 
+library(stargazer)
+gender_dem <- people %>% 
   group_by(type) %>%
   mutate(total = n()) %>%
   group_by(type, gender) %>%
   summarize(
     freq = n(),
-    prop = freq / total[1]
+    prop = round(freq / total[1], 3)
   )
+
+names(gender_dem) <- c("Role", "Gender", "#", "%")
+
+stargazer(gender_dem, summary = F, rownames = F, type = "latex", font.size = "scriptsize")
+
+
 ```
 
 ### Frequencies of author and gatekepeer continental affilaitions at eLife
 ```{r rows.print=30}
-people %>% 
+geo_dem <- people %>% 
   group_by(type) %>%
   mutate(total = n()) %>%
   group_by(type, continent) %>%
   summarize(
     freq = n(),
-    prop = freq / total[1]
-    )
+    prop = round(freq / total[1], 3)
+    ) %>%
+  mutate(continent = ifelse(is.na(continent), "UNK", continent))
+
+names(geo_dem) <- c("Role", "Continent", "#", "%")
+
+stargazer(geo_dem, summary = F, rownames = F, type = "latex", font.size = "scriptsize")
 ```
 

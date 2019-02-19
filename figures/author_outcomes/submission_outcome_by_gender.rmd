@@ -6,10 +6,10 @@ output: html_notebook
 
 ### Set parameters for the name and extension of the figure
 ```{r}
-figure_name <- "fig_5"
-figure_extension <- ".png"
+figure_name <- "fig_4"
+figure_extension <- ".pdf"
 
-path_to_data <- "https://www.dropbox.com/s/5doa2khbrs7nuyx/formatted_elife.csv?dl=1"
+path_to_data <- "https://www.dropbox.com/s/u5lmsyri359mvr9/formatted_elife.csv?dl=1"
 ```
 
 ```{r message=FALSE, warning=FALSE}
@@ -71,27 +71,27 @@ Note: There is a lot of extra code with this figure, because this figure origina
 # First, test the encourage rate diffs
 s <- subset(elife, initial_decision_made)
 t <- table("ca_gender" = s$ca_gender, "encouraged" = s$encouraged)[1:2,]
-ca_encouraged <- chisq.test(t[, 1:2])
+ca_encouraged <- prop.test(t[, 1:2])
 
 # Difference in acceptance rates by gender of corresponding author
 s <- subset(elife, initial_decision_made & (!has_full_submission | full_decision_made))
 t <- table("ca_gender" = s$ca_gender, "accepted" = s$accepted)[1:2,]
-ca_accepted <- chisq.test(t[, 1:2])
+ca_accepted <- prop.test(t[, 1:2])
 
 # Difference in encourage-acceptance rates by gender of corresponding author
 s <- subset(elife, initial_decision_made & full_decision_made)
 t <- table("ca_gender" = s$ca_gender, "accepted" = s$accepted)[1:2,]
-ca_ea <- chisq.test(t[, 1:2])
+ca_ea <- prop.test(t[, 1:2])
 
 # Difference in encourage-acceptance rates by gender of first author
 s <- subset(elife, initial_decision_made & full_decision_made)
 t <- table("fa_gender" = s$fa_gender, "accepted" = s$accepted)[1:2,]
-fa_ea <- chisq.test(t[, 1:2])
+fa_ea <- prop.test(t[, 1:2])
 
 # Difference in encourage-acceptance rates by gender of last author
 s <- subset(elife, initial_decision_made & full_decision_made)
 t <- table("la_gender" = s$la_gender, "accepted" = s$accepted)[1:2,]
-la_ea <- chisq.test(t[, 1:2])
+la_ea <- prop.test(t[, 1:2])
 
 # Now we use the results of these tests to construct a table
 measurements <- c(rep("submit_rate", 3), rep("encourage_rate", 3), rep("accept_rate", 3), rep("encourage_accept_rate", 3))
@@ -180,9 +180,12 @@ Signif. test results for figure 4
 fig4_sig_table <- data.frame(
   test = names(sig_list),
   p.value = sapply(sig_list, function(x) x$p.value),
+  estimate = sapply(sig_list, function(x) abs(x$estimate[1] - x$estimate[2])),
   n = sapply(sig_list, function(x) sum(x$observed)),
   statistic = sapply(sig_list, function(x) x$statistic),
-  df = sapply(sig_list, function(x) x$parameter)
+  #df = sapply(sig_list, function(x) x$parameter)
+  lower = sapply(sig_list, function(x) x$conf.int[1]),
+  upper = sapply(sig_list, function(x) x$conf.int[2])
 )
 
 rownames(fig4_sig_table)<- NULL
@@ -341,7 +344,8 @@ p2 <- data_national_p2 %>%
   ylim(0, 0.7) +
   theme(
     axis.title.y = element_blank()
-  )
+  ) +
+  labs(y = "")
 
 national_outcomes <- grid.arrange(p1, p2)
 
@@ -392,7 +396,7 @@ plot(g)
 ## Save the file
 ```{r}
 name <- paste0("~/Dropbox/eLife/elife-analysis/figures/main/", figure_name, figure_extension)
-ggsave(name, plot = g, height = 8, width = 12)
+ggsave(name, plot = g, height = 5, width = 11)
 ```
 
 

@@ -7,7 +7,7 @@ output: html_notebook
 ### Set parameters for the name and extension of the figure
 ```{r}
 figure_name <- "fig_7"
-figure_extension <- ".png"
+figure_extension <- ".pdf"
 
 path_to_data <- "https://www.dropbox.com/s/97im2cayb1trlax/formatted_elife.csv?dl=1"
 ```
@@ -69,31 +69,29 @@ initial.cov.labels = c("submission_year" = "Submission Year",
                "submission_typeTR" = "Submission Type = TR", 
                "ca_genderM" = "Corr. Author is Male",
                "ca_genderUNK" = "Corr. Author Gender UNK",
-               "ca_institution_rankTop" = "Corr. Author Inst. Top 50",
-               "ca_institution_rankStandard/Unranked/Unknown" = "Corr. Author Inst. Below 200",
+               "ca_institution_rankTop" = "Corr. Author Inst. Top",
                "ca_continentAfrica" = "Corr. author from Africa",
                "ca_continentAsia" = "Corr. author from Asia",
                "ca_continentEurope" = "Corr. author from Europe",
                "ca_continentOceania" = "Corr. author from Oceania",
                "ca_continentSouth America" = "Corr. author from South America",
-               "se_genderM" = "Senior Editor is Male",
                "I(ca_se_dist/1e+06)" = "Geographic distance (1000s km)",
-               "ca_se_dist_zeroTRUE" = "Geographic distance is zero",
-               "ca_genderM:se_genderM" = "Corr. author male * Senior editor male",
-               "ca_genderUNK:se_genderM" = "Corr. author UNK * Senior editor male"
-               
+               "ca_se_dist_zeroTRUE" = "Geographic distance is zero"
                )
 
-out <- capture.output(stargazer(initial_model, 
-                                ci = T, 
-                                align = T, 
-                                covariate.labels = initial.cov.labels, 
-                                model.names = T,
-                                style = "ajs"
-                                ))
+stargazer(initial_model, 
+            ci = T, 
+            t.auto = F,
+            p.auto = F,
+            align = T, 
+            apply.coef = exp,
+            covariate.labels = initial.cov.labels, 
+            model.names = T,
+            style = "ajs"
+            )
 
 #cat(paste(out, collapse = "\n"), "\n", file="~/Desktop/encourage_model.txt", append=F)
-out
+#out
 ```
 
 ### Construct the initial regression plot
@@ -173,8 +171,7 @@ full.cov.labels = c("submission_year" = "Submission Year",
                "submission_typeTR" = "Submission Type = TR", 
                "fa_genderM" = "First Author is Male",
                "fa_genderUNK" = "First Author is Unknown Gender",
-               "la_institution_rankStandard/Unranked/Unknown" = "Last Author Inst. Below 200",
-               "la_institution_rankTop" = "Last Author Inst. Top 50",
+               "la_institution_rankTop" = "Last Author Inst. Top",
                "la_continentAfrica" = "Last author from Africa",
                "la_continentAsia" = "Last author from Asia",
                "la_continentEurope" = "Last author from Europe",
@@ -184,18 +181,37 @@ full.cov.labels = c("submission_year" = "Submission Year",
                "la_reviewer_dist_zeroTRUE" = "Sum of geographic distance is zero",
                "author_reviewer_interactionFemale Author, All Women" = "Last author female - all reviewers female",
                "author_reviewer_interactionFemale Author, Mixed" = "Last author female - mixed reviewers",
-               "author_reviewer_interactionMale Author, All Men" = "Last author male - all reviewers men",
+               "author_reviewer_interactionMale Author, All Men" = "Last author male - all reviewers male",
                "author_reviewer_interactionMale Author, All Women" = "Last author male - all reviewers female",
                "author_reviewer_interactionMale Author, Mixed" = "Last author male - mixed reviewers"
                )
 
 
+stargazer(full_model, 
+          ci = T, 
+          align = T, 
+          apply.coef = exp,
+          t.auto = F,
+          p.auto = F,
+          covariate.labels = full.cov.labels, 
+          model.names = T,
+          style = "ajs",
+          font.size = "scriptsize"
+          )
+
+#cat(paste(out, collapse = "\n"), "\n", file="~/Desktop/full_model.txt", append=F)
+#out
+
+```
+
+
+```{r}
 full_reg_plot <- plot_model(full_model, 
            vline.color = "black", 
            rm.terms = c("fa_genderUNK"),
            sort.est = TRUE, 
            show.values = TRUE, 
-           value.offset = .3, 
+           value.offset = .4, 
            axis.labels = full.cov.labels,
            wrap.labels = 100, # basically, don't wrap the labels, squeeze them all in
            title = "Acceptance of full submissions",
@@ -214,5 +230,5 @@ regressions_interactions <- grid.arrange(initial_reg_plot, full_reg_plot, ncol =
 ### Save the plot
 ```{r}
 name <- paste0("~/Dropbox/eLife/elife-analysis/figures/main/", figure_name, figure_extension)
-ggsave(name, plot = regressions_interactions, height = 5, width = 10)
+ggsave(name, plot = regressions_interactions, height = 8, width = 10)
 ```

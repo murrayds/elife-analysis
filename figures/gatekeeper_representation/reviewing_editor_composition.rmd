@@ -7,9 +7,9 @@ output: html_notebook
 ### Set parameters for the name and extension of the figure
 ```{r}
 figure_name <- "fig_si5"
-figure_extension <- ".png"
+figure_extension <- ".pdf"
 
-path_to_data <- "https://www.dropbox.com/s/5doa2khbrs7nuyx/formatted_elife.csv?dl=1"
+path_to_data <- "https://www.dropbox.com/s/97im2cayb1trlax/formatted_elife.csv?dl=1"
 ```
 
 ```{r message=FALSE, warning=FALSE}
@@ -93,5 +93,5 @@ rev_editor_composition
 ```{r}
 ## Save the file
 name <- paste0("~/Dropbox/eLife/elife-analysis/figures/supp/", figure_name, figure_extension)
-ggsave(name, plot = countries_16, height = 6, width = 10)
+ggsave(name, plot = rev_editor_composition, height = 6, width = 10)
 ```
