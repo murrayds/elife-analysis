@@ -33,11 +33,11 @@ theme_dakota <- function () {
 }
 
 # converts a provided p-value into a representation that is easier to visualize
-sig2ast <- function(p) { ifelse(p <= 0.0001, "****", 
+sig2ast <- function(p) { ifelse(p <= 0.0001, "***", 
                                 ifelse(p <= 0.001, "***", 
                                        ifelse(p <= 0.01, "**", 
                                               ifelse(p <= 0.05, "*", 
-                                                     ifelse(p < 0.1, ".", "ns")
+                                                     ifelse(p < 0.1, "-", "ns")
                                               )
                                        )
                                 )
@@ -118,15 +118,17 @@ gender_homophily <- data_homophily %>%
   geom_bar(stat = "identity", alpha = 0.8, color = "black") +
   geom_text(aes(y = 0.05, label = paper_count), size = 3.5, color = "black") +
   geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2, color = "black", alpha = 0.8) +
-  geom_text(aes(x = 1.5, y = 0.89, label = sig), color = "black") +
+  geom_text(aes(x = 1.5, y = 0.92, label = sig), size = 4, color = "black") +
   geom_segment(aes(x = 1.1, xend = 1.9, y = ifelse(sig != "N/A", 0.85, 1.1), yend = ifelse(sig != "N/A", 0.85, 1.1)), color = "black") +
   facet_grid(author_key~composition) +
   coord_cartesian(ylim = c(0.0, 1.0)) +
   theme_dakota() +
   guides(fill = F) +
   labs(y = "% of full submissions accepted",
-       x = "Gender of Last Author"
-  ) 
+       x = "Gender of Last Author",
+       title = "A"
+  ) +
+  theme(plot.title = element_text(size = 20))
 
 gender_homophily
 ```
@@ -231,7 +233,7 @@ countries_separate <- elife %>%
   geom_bar(stat = "identity", position = position_dodge(), color = "black", alpha = 0.8) +
   geom_errorbar(aes(ymin = lower, ymax = upper), color = "black", width = 0.2) +
   geom_text(aes(label = paper_count, y = 0.075), size = 2.5) +
-  geom_text(aes(label = sig, x = 1.5, y = 0.95)) +
+  geom_text(aes(label = sig, x = 1.5, y = 0.90), size = 4) +
   geom_segment(aes(x = 1, xend = 2, y = ifelse(sig != "N/A", 0.85, 1.1), yend = ifelse(sig != "N/A", 0.85, 1.1)), color = "black") +
   facet_wrap(~ca_country, nrow = 2, ncol = 4) +
   ylim(0, 1) +
@@ -241,10 +243,12 @@ countries_separate <- elife %>%
   scale_x_discrete(labels = c("No Homogeneity", "Homogeneity")) +
   labs(
     x = "",
-    y = "% of full submissions accepted"
+    y = "% of full submissions accepted",
+    title = "C"
   ) +
   theme(
-    axis.text.x = element_text(angle = 20, vjust = 1, hjust = 1)
+    axis.text.x = element_text(angle = 20, vjust = 1, hjust = 1),
+    plot.title = element_text(size = 20)
   )
 
 countries_separate 
@@ -345,7 +349,7 @@ countries_pooled <- d1.summ %>%
   geom_bar(stat = "identity", position = position_dodge(), color = "black", alpha = 0.8) +
   geom_errorbar(aes(ymin = lower, ymax = upper), color = "black", width = 0.2) +
   geom_text(aes(label = paper_count, y = 0.10), size = 2.5) +
-  geom_text(aes(label = sig, x = 1.5, y = 0.85)) +
+  geom_text(aes(label = sig, x = 1.5, y = 0.85), size = 4) +
   geom_segment(aes(x = 1, xend = 2, y = ifelse(sig != "N/A", 0.8, 1.1), yend = ifelse(sig != "N/A", 0.8, 1.1)), color = "black") +
   facet_wrap(~type, ncol = 3) +
   coord_cartesian(ylim = c(0.0, 1.0)) +
@@ -355,9 +359,11 @@ countries_pooled <- d1.summ %>%
   scale_x_discrete(labels = c("No Homogeneity", "Homogeneity")) +
   labs(
     x = "",
-    y = "% of full submissions accepted"
+    y = "% of full submissions accepted",
+    title = "B"
   ) +
-  theme(axis.text.x = element_text(angle = 20, hjust = 1, vjust = 1))
+  theme(axis.text.x = element_text(angle = 20, hjust = 1, vjust = 1),
+        plot.title = element_text(size = 20))
 
 countries_pooled
 ```
