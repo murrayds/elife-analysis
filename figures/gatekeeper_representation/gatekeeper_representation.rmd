@@ -32,7 +32,7 @@ theme_dakota <- function () {
 }
 
 # converts a provided p-value into a representation that is easier to visualize
-sig2ast <- function(p) { ifelse(p <= 0.0001, "****", 
+sig2ast <- function(p) { ifelse(p <= 0.0001, "***", 
                                 ifelse(p <= 0.001, "***", 
                                        ifelse(p <= 0.01, "**", 
                                               ifelse(p <= 0.05, "*", 
@@ -121,9 +121,11 @@ p1 <- people %>%
   ylim(c(0, 1)) +
   theme(
     axis.title.x = element_blank(),
-    legend.position = "right"
+    legend.position = "right",
+    plot.title = element_text(size = 18)
   ) +
-  labs(y = "Proportion") +
+  labs(y = "Proportion",
+       title = "A") +
   guides(fill = F)
 
 s <- subset(people, continent != "Antarctica" & (type == "Corr. Author" | type == "Gatekeeper" ))
@@ -188,9 +190,11 @@ p2 <- people %>%
   guides(fill = F) +
   theme(
     axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1),
-    axis.title.x = element_blank()
+    axis.title.x = element_blank(),
+    plot.title = element_text(size = 18)
   ) +
-  labs(y = "Proportion") +
+  labs(y = "Proportion",
+       title = "B") +
   scale_fill_brewer(palette = "Set2")
 
 gate_rep <- grid.arrange(p1, p2)

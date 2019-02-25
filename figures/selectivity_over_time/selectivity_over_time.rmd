@@ -65,8 +65,10 @@ p1 <- d1 %>%
   theme_dakota() +
   labs(
     x = "Submission Year",
-    y = "# Manuscripts"
+    y = "# Manuscripts",
+    title = "A"
   ) +
+  theme(plot.title = element_text(size = 18)) +
   scale_color_manual(labels = c("accept_count" = "# Accepted", "encourage_count" = "# Encouraged", "paper_count" = "# Submitted"), values = c("black", "blue", "red")) +
   scale_shape_discrete(labels = c("accept_count" = "# Accepted", "encourage_count" = "# Encouraged", "paper_count" = "# Submitted")) +
   scale_linetype_discrete(labels = c("accept_count" = "# Accepted", "encourage_count" = "# Encouraged", "paper_count" = "# Submitted"))
@@ -96,8 +98,10 @@ p2 <- d2 %>%
   theme_dakota() +
   labs(
     x = "Submission Year",
-    y = "%"
+    y = "%",
+    title = "B"
   ) +
+  theme(plot.title = element_text(size = 18)) +
   scale_color_manual(labels = c("accept_rate" = "Overall accept %", "encourage_rate" = "Encourage %", "encourage_accept_rate" = "% Full accepted"), 
                      values = c("blue", "purple", "red")) +
   scale_shape_manual(labels = c("accept_rate" = "Overall accept %", "encourage_rate" = "Encourage %", "encourage_accept_rate" = "% Full accepted"),
