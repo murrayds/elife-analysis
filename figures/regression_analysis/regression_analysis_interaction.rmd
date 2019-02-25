@@ -103,7 +103,7 @@ initial_reg_plot <- plot_model(initial_model,
            value.offset = .3, 
            axis.labels = initial.cov.labels,
            wrap.labels = 100, # basically, don't wrap the labels, squeeze them all in
-           title = "Encouragement of initial submissions",
+           title = "A. Encouragement of initial submissions",
            axis.lim = c(0.1, 10)) +
   theme_bw()
 
@@ -177,13 +177,13 @@ full.cov.labels = c("submission_year" = "Submission Year",
                "la_continentEurope" = "Last author from Europe",
                "la_continentOceania" = "Last author from Oceania",
                "la_continentSouth America" = "Last author from South America",
-               "I(la_reviewer_dist/1e+06)" = "Sum of geographic distance (1000s km)",
-               "la_reviewer_dist_zeroTRUE" = "Sum of geographic distance is zero",
-               "author_reviewer_interactionFemale Author, All Women" = "Last author female - all reviewers female",
-               "author_reviewer_interactionFemale Author, Mixed" = "Last author female - mixed reviewers",
-               "author_reviewer_interactionMale Author, All Men" = "Last author male - all reviewers male",
-               "author_reviewer_interactionMale Author, All Women" = "Last author male - all reviewers female",
-               "author_reviewer_interactionMale Author, Mixed" = "Last author male - mixed reviewers"
+               "I(la_reviewer_dist/1e+06)" = "Sum of geo. distance (1000s km)",
+               "la_reviewer_dist_zeroTRUE" = "Sum of geo. distance is zero",
+               "author_reviewer_interactionFemale Author, All Women" = "Last author female - all rev. female",
+               "author_reviewer_interactionFemale Author, Mixed" = "Last author female - mixed rev.",
+               "author_reviewer_interactionMale Author, All Men" = "Last author male - all rev. male",
+               "author_reviewer_interactionMale Author, All Women" = "Last author male - all rev. female",
+               "author_reviewer_interactionMale Author, Mixed" = "Last author male - mixed rev."
                )
 
 
@@ -214,7 +214,7 @@ full_reg_plot <- plot_model(full_model,
            value.offset = .4, 
            axis.labels = full.cov.labels,
            wrap.labels = 100, # basically, don't wrap the labels, squeeze them all in
-           title = "Acceptance of full submissions",
+           title = "B. Acceptance of full submissions",
            axis.lim = c(0.1, 10)) +
   theme_bw()
 

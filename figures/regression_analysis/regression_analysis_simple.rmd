@@ -109,7 +109,7 @@ initial_reg_plot <- plot_model(initial_model,
            value.offset = .3, 
            axis.labels = initial.cov.labels,
            wrap.labels = 100, # basically, don't wrap the labels, squeeze them all in
-           title = "Encouragement of initial submissions",
+           title = "A. Encouragement of initial submissions",
            axis.lim = c(0.1, 10)) +
   theme_bw()
 
@@ -167,7 +167,7 @@ full_reg_plot <- plot_model(full_model,
            value.offset = .3, 
            axis.labels = full.cov.labels,
            wrap.labels = 100, # basically, don't wrap the labels, squeeze them all in
-           title = "Acceptance of full submissions",
+           title = "B. Acceptance of full submissions",
            axis.lim = c(0.1, 10)) +
   theme_bw()
 
