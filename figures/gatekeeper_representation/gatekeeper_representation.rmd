@@ -23,9 +23,9 @@ theme_dakota <- function () {
     theme_bw(base_size=10, base_family="Times") %+replace% 
         theme(
             strip.background = element_blank(),
-            strip.text = element_text(face = "bold"),
-            plot.title = element_text(size = 11, face = "bold"),
-            axis.text.x = element_text(size = 9, margin = margin(t = 5, b = 5)),
+            strip.text = element_text(size = 12),
+            plot.title = element_text(size = 18, face = "bold"),
+            axis.text.x = element_text(size = 9, margin = margin(t = 5, b = 5), face = "bold"),
             legend.title = element_blank(),
             legend.position = "bottom"
         )
@@ -46,7 +46,24 @@ sig2ast <- function(p) { ifelse(p <= 0.0001, "***",
 
 ### Load the required data
 ```{r message=FALSE, warning=FALSE}
-people <- read_csv("https://www.dropbox.com/s/ic2b17xp3wo0255/elife_people.csv?dl=1")
+people <- read_csv("https://www.dropbox.com/s/ic2b17xp3wo0255/elife_people.csv?dl=1") %>%
+  select(-X1)
+
+# Need to use the non-anonymous data here
+elife <- read.csv("https://www.dropbox.com/s/dmvmzz57m7t4xtq/non_anonymous_data.csv?dl=1")
+
+
+ca_full_sub <- subset(elife, has_full_submission) %>%
+  group_by(ca_name) %>%
+  slice(1) %>%
+  ungroup() %>%
+  select(ca_gender, ca_continent) %>%
+  rename(gender = ca_gender, continent = ca_continent) %>%
+  mutate(type = "Corr.Full")
+
+people <- rbind(people, ca_full_sub) %>%
+  filter(continent != "Antarctica")
+
 head(people)
 ```
 
@@ -71,21 +88,26 @@ s <- subset(people, type == "Last Author" | type == "Gatekeeper" )
 t <- t(table(s$gender, s$type))
 last <- chisq.test(t[2, 1:2], p = prop.table(t[1, 1:2]))
 
-sig_df <- data.frame(type = rep(c("Gatekeeper", "Corr. Author", "First Author", "Last Author"), 1), 
-                     gender = rep(c("Male", "Female"), 2),  
-                     sig = c("N/A", sig2ast(corr$p.value), sig2ast(first$p.value), sig2ast(last$p.value)))
+s <- subset(people, type == "Corr.Full" | type == "Gatekeeper" )
+t <- t(table(s$gender, s$type))
+corr.full <- chisq.test(t[2, 1:2], p = prop.table(t[1, 1:2]))
 
-gender_sig_list <- list("Corresponding Author" = corr, "First Author" = first, "Last Author" = last)
+sig_df <- data.frame(type = rep(c("Gatekeeper", "Corr. Author", "First Author", "Last Author", "Corr.Full"), 1), 
+                     #gender = rep(c("Male", "Female"), 2),  
+                     sig = c("N/A", sig2ast(corr$p.value), sig2ast(first$p.value), sig2ast(last$p.value), sig2ast(corr.full$p.value)))
+
+gender_sig_list <- list("Corresponding Author" = corr, "First Author" = first, "Last Author" = last, "Corr.Full" = corr.full)
 
 
 expected <- people %>%
   filter(gender %in% c("M", "F")) %>%
+  filter(type != "Corr.Full") %>%
   mutate(gender = ifelse(gender == "M", "Male", "Female")) %>%
   filter(type == "Gatekeeper") %>%
   mutate(total = n()) %>%
   group_by(type, gender) %>%
   summarize(
-    expected_prop = n() / total[1]
+    expected_prop = n() / total[1] * 100
   ) %>%
   ungroup() %>%
   select(-type)
@@ -98,15 +120,23 @@ p1 <- people %>%
   mutate(total = n()) %>%
   group_by(type, gender) %>%
   summarize(
-    prop = n() / total[1]
+    prop = n() / total[1] * 100
   ) %>%
   ungroup() %>%
   left_join(expected, by = "gender") %>%
-  left_join(sig_df, by = c("gender", "type")) %>%
+  left_join(sig_df, by = c("type")) %>%
   mutate(
     type = factor(type, 
-                  levels = c("Gatekeeper", "Corr. Author", "First Author", "Last Author"),
-                  labels = c("Gatekeeper" = "Gatekeeper", "Corr. Author" = "Corresponding", "First Author" = "First", "Last Author" = "Last")),
+                  levels = c("Gatekeeper", 
+                             "Corr. Author",
+                             "First Author",
+                             "Corr.Full",  
+                             "Last Author"),
+                  labels = c("Gatekeeper" = "Gatekeeper", 
+                             "Corr. Author" = "Corresponding (Initial)", 
+                             "First Author" = "First", 
+                             "Corr.Full" = "Corresponding (Full)",
+                             "Last Author" = "Last")),
     sig = as.character(sig)
   ) %>%
   # start ggplot
@@ -114,17 +144,16 @@ p1 <- people %>%
   geom_bar(stat = "identity", alpha = 0.8, color = "black") +
   geom_bar(stat = "identity", aes(y = expected_prop), alpha = 0, color = "black", fill = "white", size = 0.5, linetype = "longdash") +
   #geom_text(aes(label = paste0(round(prop, 3) * 100, "%"), y = 0.1), size = 3) +
-  geom_text(aes(label = ifelse(sig == "N/A", "", sig), x = 1.5, y = 0.9)) +
-  geom_segment(aes(x = 1, xend = 2, y = ifelse(sig != "N/A", 0.85, 1.1), yend = ifelse(sig != "N/A", 0.85, 1.1)), color = "black") +
-  facet_wrap(~type, nrow = 1) +
+  #geom_text(aes(label = ifelse(sig == "N/A", "", sig), x = 1.5, y = 92)) +
+  #geom_segment(aes(x = 1, xend = 2, y = ifelse(sig != "N/A", 85, 101), yend = ifelse(sig != "N/A", 85, 101)), color = "black") +
+  facet_wrap(~type, nrow = 1, labeller = labeller(type = label_wrap_gen(10))) +
   theme_dakota() +
-  ylim(c(0, 1)) +
+  ylim(c(0, 100)) +
   theme(
     axis.title.x = element_blank(),
-    legend.position = "right",
-    plot.title = element_text(size = 18)
+    legend.position = "right"
   ) +
-  labs(y = "Proportion",
+  labs(y = "",
        title = "A") +
   guides(fill = F)
 
@@ -140,20 +169,23 @@ s <- subset(people, continent != "Antarctica" & (type == "Last Author" | type ==
 t <- t(table(s$continent, s$type))
 last <- chisq.test(t[2, ], p = prop.table(t[1, ]))
 
-sig_df <- data.frame(type = rep(c("Gatekeeper", "Corr. Author", "First Author", "Last Author"), 3), 
-                     continent = rep(c("Africa", "Asia", "Europe", "North America", "Oceania", "South America"), 2),  
-                     sig = c("N/A", sig2ast(corr$p.value), sig2ast(first$p.value), sig2ast(last$p.value)))
+s <- subset(people, continent != "Antarctica" & (type == "Corr.Full" | type == "Gatekeeper" ))
+t <- t(table(s$continent, s$type))
+corr.full <- chisq.test(t[2, ], p = prop.table(t[1, ]))
 
-continent_sig_list <- list("Corresponding Author" = corr, "First Author" = first, "Last Author" = last)
+sig_df <- data.frame(type = rep(c("Gatekeeper", "Corr. Author", "First Author", "Last Author", "Corr.Full"), 1), 
+                     #continent = rep(c("Africa", "Asia", "Europe", "North America", "Oceania", "South America"), 2),  
+                     sig = c("N/A", sig2ast(corr$p.value), sig2ast(first$p.value), sig2ast(last$p.value), sig2ast(corr.full$p.value)))
+
+continent_sig_list <- list("Corresponding Author" = corr, "First Author" = first, "Last Author" = last, "Corr.Full" = corr.full)
 
 # Now we should repeat this graph, except this time for the continental representation
 expected <- people %>%
   filter(type == "Gatekeeper") %>%
   mutate(total = n()) %>%
-  filter(continent != "Antarctica") %>%
   group_by(type, continent) %>%
   summarize(
-    expected_prop = n() / total[1]
+    expected_prop = n() / total[1] * 100
   ) %>%
   ungroup() %>%
   select(-type)
@@ -162,18 +194,25 @@ expected <- people %>%
 p2 <- people %>%
   group_by(type) %>%
   mutate(total = n()) %>%
-  filter(continent != "Antarctica") %>%
   group_by(type, continent) %>%
   summarize(
-    prop = n() / total[1]
+    prop = n() / total[1] * 100
   ) %>%
   ungroup() %>%
   left_join(expected, by = "continent") %>%
-  left_join(sig_df, by = c("continent", "type")) %>%
+  left_join(sig_df, by = c("type")) %>%
   mutate(
     type = factor(type, 
-                  levels = c("Gatekeeper", "Corr. Author", "First Author", "Last Author"),
-                  labels = c("Gatekeeper" = "Gatekeeper", "Corr. Author" = "Corresponding", "First Author" = "First", "Last Author" = "Last")),
+                  levels = c("Gatekeeper", 
+                             "Corr. Author", 
+                             "First Author", 
+                             "Corr.Full",  
+                             "Last Author"),
+                  labels = c("Gatekeeper" = "Gatekeeper", 
+                             "Corr. Author" = "Corresponding (Initial)", 
+                             "First Author" = "First",
+                             "Corr.Full" = "Corresponding (Full)",
+                             "Last Author" = "Last")),
     continent = reorder(continent, -prop),
     sig = as.character(sig)
   ) %>%
@@ -182,18 +221,17 @@ p2 <- people %>%
   geom_bar(stat = "identity", alpha = 0.8, color = "black") +
   geom_bar(stat = "identity", aes(y = expected_prop), alpha = 0, color = "black", fill = "white", size = 0.5, linetype = "longdash") +
   #geom_text(aes(label = paste0(round(prop, 3) * 100, "%"), y = 0.05), size = 2) +
-  geom_text(aes(label = ifelse(sig == "N/A", "", sig), x = 3.5, y = 0.92)) +
-  geom_segment(aes(x = 1, xend = 6, y = ifelse(sig != "N/A", 0.85, 1.1), yend = ifelse(sig != "N/A", 0.85, 1.1)), color = "black") +
-  facet_wrap(~type, nrow = 1) +
+  #geom_text(aes(label = ifelse(sig == "N/A", "", sig), x = 3.5, y = 92)) +
+  #geom_segment(aes(x = 1, xend = 6, y = ifelse(sig != "N/A", 85, 101), yend = ifelse(sig != "N/A", 85, 101)), color = "black") +
+  facet_wrap(~type, nrow = 1, labeller = labeller(type = label_wrap_gen(10))) +
   theme_dakota() +
-  ylim(c(0, 1)) +
+  ylim(c(0, 100)) +
   guides(fill = F) +
   theme(
     axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1),
-    axis.title.x = element_blank(),
-    plot.title = element_text(size = 18)
+    axis.title.x = element_blank()
   ) +
-  labs(y = "Proportion",
+  labs(y = "",
        title = "B") +
   scale_fill_brewer(palette = "Set2")
 
@@ -212,7 +250,7 @@ ggsave(name, plot = gate_rep, height = 6, width = 7)
 And below are the explicit results of the significaince tests used in the previous graphs to compare the actual proportion of male/female authors with the expected proportion given the population of gatekeepers. 
 ```{r}
 fig3_top_sig_table <- data.frame(
-  authorship = c("Corresponding", "First", "Last"),
+  authorship = c("Corresponding", "First", "Last", "Corr.Full"),
   p.value = sapply(gender_sig_list, function(x) x$p.value),
   n = sapply(gender_sig_list, function(x) sum(x$observed)),
   statistic = sapply(gender_sig_list, function(x) x$statistic),
@@ -226,7 +264,7 @@ fig3_top_sig_table
 And the same for the continent-level tests
 ```{r}
 fig3_bottom_sig_table <- data.frame(
-  continent = c("Corresponding", "First", "Last"),
+  continent = c("Corresponding", "First", "Last", "Corr.Full"),
   p.value = sapply(continent_sig_list, function(x) x$p.value),
   n = sapply(continent_sig_list, function(x) sum(x$observed)),
   statistic = sapply(continent_sig_list, function(x) x$statistic),
@@ -252,8 +290,6 @@ gender_dem <- people %>%
 names(gender_dem) <- c("Role", "Gender", "#", "%")
 
 stargazer(gender_dem, summary = F, rownames = F, type = "latex", font.size = "scriptsize")
-
-
 ```
 
 ### Frequencies of author and gatekepeer continental affilaitions at eLife

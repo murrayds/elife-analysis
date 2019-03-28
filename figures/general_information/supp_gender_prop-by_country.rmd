@@ -6,7 +6,7 @@ output: html_notebook
 
 ### Set parameters for the name and extension of the figure
 ```{r}
-figure_name <- "fig_si7"
+figure_name <- "fig_si8"
 figure_extension <- ".pdf"
 
 path_to_data <- "https://www.dropbox.com/s/97im2cayb1trlax/formatted_elife.csv?dl=1"

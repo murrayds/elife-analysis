@@ -24,10 +24,11 @@ theme_dakota <- function () {
     theme_bw(base_size=10, base_family="Times") %+replace% 
         theme(
             strip.background = element_blank(),
-            strip.text = element_text(face = "bold"),
-            plot.title = element_text(size = 11, face = "bold"),
-            axis.text.x = element_text(size = 9, margin = margin(t = 5, b = 5)),
+            #strip.text = element_text(face = "bold"),
+            plot.title = element_text(size = 20, face = "bold"),
+            axis.text.x = element_text(size = 9, margin = margin(t = 5, b = 5), face = "bold"),
             legend.title = element_blank(),
+            strip.text = element_text(size = 11),
             legend.position = "bottom"
         )
 }
@@ -97,6 +98,8 @@ data_homophily <- elife %>%
     accept_count = sum(accepted == TRUE),
     acceptance_rate = sum(accepted == TRUE) / paper_count,
     standard_error = 1.96 * sqrt( (acceptance_rate * (1 - acceptance_rate)) / paper_count),
+    acceptance_rate = acceptance_rate * 100,
+    standard_error = standard_error * 100,
     lower = acceptance_rate - standard_error,
     upper = acceptance_rate + standard_error
   ) %>%
@@ -105,7 +108,7 @@ data_homophily <- elife %>%
   mutate(
     author_key = factor(author_key,
                         levels = c("ca_gender", "fa_gender", "la_gender"),
-                        labels = c("ca_gender" = "Corresponding", "fa_gender" = "First", "la_gender" = "Last"))
+                        labels = c("ca_gender" = "Corresponding Author", "fa_gender" = "First Author", "la_gender" = "Last Author"))
     ,
     gender = ifelse(gender == "M", "Male", "Female"),
     composition = factor(composition, labels = c("All Men" = "All-male", "All Women" = "All-female", "Mixed" = "Mixed-gender"))
@@ -113,24 +116,53 @@ data_homophily <- elife %>%
   filter(composition != "Uncertain")
 
 # Construct the final plot
-gender_homophily <- data_homophily %>% 
+p1 <-  data_homophily %>% 
+  filter(author_key == "First Author") %>%
   ggplot(aes(x = gender, y = acceptance_rate, fill = gender)) +
   geom_bar(stat = "identity", alpha = 0.8, color = "black") +
-  geom_text(aes(y = 0.05, label = paper_count), size = 3.5, color = "black") +
+  geom_text(aes(y = 5, label = paper_count), size = 4, color = "black") +
   geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2, color = "black", alpha = 0.8) +
-  geom_text(aes(x = 1.5, y = 0.92, label = sig), size = 4, color = "black") +
-  geom_segment(aes(x = 1.1, xend = 1.9, y = ifelse(sig != "N/A", 0.85, 1.1), yend = ifelse(sig != "N/A", 0.85, 1.1)), color = "black") +
-  facet_grid(author_key~composition) +
-  coord_cartesian(ylim = c(0.0, 1.0)) +
+  geom_text(aes(x = 1.5, y = 92, label = sig), size = 4, color = "black") +
+  geom_segment(aes(x = 1.1, xend = 1.9, y = ifelse(sig != "N/A", 85, 101), yend = ifelse(sig != "N/A", 85, 101)), color = "black") +
+  #facet_grid(author_key~composition) +
+  facet_wrap(~composition) +
+  coord_cartesian(ylim = c(0.0, 100)) +
   theme_dakota() +
   guides(fill = F) +
   labs(y = "% of full submissions accepted",
-       x = "Gender of Last Author",
+       x = "First Author Gender",
        title = "A"
   ) +
-  theme(plot.title = element_text(size = 20))
+  theme(axis.title.x = element_text(face = "bold", size = 12),
+        axis.title.y = element_text(size = 12),
+        strip.text.x = element_text(size = 12),
+        strip.text.y = element_text(size = 14, face = "bold"))
 
-gender_homophily
+# Construct the final plot
+p2 <- data_homophily %>% 
+  filter(author_key == "Last Author") %>%
+  ggplot(aes(x = gender, y = acceptance_rate, fill = gender)) +
+  geom_bar(stat = "identity", alpha = 0.8, color = "black") +
+  geom_text(aes(y = 5, label = paper_count), size = 4, color = "black") +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2, color = "black", alpha = 0.8) +
+  geom_text(aes(x = 1.5, y = 92, label = sig), size = 4, color = "black") +
+  geom_segment(aes(x = 1.1, xend = 1.9, y = ifelse(sig != "N/A", 85, 101), yend = ifelse(sig != "N/A", 85, 101)), color = "black") +
+  #facet_grid(author_key~composition) +
+  facet_wrap(~composition) +
+  coord_cartesian(ylim = c(0.0, 100)) +
+  theme_dakota() +
+  guides(fill = F) +
+  labs(y = "% of full submissions accepted",
+       x = "Last Author Gender",
+       title = "B"
+  ) +
+  theme(axis.title.x = element_text(face = "bold", size = 12),
+        axis.title.y = element_text(size = 12),
+        strip.text.x = element_text(size = 12),
+        strip.text.y = element_text(size = 14, face = "bold"))
+
+
+gender_homophily <- grid.arrange(p1, p2, nrow = 2)
 ```
 
 ###Signif. test resutls for figure 5
@@ -200,7 +232,7 @@ sig_list <- list()
 for (country in countries) {
   print(country)
   s <- subset(elife, full_decision_made == T & has_full_submission & ca_country == country)
-  t <- table(s$ca_country_homophily, s$accepted)
+  t <- table(s$la_country_homophily, s$accepted)
   test = prop.test(t[, 1:2])
   sig_list[length(sig_list) + 1] <- list(country = test)
 }
@@ -212,15 +244,17 @@ sig_df <- data.frame(
 
 countries_separate <- elife %>%
   filter(full_decision_made & has_full_submission & ca_country %in% countries) %>%
-  group_by(ca_country, ca_country_homophily) %>%
+  group_by(ca_country, la_country_homophily) %>%
   summarize(
     paper_count = n(),
     accept_count = sum(accepted == TRUE, na.rm = T),
     encourage_accept_rate = accept_count / paper_count,
     se = 1.96 * sqrt( (encourage_accept_rate * (1 - encourage_accept_rate)) / paper_count),
+    encourage_accept_rate = encourage_accept_rate * 100,
+    se = se * 100,
     lower = encourage_accept_rate - se,
     upper = encourage_accept_rate + se,
-    upper = ifelse(upper > 1, 1, upper)
+    upper = ifelse(upper > 100, 100, upper)
   ) %>%
   group_by(ca_country) %>%
   mutate(totals = sum(paper_count)) %>%
@@ -229,26 +263,26 @@ countries_separate <- elife %>%
   #top_n(16, totals) %>% # 8 countries, 3 authorship types per country, therefore first 24 rows
   mutate(ca_country = factor(sapply(as.character(ca_country), simpleCap))) %>%
   # Start ggplot
-  ggplot(aes(x = ca_country_homophily, y = encourage_accept_rate, fill = ca_country_homophily)) +
+  ggplot(aes(x = la_country_homophily, y = encourage_accept_rate, fill = la_country_homophily)) +
   geom_bar(stat = "identity", position = position_dodge(), color = "black", alpha = 0.8) +
   geom_errorbar(aes(ymin = lower, ymax = upper), color = "black", width = 0.2) +
-  geom_text(aes(label = paper_count, y = 0.075), size = 2.5) +
-  geom_text(aes(label = sig, x = 1.5, y = 0.90), size = 4) +
-  geom_segment(aes(x = 1, xend = 2, y = ifelse(sig != "N/A", 0.85, 1.1), yend = ifelse(sig != "N/A", 0.85, 1.1)), color = "black") +
-  facet_wrap(~ca_country, nrow = 2, ncol = 4) +
-  ylim(0, 1) +
+  geom_text(aes(label = paper_count, y = 7.5), size = 4) +
+  geom_text(aes(label = sig, x = 1.5, y = 86), size = 4) +
+  geom_segment(aes(x = 1, xend = 2, y = ifelse(sig != "N/A", 80, 101), yend = ifelse(sig != "N/A", 80, 101)), color = "black") +
+  facet_wrap(~ca_country, nrow = 2, ncol = 4, labeller = label_wrap_gen()) +
   theme_dakota() +
   guides(fill = FALSE) +
   scale_fill_brewer(palette = "Oranges", labels = c("No Homogeneity", "Homogeneity")) +
+  scale_y_continuous(limits = c(0, 100), position = "right") +
   scale_x_discrete(labels = c("No Homogeneity", "Homogeneity")) +
   labs(
     x = "",
     y = "% of full submissions accepted",
-    title = "C"
+    title = "D"
   ) +
   theme(
-    axis.text.x = element_text(angle = 20, vjust = 1, hjust = 1),
-    plot.title = element_text(size = 20)
+    axis.text.x = element_text(size = 11, angle = 330, vjust = 1, hjust = 0, face = "bold"),
+    axis.title.y = element_text(size = 12)
   )
 
 countries_separate 
@@ -280,6 +314,13 @@ d2 <- elife %>%
   filter(full_decision_made & has_full_submission) %>%
   filter(ca_country != "United States")
 
+
+# Excluding all founding countries: U.S., U.K., and Germany
+d2.5 <- elife %>%
+  filter(full_decision_made & has_full_submission) %>%
+  filter(!ca_country %in% c("United States", "United Kingdom"))
+
+
 # Excluding all founding countries: U.S., U.K., and Germany
 d3 <- elife %>%
   filter(full_decision_made & has_full_submission) %>%
@@ -287,83 +328,109 @@ d3 <- elife %>%
 
 
 # we also need to get the statistical test infomration for each
-t1 <- prop.test(table(d1$ca_country_homophily, d1$accepted))
-t2 <- prop.test(table(d2$ca_country_homophily, d2$accepted))
-t3 <- prop.test(table(d3$ca_country_homophily, d3$accepted))
-sig_list <- list(t1, t2, t3)
+t1 <- prop.test(table(d1$la_country_homophily, d1$accepted))
+t2 <- prop.test(table(d2$la_country_homophily, d2$accepted))
+t2.5 <- prop.test(table(d2.5$la_country_homophily, d2.5$accepted))
+t3 <- prop.test(table(d3$la_country_homophily, d3$accepted))
+
+sig_list <- list(t1, t2, t2.5, t3)
 
 sig_df <- data.frame(
-  type = c("all", "no us", "no founder"),
+  type = c("all", "no us", "no usuk", "no founder"),
   sig = sapply(sig_list, function(l) {sig2ast(l$p.value) })
 ) 
 
 d1.summ <- d1 %>%
-  group_by(ca_country_homophily) %>%
+  group_by(la_country_homophily) %>%
   summarize(
     paper_count = n(),
     accept_count = sum(accepted == TRUE, na.rm = T),
     encourage_accept_rate = accept_count / paper_count,
     se = 1.96 * sqrt( (encourage_accept_rate * (1 - encourage_accept_rate)) / paper_count),
+    encourage_accept_rate = encourage_accept_rate * 100,
+    se = se * 100,
     lower = encourage_accept_rate - se,
     upper = encourage_accept_rate + se,
-    upper = ifelse(upper > 1, 1, upper),
+    upper = ifelse(upper > 100, 100, upper),
     type = "all"
   )
 
 d2.summ <- d2 %>%
-  group_by(ca_country_homophily) %>%
+  group_by(la_country_homophily) %>%
   summarize(
     paper_count = n(),
     accept_count = sum(accepted == TRUE, na.rm = T),
     encourage_accept_rate = accept_count / paper_count,
     se = 1.96 * sqrt( (encourage_accept_rate * (1 - encourage_accept_rate)) / paper_count),
+    encourage_accept_rate = encourage_accept_rate * 100,
+    se = se * 100,
     lower = encourage_accept_rate - se,
     upper = encourage_accept_rate + se,
-    upper = ifelse(upper > 1, 1, upper),
+    upper = ifelse(upper > 100, 100, upper),
     type = "no us"
   )
 
-d3.summ <- d3 %>%
-  group_by(ca_country_homophily) %>%
+d25.summ <- d2.5 %>%
+  group_by(la_country_homophily) %>%
   summarize(
     paper_count = n(),
     accept_count = sum(accepted == TRUE, na.rm = T),
     encourage_accept_rate = accept_count / paper_count,
     se = 1.96 * sqrt( (encourage_accept_rate * (1 - encourage_accept_rate)) / paper_count),
+    encourage_accept_rate = encourage_accept_rate * 100,
+    se = se * 100,
     lower = encourage_accept_rate - se,
     upper = encourage_accept_rate + se,
-    upper = ifelse(upper > 1, 1, upper),
+    upper = ifelse(upper > 100, 100, upper),
+    type = "no usuk"
+  )
+
+d3.summ <- d3 %>%
+  group_by(la_country_homophily) %>%
+  summarize(
+    paper_count = n(),
+    accept_count = sum(accepted == TRUE, na.rm = T),
+    encourage_accept_rate = accept_count / paper_count,
+    se = 1.96 * sqrt( (encourage_accept_rate * (1 - encourage_accept_rate)) / paper_count),
+    encourage_accept_rate = encourage_accept_rate * 100,
+    se = se * 100,
+    lower = encourage_accept_rate - se,
+    upper = encourage_accept_rate + se,
+    upper = ifelse(upper > 100, 100, upper),
     type = "no founder"
   )
 
 countries_pooled <- d1.summ %>%
   union(d2.summ) %>%
-  union(d3.summ) %>%
+  union(d25.summ) %>%
+  #union(d3.summ) %>%
   left_join(sig_df, by = "type") %>%
   mutate(type = factor(type, 
-                       levels = c("all", "no us", "no founder"),
-                       labels = c("All Countries", "No U.S.", "No U.S., U.K., or Germany")
+                       levels = c("all", "no us", "no usuk"),
+                       labels = c("All Countries", "No U.S.", "No U.S., U.K.")
                        )
          ) %>%
-  ggplot(aes(x = ca_country_homophily, y = encourage_accept_rate, fill = ca_country_homophily)) +
+  ggplot(aes(x = la_country_homophily, y = encourage_accept_rate, fill = la_country_homophily)) +
   geom_bar(stat = "identity", position = position_dodge(), color = "black", alpha = 0.8) +
   geom_errorbar(aes(ymin = lower, ymax = upper), color = "black", width = 0.2) +
-  geom_text(aes(label = paper_count, y = 0.10), size = 2.5) +
-  geom_text(aes(label = sig, x = 1.5, y = 0.85), size = 4) +
-  geom_segment(aes(x = 1, xend = 2, y = ifelse(sig != "N/A", 0.8, 1.1), yend = ifelse(sig != "N/A", 0.8, 1.1)), color = "black") +
-  facet_wrap(~type, ncol = 3) +
-  coord_cartesian(ylim = c(0.0, 1.0)) +
+  geom_text(aes(label = paper_count, y = 10), size = 4) +
+  geom_text(aes(label = sig, x = 1.5, y = 85), size = 4) +
+  geom_segment(aes(x = 1, xend = 2, y = ifelse(sig != "N/A", 80, 101), yend = ifelse(sig != "N/A", 80, 101)), color = "black") +
+  facet_wrap(~type, ncol = 4, labeller = label_wrap_gen(20)) +
+  coord_cartesian(ylim = c(0.0, 100)) +
   theme_dakota() +
   guides(fill = FALSE) +
+  ylim(0, 1) +
   scale_fill_brewer(palette = "Oranges", labels = c("No Homogeneity", "Homogeneity")) +
   scale_x_discrete(labels = c("No Homogeneity", "Homogeneity")) +
+  scale_y_continuous(position = "right") +
   labs(
     x = "",
     y = "% of full submissions accepted",
-    title = "B"
+    title = "C"
   ) +
-  theme(axis.text.x = element_text(angle = 20, hjust = 1, vjust = 1),
-        plot.title = element_text(size = 20))
+  theme(axis.text.x = element_text(size = 11, angle = 330, vjust = 1, hjust = 0, face = "bold"),
+        axis.title.y = element_text(size = 12))
 
 countries_pooled
 ```
@@ -371,7 +438,7 @@ countries_pooled
 ### Testing the pooled country proportions
 ```{r}
 fig7.B_sig_table <- data.frame(
-  type  = c("all", "no us", "no founer"),
+  type  = c("all", "no us", "no usuk", "no founer"),
   p.value = round(sapply(sig_list, function(x) x$p.value), 4),
   #n = sapply(sig_list, function(x) sum(x$observed)),
   estimate = sapply(sig_list, function(x) abs(x$estimate[1] - x$estimate[2])),
@@ -392,7 +459,7 @@ full <- elife %>%
   group_by(ca_country) %>%
   summarize(
     submissions = n(),
-    prop_homogeny = sum(ca_country_homophily, na.rm = T) / submissions
+    prop_homogeny = sum(la_country_homophily, na.rm = T) / submissions
   ) %>%
   arrange(-prop_homogeny) %>%
   top_n(20) %>%
@@ -414,7 +481,7 @@ us_submissions <- elife %>%
   filter(has_full_submission) %>%
   filter(ca_country == "United States")
 
-prop.table(table(us_submissions$ca_country_homophily))
+prop.table(table(us_submissions$la_country_homophily))
 ```
 
 ```{r}
@@ -422,7 +489,7 @@ uk_submissions <- elife %>%
   filter(has_full_submission) %>%
   filter(ca_country == "United Kingdom")
 
-prop.table(table(uk_submissions$ca_country_homophily))
+prop.table(table(uk_submissions$la_country_homophily))
 ```
 
 
@@ -431,7 +498,7 @@ germ_submissions <- elife %>%
   filter(has_full_submission) %>%
   filter(ca_country == "Germany")
 
-prop.table(table(germ_submissions$ca_country_homophily))
+prop.table(table(germ_submissions$la_country_homophily))
 ```
 
 ```{r}
@@ -439,7 +506,7 @@ submissions <- elife %>%
   filter(has_full_submission) %>%
   filter(ca_country == "Japan")
 
-prop.table(table(submissions$ca_country_homophily))
+prop.table(table(submissions$la_country_homophily))
 ```
 
 
@@ -448,13 +515,13 @@ submissions <- elife %>%
   filter(has_full_submission) %>%
   filter(ca_country == "China")
 
-prop.table(table(submissions$ca_country_homophily))
+prop.table(table(submissions$la_country_homophily))
 ```
 
 
 ```{r}
 with_homogeny <- elife %>%
-  filter(ca_country_homophily)
+  filter(la_country_homophily)
 
 table(with_homogeny$ca_country)
 prop.table(table(with_homogeny$ca_country))
@@ -462,14 +529,22 @@ prop.table(table(with_homogeny$ca_country))
 
 
 ```{r}
-g1 <- grid.arrange(gender_homophily, countries_pooled, nrow = 2)
-g <- grid.arrange(g1, countries_separate, ncol = 2)
+g1 <- grid.arrange(countries_pooled, countries_separate, ncol = 1, heights = 2:3)
+g <- grid.arrange(gender_homophily, g1, ncol = 2)
 ```
 
 
 ```{r}
 ## Save the file
 name <- paste0("~/Dropbox/eLife/elife-analysis/figures/main/", figure_name, figure_extension)
-ggsave(name, plot = g, height = 10, width = 14)
+ggsave(name, plot = g, height = 8, width = 10)
+```
+
+
+```{r}
+## Save the file
+name <- paste0("~/Dropbox/eLife/elife-analysis/figures/main/", "si_x", figure_extension)
+ggsave(name, plot = countries_pooled, height = 5, width = 6)
+
 ```
 
