@@ -1,0 +1,106 @@
+"","Country","continent","name","region_un","subregion","region_wb","Longitude","Latitude","economy","income_grp","pop_est"
+"1","united states","North America","United States","Americas","Northern America","North America",-112.4616737,45.6795472,"1. Developed region: G7","1. High income: OECD",313973000
+"2","germany","Europe","Germany","Europe","Western Europe","Europe & Central Asia",10.38578051,51.10698181,"1. Developed region: G7","1. High income: OECD",82329758
+"3","united kingdom","Europe","United Kingdom","Europe","Northern Europe","Europe & Central Asia",-2.86563164,54.12387156,"1. Developed region: G7","1. High income: OECD",62262000
+"4","japan","Asia","Japan","Asia","Eastern Asia","East Asia & Pacific",138.03089558,37.59230135,"1. Developed region: G7","1. High income: OECD",127078679
+"5","puerto rico","North America","Puerto Rico","Americas","Caribbean","Latin America & Caribbean",-66.47307604,18.22813055,"6. Developing region","2. High income: nonOECD",3971020
+"6","belgium","Europe","Belgium","Europe","Western Europe","Europe & Central Asia",4.64065114,50.63981576,"2. Developed region: nonG7","1. High income: OECD",10414336
+"7","switzerland","Europe","Switzerland","Europe","Western Europe","Europe & Central Asia",8.20867471,46.79785878,"2. Developed region: nonG7","1. High income: OECD",7604467
+"8","austria","Europe","Austria","Europe","Western Europe","Europe & Central Asia",14.1264761,47.58549439,"2. Developed region: nonG7","1. High income: OECD",8210281
+"9","china","Asia","China","Asia","Eastern Asia","East Asia & Pacific",103.81907349,36.56176546,"3. Emerging region: BRIC","3. Upper middle income",1338612970
+"10","canada","North America","Canada","Americas","Northern America","North America",-98.30777028,61.36206324,"1. Developed region: G7","1. High income: OECD",33487208
+"11","spain","Europe","Spain","Europe","Southern Europe","Europe & Central Asia",-3.64755047,40.24448698,"2. Developed region: nonG7","1. High income: OECD",40525002
+"12","thailand","Asia","Thailand","Asia","South-Eastern Asia","East Asia & Pacific",101.0028813,15.11815794,"5. Emerging region: G20","3. Upper middle income",65905410
+"13","republic of korea","Asia","Korea","Asia","Eastern Asia","East Asia & Pacific",127.83916086,36.38523983,"4. Emerging region: MIKT","1. High income: OECD",48508972
+"14","poland","Europe","Poland","Europe","Eastern Europe","Europe & Central Asia",19.39012835,52.12759564,"2. Developed region: nonG7","1. High income: OECD",38482919
+"15","denmark","Europe","Denmark","Europe","Northern Europe","Europe & Central Asia",10.02800992,55.98125296,"2. Developed region: nonG7","1. High income: OECD",5500510
+"16","australia","Oceania","Australia","Oceania","Australia and New Zealand","East Asia & Pacific",134.49100008,-25.73288704,"2. Developed region: nonG7","1. High income: OECD",21262641
+"17","france","Europe","France","Europe","Western Europe","Europe & Central Asia",-2.76172945,42.17344011,"1. Developed region: G7","1. High income: OECD",64057792
+"18","croatia","Europe","Croatia","Europe","Southern Europe","Europe & Central Asia",16.40412899,45.08047631,"2. Developed region: nonG7","2. High income: nonOECD",4489409
+"19","ireland","Europe","Ireland","Europe","Northern Europe","Europe & Central Asia",-8.13793569,53.1754487,"2. Developed region: nonG7","1. High income: OECD",4203200
+"20","singapore","Asia","Singapore","Asia","South-Eastern Asia","East Asia & Pacific",103.81725592,1.35876087,"6. Developing region","2. High income: nonOECD",4657542
+"21","italy","Europe","Italy","Europe","Southern Europe","Europe & Central Asia",12.07001339,42.79662641,"1. Developed region: G7","1. High income: OECD",58126212
+"22","india","Asia","India","Asia","Southern Asia","South Asia",79.6119761,22.88578212,"3. Emerging region: BRIC","4. Lower middle income",1166079220
+"23","netherlands","Europe","Netherlands","Europe","Western Europe","Europe & Central Asia",5.28144793,52.1007899,"2. Developed region: nonG7","1. High income: OECD",16715999
+"24","portugal","Europe","Portugal","Europe","Southern Europe","Europe & Central Asia",-8.50104361,39.59550671,"2. Developed region: nonG7","1. High income: OECD",10707924
+"25","iran","Asia","Iran","Asia","Southern Asia","Middle East & North Africa",54.27407004,32.57503292,"5. Emerging region: G20","3. Upper middle income",66429284
+"26","norway","Europe","Norway","Europe","Northern Europe","Europe & Central Asia",15.34834656,68.75015572,"2. Developed region: nonG7","1. High income: OECD",4676305
+"27","mexico","North America","Mexico","Americas","Central America","Latin America & Caribbean",-102.52345169,23.94753724,"4. Emerging region: MIKT","3. Upper middle income",111211789
+"28","viet nam","Asia","Vietnam","Asia","South-Eastern Asia","East Asia & Pacific",106.29914698,16.6460167,"5. Emerging region: G20","4. Lower middle income",86967524
+"29","sweden","Europe","Sweden","Europe","Northern Europe","Europe & Central Asia",16.74558049,62.77966519,"2. Developed region: nonG7","1. High income: OECD",9059651
+"30","iraq","Asia","Iraq","Asia","Western Asia","Middle East & North Africa",43.74353149,33.03970582,"6. Developing region","4. Lower middle income",31129225
+"31","israel","Asia","Israel","Asia","Western Asia","Middle East & North Africa",35.00444693,31.46110101,"2. Developed region: nonG7","1. High income: OECD",7233701
+"32","czech republic","Europe","Czech Rep.","Europe","Eastern Europe","Europe & Central Asia",15.31240163,49.73341233,"2. Developed region: nonG7","1. High income: OECD",10211904
+"33","ukraine","Europe","Ukraine","Europe","Eastern Europe","Europe & Central Asia",31.38326469,48.99656673,"6. Developing region","4. Lower middle income",45700395
+"34","hong kong","Asia","Hong Kong","Asia","Eastern Asia","East Asia & Pacific",114.11380454,22.39827737,"6. Developing region","2. High income: nonOECD",7061200
+"35","brazil","South America","Brazil","Americas","South America","Latin America & Caribbean",-53.09783113,-10.78777702,"3. Emerging region: BRIC","3. Upper middle income",198739269
+"36","finland","Europe","Finland","Europe","Northern Europe","Europe & Central Asia",26.2746656,64.49884603,"2. Developed region: nonG7","1. High income: OECD",5250275
+"37","reunion","Europe","France","Europe","Western Europe","Europe & Central Asia",-2.76172945,42.17344011,"1. Developed region: G7","1. High income: OECD",64057792
+"38","slovenia","Europe","Slovenia","Europe","Southern Europe","Europe & Central Asia",14.80444238,46.11554772,"2. Developed region: nonG7","1. High income: OECD",2005692
+"39","new zealand","Oceania","New Zealand","Oceania","Australia and New Zealand","East Asia & Pacific",171.48492347,-41.81113557,"2. Developed region: nonG7","1. High income: OECD",4213418
+"40","kenya","Africa","Kenya","Africa","Eastern Africa","Sub-Saharan Africa",37.79593973,0.59988022,"5. Emerging region: G20","5. Low income",39002772
+"41","taiwan","Asia","Taiwan","Asia","Eastern Asia","East Asia & Pacific",120.95427281,23.7539928,"2. Developed region: nonG7","2. High income: nonOECD",22974347
+"42","russia","Europe","Russia","Europe","Eastern Europe","Europe & Central Asia",96.68656112,61.98052209,"3. Emerging region: BRIC","3. Upper middle income",140041247
+"43","turkey","Asia","Turkey","Asia","Western Asia","Europe & Central Asia",35.16895346,39.0616029,"4. Emerging region: MIKT","3. Upper middle income",76805524
+"44","costa rica","North America","Costa Rica","Americas","Central America","Latin America & Caribbean",-84.19208768,9.97634464,"5. Emerging region: G20","3. Upper middle income",4253877
+"45","venezuela","South America","Venezuela","Americas","South America","Latin America & Caribbean",-66.18184123,7.12422421,"5. Emerging region: G20","3. Upper middle income",26814843
+"46","korea (south), republic of","Asia","Korea","Asia","Eastern Asia","East Asia & Pacific",127.83916086,36.38523983,"4. Emerging region: MIKT","1. High income: OECD",48508972
+"47","argentina","South America","Argentina","Americas","South America","Latin America & Caribbean",-65.17980692,-35.3813488,"5. Emerging region: G20","3. Upper middle income",40913584
+"48","nepal","Asia","Nepal","Asia","Southern Asia","South Asia",83.9158264,28.24891365,"7. Least developed region","5. Low income",28563377
+"49","greece","Europe","Greece","Europe","Southern Europe","Europe & Central Asia",22.95555794,39.07469623,"2. Developed region: nonG7","1. High income: OECD",10737428
+"50","yemen","Asia","Yemen","Asia","Western Asia","Middle East & North Africa",47.58676189,15.90928005,"7. Least developed region","4. Lower middle income",23822783
+"51","qatar","Asia","Qatar","Asia","Western Asia","Middle East & North Africa",51.18479632,25.30601188,"6. Developing region","2. High income: nonOECD",833285
+"52","hungary","Europe","Hungary","Europe","Eastern Europe","Europe & Central Asia",19.39559116,47.16277506,"2. Developed region: nonG7","1. High income: OECD",9905596
+"53","south africa","Africa","South Africa","Africa","Southern Africa","Sub-Saharan Africa",25.08390093,-29.00034095,"5. Emerging region: G20","3. Upper middle income",49052489
+"54","peru","South America","Peru","Americas","South America","Latin America & Caribbean",-74.38242685,-9.15280381,"5. Emerging region: G20","3. Upper middle income",29546963
+"55","chile","South America","Chile","Americas","South America","Latin America & Caribbean",-71.38256213,-37.73070989,"5. Emerging region: G20","3. Upper middle income",16601707
+"56","monaco","Europe","Monaco","Europe","Western Europe","Europe & Central Asia",7.40627677,43.75274627,"2. Developed region: nonG7","2. High income: nonOECD",32965
+"57","malaysia","Asia","Malaysia","Asia","South-Eastern Asia","East Asia & Pacific",109.69762284,3.78986846,"6. Developing region","3. Upper middle income",25715819
+"58","indonesia","Asia","Indonesia","Asia","South-Eastern Asia","East Asia & Pacific",117.24011366,-2.21505456,"4. Emerging region: MIKT","4. Lower middle income",240271522
+"59","taiwan, republic of china","Asia","Taiwan","Asia","Eastern Asia","East Asia & Pacific",120.95427281,23.7539928,"2. Developed region: nonG7","2. High income: nonOECD",22974347
+"60","saudi arabia","Asia","Saudi Arabia","Asia","Western Asia","Middle East & North Africa",44.53686271,24.12245841,"2. Developed region: nonG7","2. High income: nonOECD",28686633
+"61","madagascar","Africa","Madagascar","Africa","Eastern Africa","Sub-Saharan Africa",46.70473674,-19.37189587,"7. Least developed region","5. Low income",20653556
+"62","uganda","Africa","Uganda","Africa","Eastern Africa","Sub-Saharan Africa",32.36907971,1.27469299,"7. Least developed region","5. Low income",32369558
+"63","serbia and montenegro","Europe","Serbia","Europe","Southern Europe","Europe & Central Asia",20.78958334,44.2215032,"6. Developing region","3. Upper middle income",7379339
+"64","serbia and montenegro","Europe","Montenegro","Europe","Southern Europe","Europe & Central Asia",19.23883939,42.78890259,"6. Developing region","3. Upper middle income",672180
+"65","luxembourg","Europe","Luxembourg","Europe","Western Europe","Europe & Central Asia",6.07182201,49.76725361,"2. Developed region: nonG7","1. High income: OECD",491775
+"66","estonia","Europe","Estonia","Europe","Northern Europe","Europe & Central Asia",25.54248537,58.67192972,"2. Developed region: nonG7","1. High income: OECD",1299371
+"67","uruguay","South America","Uruguay","Americas","South America","Latin America & Caribbean",-56.01807053,-32.79951534,"5. Emerging region: G20","3. Upper middle income",3494382
+"68","romania","Europe","Romania","Europe","Eastern Europe","Europe & Central Asia",24.97293039,45.85243127,"2. Developed region: nonG7","3. Upper middle income",22215421
+"69","colombia","South America","Colombia","Americas","South America","Latin America & Caribbean",-73.08114582,3.91383431,"6. Developing region","3. Upper middle income",45644023
+"70","oman","Asia","Oman","Asia","Western Asia","Middle East & North Africa",56.09166155,20.60515333,"6. Developing region","2. High income: nonOECD",3418085
+"71","macau","Asia","Macao","Asia","Eastern Asia","East Asia & Pacific",113.50932116,22.22311688,"6. Developing region","2. High income: nonOECD",559846
+"72","nigeria","Africa","Nigeria","Africa","Western Africa","Sub-Saharan Africa",8.08943895,9.59411452,"5. Emerging region: G20","4. Lower middle income",149229090
+"73","cyprus","Asia","Cyprus","Asia","Western Asia","Europe & Central Asia",33.0060022,34.91667211,"6. Developing region","2. High income: nonOECD",531640
+"74","united arab emirates","Asia","United Arab Emirates","Asia","Western Asia","Middle East & North Africa",54.3001671,23.90528188,"6. Developing region","2. High income: nonOECD",4798491
+"75","russian federation","Europe","Russia","Europe","Eastern Europe","Europe & Central Asia",96.68656112,61.98052209,"3. Emerging region: BRIC","3. Upper middle income",140041247
+"76","ghana","Africa","Ghana","Africa","Western Africa","Sub-Saharan Africa",-1.21676566,7.95345644,"6. Developing region","4. Lower middle income",23832495
+"77","egypt","Africa","Egypt","Africa","Northern Africa","Middle East & North Africa",29.86190099,26.49593311,"5. Emerging region: G20","4. Lower middle income",83082869
+"78","french polynesia","Oceania","Fr. Polynesia","Oceania","Polynesia","East Asia & Pacific",-144.90494387,-14.72227409,"6. Developing region","2. High income: nonOECD",287032
+"79","lithuania","Europe","Lithuania","Europe","Northern Europe","Europe & Central Asia",23.88719355,55.32610984,"2. Developed region: nonG7","3. Upper middle income",3555179
+"80","cambodia","Asia","Cambodia","Asia","South-Eastern Asia","East Asia & Pacific",104.90694325,12.72004786,"7. Least developed region","5. Low income",14494293
+"81","philippines","Asia","Philippines","Asia","South-Eastern Asia","East Asia & Pacific",122.88393253,11.77536778,"5. Emerging region: G20","4. Lower middle income",97976603
+"82","ethiopia","Africa","Ethiopia","Africa","Eastern Africa","Sub-Saharan Africa",39.60080098,8.62278679,"7. Least developed region","5. Low income",85237338
+"83","iran, islamic republic of","Asia","Iran","Asia","Southern Asia","Middle East & North Africa",54.27407004,32.57503292,"5. Emerging region: G20","3. Upper middle income",66429284
+"84","slovak republic","Europe","Slovakia","Europe","Eastern Europe","Europe & Central Asia",19.47905218,48.70547528,"2. Developed region: nonG7","1. High income: OECD",5463046
+"85","vietnam","Asia","Vietnam","Asia","South-Eastern Asia","East Asia & Pacific",106.29914698,16.6460167,"5. Emerging region: G20","4. Lower middle income",86967524
+"86","malawi","Africa","Malawi","Africa","Eastern Africa","Sub-Saharan Africa",34.28935599,-13.21808088,"7. Least developed region","5. Low income",14268711
+"87","mozambique","Africa","Mozambique","Africa","Eastern Africa","Sub-Saharan Africa",35.53367543,-17.27381643,"7. Least developed region","5. Low income",21669278
+"88","tanzania","Africa","Tanzania","Africa","Eastern Africa","Sub-Saharan Africa",34.81309981,-6.27565408,"7. Least developed region","5. Low income",41048532
+"89","iceland","Europe","Iceland","Europe","Northern Europe","Europe & Central Asia",-18.57396167,64.99575386,"2. Developed region: nonG7","1. High income: OECD",306694
+"90","kuwait","Asia","Kuwait","Asia","Western Asia","Middle East & North Africa",47.58700459,29.33431262,"6. Developing region","2. High income: nonOECD",2691158
+"91","lebanon","Asia","Lebanon","Asia","Western Asia","Middle East & North Africa",35.88016072,33.92306631,"6. Developing region","3. Upper middle income",4017095
+"92","burkina faso","Africa","Burkina Faso","Africa","Western Africa","Sub-Saharan Africa",-1.75456601,12.26953846,"7. Least developed region","5. Low income",15746232
+"93","sri lanka","Asia","Sri Lanka","Asia","Southern Asia","South Asia",80.70108238,7.61266509,"6. Developing region","4. Lower middle income",21324791
+"94","gabon","Africa","Gabon","Africa","Middle Africa","Sub-Saharan Africa",11.7886287,-0.58660025,"6. Developing region","3. Upper middle income",1514993
+"95","bangladesh","Asia","Bangladesh","Asia","Southern Asia","South Asia",90.23812743,23.86731158,"7. Least developed region","5. Low income",156050883
+"96","fiji","Oceania","Fiji","Oceania","Melanesia","East Asia & Pacific",165.45195432,-17.42858032,"6. Developing region","4. Lower middle income",944720
+"97","pakistan","Asia","Pakistan","Asia","Southern Asia","South Asia",69.33957937,29.9497515,"5. Emerging region: G20","4. Lower middle income",176242949
+"98","french guiana","South America","Guyana","Americas","South America","Latin America & Caribbean",-58.98202459,4.79378034,"6. Developing region","4. Lower middle income",772298
+"99","antarctica","Antarctica","Antarctica","Antarctica","Antarctica","Antarctica",19.92108951,-80.50857913,"6. Developing region","2. High income: nonOECD",3802
+"100","slovakia","Europe","Slovakia","Europe","Eastern Europe","Europe & Central Asia",19.47905218,48.70547528,"2. Developed region: nonG7","1. High income: OECD",5463046
+"101","wales","Europe","United Kingdom","Europe","Northern Europe","Europe & Central Asia",-2.86563164,54.12387156,"1. Developed region: G7","1. High income: OECD",62262000
+"102","democratic republic of the congo","Africa","Dem. Rep. Congo","Africa","Middle Africa","Sub-Saharan Africa",23.64396107,-2.87746289,"7. Least developed region","5. Low income",68692542
+"103","albania","Europe","Albania","Europe","Southern Europe","Europe & Central Asia",20.04983396,41.14244989,"6. Developing region","4. Lower middle income",3639453
+"104","andorra","Europe","Andorra","Europe","Southern Europe","Europe & Central Asia",1.56054378,42.54229102,"2. Developed region: nonG7","2. High income: nonOECD",83888
+"105","usa","North America","United States","Americas","Northern America","North America",-112.4616737,45.6795472,"1. Developed region: G7","1. High income: OECD",313973000

@@ -5,7 +5,7 @@ output: html_notebook
 
 ### Set parameters for the name and extension of the figure
 ```{r}
-figure_name <- "fig_si3"
+figure_name <- "fig_si6"
 figure_extension <- ".pdf"
 
 

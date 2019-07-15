@@ -23,6 +23,19 @@ library(sjlabelled)
 library(sjmisc)
 library(grid)
 library(gridExtra)
+library(broom)
+
+# converts a provided p-value into a representation that is easier to visualize
+sig2ast <- function(p) { ifelse(p <= 0.0001, "***", 
+                                ifelse(p <= 0.001, "***", 
+                                       ifelse(p <= 0.01, "**", 
+                                              ifelse(p <= 0.05, "*", 
+                                                     ifelse(p < 0.1, ".", "ns")
+                                              )
+                                       )
+                                )
+                          )
+}
 ```
 
 ### Load the required data
@@ -40,7 +53,7 @@ elife$composition <- relevel(elife$composition, ref = "Mixed")
 elife$la_institution_rank <- with(elife, ifelse(la_institution_rank == "Top", "Top", "Sandard/Unranked/Unknown"))
 elife$ca_institution_rank <- with(elife, ifelse(ca_institution_rank == "Top", "Top", "Sandard/Unranked/Unknown"))
 
-elife$submission_year <- elife$submission_year - 2012
+elife$submission_year <- elife$submission_year-2012
 dim(elife)
 ```
 
@@ -49,7 +62,7 @@ dim(elife)
 # First, filter the data by removing the observations from Antarctica 
 # add a variable for "included"
 initial_submissions <- elife %>% filter(initial_decision_made)
-initial_submissions$included <- with(initial_submissions, initial_decision_made & ca_continent != "Antarctica" & !is.na(ca_institution_rank) & !is.na(ca_gender) & !is.na(ca_se_dist) & !is.na(se_gender))
+initial_submissions$included <- with(initial_submissions, initial_decision_made & ca_continent != "Antarctica" & !is.na(ca_institution_rank) & !is.na(ca_gender) & !is.na(ca_se_dist))
 
 
 full_submissions <- elife %>% filter(full_decision_made)
@@ -64,19 +77,20 @@ summary(initial_model)
 
 ### Construct a regression table for the 
 ```{r}
-initial.cov.labels = c("submission_year" = "Submission Year", 
+initial.cov.labels = c(
+               "submission_year" = "Submission Year", 
                "submission_typeSR" = "Submission Type = SR", 
                "submission_typeTR" = "Submission Type = TR", 
                "ca_genderM" = "Corr. Author is Male",
                "ca_genderUNK" = "Corr. Author Gender UNK",
                "ca_institution_rankTop" = "Corr. Author Inst. Top",
-               "ca_continentAfrica" = "Corr. author from Africa",
-               "ca_continentAsia" = "Corr. author from Asia",
-               "ca_continentEurope" = "Corr. author from Europe",
-               "ca_continentOceania" = "Corr. author from Oceania",
-               "ca_continentSouth America" = "Corr. author from South America",
-               "I(ca_se_dist/1e+06)" = "Geographic distance (1000s km)",
-               "ca_se_dist_zeroTRUE" = "Geographic distance is zero"
+               "ca_continentAfrica" = "Corr. Author from Africa",
+               "ca_continentAsia" = "Corr. Author from Asia",
+               "ca_continentEurope" = "Corr. Author from Europe",
+               "ca_continentOceania" = "Corr. Author from Oceania",
+               "ca_continentSouth America" = "Corr. Author from South America",
+               "I(ca_se_dist/1e+06)" = "Corr. Author-Editor Geo. Distance",
+               "ca_se_dist_zeroTRUE" = "Corr. Author-Editor Geo. Distance = 0"
                )
 
 stargazer(initial_model, 
@@ -92,22 +106,6 @@ stargazer(initial_model,
 
 #cat(paste(out, collapse = "\n"), "\n", file="~/Desktop/encourage_model.txt", append=F)
 #out
-```
-
-### Construct the initial regression plot
-```{r}
-initial_reg_plot <- plot_model(initial_model, 
-           vline.color = "black", 
-           sort.est = TRUE, 
-           show.values = TRUE, 
-           value.offset = .3, 
-           axis.labels = initial.cov.labels,
-           wrap.labels = 100, # basically, don't wrap the labels, squeeze them all in
-           title = "A. Encouragement of initial submissions",
-           axis.lim = c(0.1, 10)) +
-  theme_bw()
-
-initial_reg_plot
 ```
 
 
@@ -158,32 +156,157 @@ full_model <- glm(accepted ~ submission_year + submission_type + fa_gender + la_
 summary(full_model)
 ```
 
+```{r}
+main_effects <- glm(accepted ~ submission_year + submission_type + fa_gender + la_institution_rank + la_gender + la_continent + I(la_reviewer_dist/ 1000000) + la_reviewer_dist_zero + composition, data = subset(full_with_inter, included), family = "binomial")
+summary(main_effects)
+```
+
+
+```{r}
+standard_interaction <- glm(accepted ~ submission_year + submission_type + fa_gender + la_institution_rank + la_gender + la_continent + I(la_reviewer_dist/ 1000000) + la_reviewer_dist_zero + composition + la_gender:composition, data = subset(full_with_inter, included), family = "binomial")
+summary(standard_interaction)
+```
+
 
 ### Run ANOVA on the model...
 ```{r}
-anova(full_model, test = "Chisq")
+anova(standard_interaction, test = "Chisq")
 ```
 
-### Construct the plot for full submissions
+
 ```{r}
-full.cov.labels = c("submission_year" = "Submission Year", 
+exp <- glm(accepted ~ submission_year + submission_type + fa_gender + la_institution_rank + la_gender + la_continent + I(la_reviewer_dist/ 1000000) + la_reviewer_dist_zero + composition + la_gender:composition, data = subset(full_with_inter, included & composition != "All Women"), family = "binomial")
+anova(exp, test = "Chisq")
+summary(exp)
+```
+
+
+Mixed-gender only
+```{r}
+mixed <- glm(accepted ~ submission_year + submission_type + fa_gender +  la_institution_rank + la_gender + la_continent + I(la_reviewer_dist/ 1000000) + la_reviewer_dist_zero, data = subset(full_with_inter, included & composition == "Mixed"), family = "binomial")
+summary(mixed)
+```
+
+
+All-Male
+```{r}
+all_male <- glm(accepted ~ submission_year + submission_type + fa_gender + la_institution_rank + la_gender + la_continent + I(la_reviewer_dist/ 1000000) + la_reviewer_dist_zero, data = subset(full_with_inter, included & composition == "All Men"), family = "binomial")
+summary(all_male)
+```
+
+
+```{r}
+main_effects_tidy <- tidy(main_effects, conf.int = T, exponentiate = T) %>%
+  mutate(type = "Main Effects")
+standard_interaction_tidy <- tidy(standard_interaction, conf.int = T, exponentiate = T) %>%
+  mutate(type = "With Interaction")
+mixed_only_tidy <- tidy(mixed, conf.int = T, exponentiate = T) %>%
+  mutate(type = "Mixed Reviewers Only")
+all_male_only_tidy <- tidy(all_male, conf.int = T, exponentiate = T) %>%
+  mutate(type = "All-Male Reviewers Only")
+global_tidy <- tidy(full_model, conf.int = T, exponentiate = T) %>%
+  mutate(type = "With Interactions")
+
+all_models <- rbind(main_effects_tidy,
+      standard_interaction_tidy,
+      mixed_only_tidy,
+      all_male_only_tidy,
+      global_tidy)
+```
+
+
+```{r}
+full.cov.labels = c(
+               "submission_year" = "Submission Year", 
                "submission_typeSR" = "Submission Type = SR", 
                "submission_typeTR" = "Submission Type = TR", 
                "fa_genderM" = "First Author is Male",
                "fa_genderUNK" = "First Author is Unknown Gender",
+               "compositionAll Men" = "All Male Rev.",
+               "compositionAll Women" = "All Female Rev.",
                "la_institution_rankTop" = "Last Author Inst. Top",
-               "la_continentAfrica" = "Last author from Africa",
-               "la_continentAsia" = "Last author from Asia",
-               "la_continentEurope" = "Last author from Europe",
-               "la_continentOceania" = "Last author from Oceania",
-               "la_continentSouth America" = "Last author from South America",
-               "I(la_reviewer_dist/1e+06)" = "Sum of geo. distance (1000s km)",
-               "la_reviewer_dist_zeroTRUE" = "Sum of geo. distance is zero",
-               "author_reviewer_interactionFemale Author, All Women" = "Last author female - all rev. female",
-               "author_reviewer_interactionFemale Author, Mixed" = "Last author female - mixed rev.",
-               "author_reviewer_interactionMale Author, All Men" = "Last author male - all rev. male",
-               "author_reviewer_interactionMale Author, All Women" = "Last author male - all rev. female",
-               "author_reviewer_interactionMale Author, Mixed" = "Last author male - mixed rev."
+               "la_genderM" = "Last Author is Male",
+               "la_continentAfrica" = "Last Author from Africa",
+               "la_continentAsia" = "Last Author from Asia",
+               "la_continentEurope" = "Last Author from Europe",
+               "la_continentOceania" = "Last Author from Oceania",
+               "la_continentSouth America" = "Last Author from South America",
+               "I(la_reviewer_dist/1e+06)" = "Last Author-Reviewers Geo. Distance",
+               "la_reviewer_dist_zeroTRUE" = "Last Author-Reviewers Geo. Distance = 0",
+               "la_genderM:compositionAll Men" = "Last Author Male*All Male Rev.",
+               "la_genderM:compositionAll Women" = "Last Author Male*All Women Rev.",
+               "author_reviewer_interactionFemale Author, All Women" = "Last Author Female-All Female Rev.",
+               "author_reviewer_interactionFemale Author, Mixed" = "Last Author Female-Mixed Rev.",
+               "author_reviewer_interactionMale Author, All Men" = "Last Author Male-All Male Rev.",
+               "author_reviewer_interactionMale Author, All Women" = "Last Author Male-All Female Rev.",
+               "author_reviewer_interactionMale Author, Mixed" = "Last Author Male-Mixed Rev."
+               )
+
+
+both.full.plots <- all_models %>%
+  filter(type == "With Interactions" | type == "Main Effects") %>%
+  filter(term != "(Intercept)") %>%
+  mutate(
+    type = factor(type, 
+                  levels = c("Main Effects", "With Interactions"),
+                  labels = c("A. Main Effects", "B. With Interactions")),
+    ast = sig2ast(p.value),
+    ast.factor = factor(ast, 
+                 levels = c("ns", ".", "*", "**", "***"), 
+                 labels = c("p > 0.1", "p < 0.1", "p < 0.05", "p < 0.01", "p < 0.001")),
+    color.sig = ifelse(p.value < 0.1, ifelse(estimate > 1, "Positive", "Negative"), "Not Signigicant"),
+    term = as.factor(term),
+    term = plyr::revalue(term, full.cov.labels),
+    term = reorder(term, estimate)
+  ) %>%
+  ggplot(aes(x = term, y = estimate, color = color.sig, shape = ast.factor)) +
+  geom_point(size = 2.5) +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.2) +
+  coord_flip(ylim = c(0.1, 3)) +
+  facet_grid(~type) +
+  geom_text(aes(label = paste0(round(estimate, 3), 
+                               ifelse(ast %in% c("ns", "."), "", ast))),
+            vjust = -0.6, hjust = -0.1, show.legend = F) +
+  scale_color_manual(name = "Direction of Effect", values = c("firebrick", "grey", "blue")) +
+  scale_shape_manual(name = "Significance Level", values = c(1, 10, 16, 17, 18)) +
+  geom_hline(yintercept = 1, color = "black") +
+  theme_minimal() +
+  guides(color = guide_legend(title.position = "top"),
+         shape = guide_legend(title.position = "top")) +
+  theme(axis.title.y = element_blank(),
+        strip.text = element_text(size = 12, face = "bold"),
+        legend.position = "bottom",
+        axis.text.y = element_text(size = 11)) +
+  labs(y = "Odds Ratio")
+
+both.full.plots
+```
+
+
+### Construct the plot for full submissions
+```{r}
+full.cov.labels = c(
+               "submission_year" = "Submission Year", 
+               "submission_typeSR" = "Submission Type = SR", 
+               "submission_typeTR" = "Submission Type = TR", 
+               "fa_genderM" = "First Author is Male",
+               "fa_genderUNK" = "First Author is Unknown Gender",
+               "compositionAll Men" = "All Male Rev.",
+               "compositionAll Women" = "All Female Rev.",
+               "la_institution_rankTop" = "Last Author Inst. Top",
+               "la_genderM" = "Last Author is Male",
+               "la_continentAfrica" = "Last Author from Africa",
+               "la_continentAsia" = "Last Author from Asia",
+               "la_continentEurope" = "Last Author from Europe",
+               "la_continentOceania" = "Last Author from Oceania",
+               "la_continentSouth America" = "Last Author from South America",
+               "I(la_reviewer_dist/1e+06)" = "Last Author-Reviewers Geo. Distance",
+               "la_reviewer_dist_zeroTRUE" = "Last Author-Reviewers Geo. Distance = 0",
+               "author_reviewer_interactionFemale Author, All Women" = "Last Author Female-All Female Rev.",
+               "author_reviewer_interactionFemale Author, Mixed" = "Last Author Female-Mixed Rev.",
+               "author_reviewer_interactionMale Author, All Men" = "Last Author Male-All Male Rev.",
+               "author_reviewer_interactionMale Author, All Women" = "Last Author Male-All Female Rev.",
+               "author_reviewer_interactionMale Author, Mixed" = "Last Author Male-Mixed Rev."
                )
 
 
@@ -193,42 +316,202 @@ stargazer(full_model,
           apply.coef = exp,
           t.auto = F,
           p.auto = F,
-          covariate.labels = full.cov.labels, 
+          covariate.labels = full.cov.labels,
+          model.names = T,
+          style = "ajs",
+          font.size = "scriptsize"
+          )
+```
+
+
+```{r}
+main.effects.cov.labels = c(
+               "submission_year" = "Submission Year", 
+               "submission_typeSR" = "Submission Type = SR", 
+               "submission_typeTR" = "Submission Type = TR", 
+               "fa_genderM" = "First Author is Male",
+               "fa_genderUNK" = "First Author is Unknown Gender",
+               "la_institution_rankTop" = "Last Author Inst. Top",
+               "la_genderM" = "Last Author is Male",
+               "la_continentAfrica" = "Last Author from Africa",
+               "la_continentAsia" = "Last Author from Asia",
+               "la_continentEurope" = "Last Author from Europe",
+               "la_continentOceania" = "Last Author from Oceania",
+               "la_continentSouth America" = "Last Author from South America",
+               "I(la_reviewer_dist/1e+06)" = "Last Author-Reviewers Geo. Distance",
+               "la_reviewer_dist_zeroTRUE" = "Last Author-Reviewers Geo. Distance = 0",
+               "compositionAll Men" = "All Male Rev.",
+               "compositionAll Women" = "All Female Rev."
+               )
+
+stargazer(main_effects, 
+          ci = T, 
+          align = T, 
+          apply.coef = exp,
+          t.auto = F,
+          p.auto = F,
+          covariate.labels = main.effects.cov.labels,
+          model.names = T,
+          style = "ajs",
+          font.size = "scriptsize"
+          )
+```
+
+```{r}
+summary(standard_interaction)
+
+```
+
+```{r}
+
+all.cov.labels = c(
+               "submission_year" = "Submission Year", 
+               "submission_typeSR" = "Submission Type = SR", 
+               "submission_typeTR" = "Submission Type = TR", 
+               "fa_genderM" = "First Author is Male",
+               "fa_genderUNK" = "First Author is Unknown Gender",
+               "la_institution_rankTop" = "Last Author Inst. Top",
+               "la_genderM" = "Last Author is Male",
+               "la_continentAfrica" = "Last Author from Africa",
+               "la_continentAsia" = "Last Author from Asia",
+               "la_continentEurope" = "Last Author from Europe",
+               "la_continentOceania" = "Last Author from Oceania",
+               "la_continentSouth America" = "Last Author from South America",
+               "I(la_reviewer_dist/1e+06)" = "Last Author-Reviewers Geo. Distance",
+               "la_reviewer_dist_zeroTRUE" = "Last Author-Reviewers Geo. Distance = 0",
+               "compositionAll Men" = "All Male Rev.",
+               "compositionAll Women" = "All Female Rev.",
+               "la_genderM:compositionAll Men" = "Last Author Male*All Male Rev.",
+               "la_genderM:compositionAll Women" = "Last Author Male*All Women Rev.",
+               "author_reviewer_interactionFemale Author, All Women" = "Last Author Female-All Female Rev.",
+               "author_reviewer_interactionFemale Author, Mixed" = "Last Author Female-Mixed Rev.",
+               "author_reviewer_interactionMale Author, All Men" = "Last Author Male-All Male Rev.",
+               "author_reviewer_interactionMale Author, All Women" = "Last Author Male-All Female Rev.",
+               "author_reviewer_interactionMale Author, Mixed" = "Last Author Male-Mixed Rev."
+               )
+
+stargazer(main_effects, standard_interaction, all_male, mixed, full_model,
+          type = "latex",
+          style = "ajs",
+          ci = T, 
+          align = T, 
+          apply.coef = exp,
+          t.auto = F,
+          p.auto = F,
+          column.labels = c("Main Effects", "With interaction", "Only All-Male", "Only Mixed", "With Interaction"),
+          covariate.labels = all.cov.labels)
+
+```
+
+
+```{r}
+interaction.cov.labels = c(
+               "submission_year" = "Submission Year", 
+               "submission_typeSR" = "Submission Type = SR", 
+               "submission_typeTR" = "Submission Type = TR", 
+               "fa_genderM" = "First Author is Male",
+               "fa_genderUNK" = "First Author is Unknown Gender",
+               "la_institution_rankTop" = "Last Author Inst. Top",
+               "la_genderM" = "Last Author Male",
+               "la_continentAfrica" = "Last author from Africa",
+               "la_continentAsia" = "Last author from Asia",
+               "la_continentEurope" = "Last author from Europe",
+               "la_continentOceania" = "Last author from Oceania",
+               "la_continentSouth America" = "Last author from South America",
+               "I(la_reviewer_dist/1e+06)" = "Sum of geo. distance (1000s km)",
+               "la_reviewer_dist_zeroTRUE" = "Sum of geo. distance is zero",
+               "compositionAll Men" = "All Reviewers Male",
+               "compositionAll Women" = "All Reviewers Women",
+               "la_genderM:compositionAll Men" = "Last Author Male*All Reviewers Male",
+               "la_genderM:compositionAll Women" = "Last Author Male*All Reviewers Female"
+               )
+
+stargazer(standard_interaction, 
+          ci = T, 
+          align = T, 
+          apply.coef = exp,
+          t.auto = F,
+          p.auto = F,
+          covariate.labels = interaction.cov.labels,
+          model.names = T,
+          style = "ajs",
+          font.size = "scriptsize"
+          )
+```
+
+
+```{r}
+interaction.anova.labels = c(
+               "submission_year" = "Submission Year", 
+               "submission_type" = "Submission Type", 
+               "fa_gender" = "First Author Gender",
+               "la_institution_rank" = "Last Author Inst. Prestige",
+               "la_gender" = "Last Author Gender",
+               "la_continent" = "Last author Continent",
+               "I(la_reviewer_dist/1e+06)" = "Last Author-Reviewers Geographic Distance",
+               "la_reviewer_dist_zero" = "Sum of geo. distance is zero",
+               "composition" = "Reviewer Gender Composition",
+               "la_gender:composition" = "Last Author Gender*Reviewer Gender Composition"
+               )
+
+anova.table <- anova(standard_interaction, test = "Chisq")
+anova.tidy <- tidy(anova.table) %>%
+  filter(term != "NULL") %>%
+  mutate(term = factor(term),
+         term = plyr::revalue(term, interaction.anova.labels),
+         term = as.character(term),
+         Deviance = round(Deviance, 3),
+         Resid..Df = round(Resid..Df, 3),
+         Resid..Dev = round(Resid..Dev, 3),
+         p.value = round(p.value, 5))
+
+anova.tidy
+  
+stargazer(anova.tidy,
+          summary = FALSE,
+          column.labels = c("Term", "df", "Deviance", "Resid. Df", "Resid. Deviance", "P-value"),
+          type = "latex")
+```
+
+
+```{r}
+main.effects.cov.labels = c(
+               "submission_year" = "Submission Year", 
+               "submission_typeSR" = "Submission Type = SR", 
+               "submission_typeTR" = "Submission Type = TR", 
+               "fa_genderM" = "First Author is Male",
+               "fa_genderUNK" = "First Author is Unknown Gender",
+               "la_institution_rankTop" = "Last Author Inst. Top",
+               "la_genderM" = "Last Author Male",
+               "la_continentAfrica" = "Last author from Africa",
+               "la_continentAsia" = "Last author from Asia",
+               "la_continentEurope" = "Last author from Europe",
+               "la_continentOceania" = "Last author from Oceania",
+               "la_continentSouth America" = "Last author from South America",
+               "I(la_reviewer_dist/1e+06)" = "Sum of geo. distance (1000s km)",
+               "la_reviewer_dist_zeroTRUE" = "Sum of geo. distance is zero",
+               "compositionAll Men" = "All Reviewers Male",
+               "compositionAll Women" = "All Reviewers Women"
+               )
+
+stargazer(all_male, mixed, 
+          column.labels = c("All Male", "Mixed-Gender"),
+          ci = T, 
+          align = T, 
+          apply.coef = exp,
+          t.auto = F,
+          p.auto = F,
+          covariate.labels = main.effects.cov.labels,
           model.names = T,
           style = "ajs",
           font.size = "scriptsize"
           )
 
-#cat(paste(out, collapse = "\n"), "\n", file="~/Desktop/full_model.txt", append=F)
-#out
-
 ```
 
-
-```{r}
-full_reg_plot <- plot_model(full_model, 
-           vline.color = "black", 
-           rm.terms = c("fa_genderUNK"),
-           sort.est = TRUE, 
-           show.values = TRUE, 
-           value.offset = .4, 
-           axis.labels = full.cov.labels,
-           wrap.labels = 100, # basically, don't wrap the labels, squeeze them all in
-           title = "B. Acceptance of full submissions",
-           axis.lim = c(0.1, 10)) +
-  theme_bw()
-
-full_reg_plot
-```
-
-
-### Arrange the plots
-```{r}
-regressions_interactions <- grid.arrange(initial_reg_plot, full_reg_plot, ncol = 2)
-```
 
 ### Save the plot
 ```{r}
 name <- paste0("~/Dropbox/eLife/elife-analysis/figures/main/", figure_name, figure_extension)
-ggsave(name, plot = regressions_interactions, height = 8, width = 10)
+ggsave(name, plot = both.full.plots, height = 8, width = 11)
 ```

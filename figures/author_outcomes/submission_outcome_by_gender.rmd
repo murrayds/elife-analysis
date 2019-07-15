@@ -23,14 +23,14 @@ theme_dakota <- function () {
     theme_bw(base_size=10, base_family="Times") %+replace% 
         theme(
             strip.background = element_blank(),
-            strip.text = element_text(face = "bold"),
-            plot.title = element_text(size = 11, face = "bold"),
-            axis.text.x = element_text(size = 9, margin = margin(t = 5, b = 5)),
+            strip.text = element_text(size = 11),
+            plot.title = element_text(size = 14, face = "bold"),
+            axis.text.x = element_text(size = 12, margin = margin(t = 5, b = 5)),
             legend.title = element_blank(),
             legend.position = "bottom"
         )
 }
-
+s
 # converts a provided p-value into a representation that is easier to visualize
 sig2ast <- function(p) { ifelse(p <= 0.0001, "***", 
                                 ifelse(p <= 0.001, "***", 
@@ -146,6 +146,8 @@ data <- elife %>%
                          levels = c("submit_rate", "encourage_rate", "accept_rate", "encourage_accept_rate")),
     gender = ifelse(gender == "F", "Female", "Male"),
     standard_error = 1.96 * sqrt( (measurement * (1 - measurement)) / paper_count),
+    standard_error = standard_error * 100,
+    measurement = measurement * 100,
     lower = measurement - standard_error,
     upper = measurement + standard_error
   )
@@ -155,10 +157,10 @@ gender_outcomes <- data %>%
   ggplot(aes(x = gender, y = measurement, color = factor(gender), shape = factor(gender), fill = factor(gender))) +
   geom_bar(stat = "identity", alpha = 0.8, color = "black") +
   geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2, color = "black") +
-  geom_text(aes(x = 1.5, y = 0.89, label = ifelse(measure_key == "Submissions", "", as.character(sig))), color = "black", size = 4) +
-  geom_segment(aes(x = 1, xend = 2, y = ifelse(sig != "N/A", 0.85, 1.1), yend = ifelse(sig != "N/A", 0.85, 1.1)), color = "black") +
+  geom_text(aes(x = 1.5, y = 89, label = ifelse(measure_key == "Submissions", "", as.character(sig))), color = "black", size = 4) +
+  geom_segment(aes(x = 1, xend = 2, y = ifelse(sig != "N/A", 85, 1.1), yend = ifelse(sig != "N/A", 85, 1.1)), color = "black") +
   facet_wrap(~author_key) +
-  coord_cartesian(ylim = c(0, 1.0)) +
+  coord_cartesian(ylim = c(0, 100)) +
   theme_dakota() +
   guides(fill = F) +
   labs(
@@ -166,7 +168,11 @@ gender_outcomes <- data %>%
     y = "% of full submissions accepted",
     title = "A"
   ) +
-  theme(plot.title = element_text(size = 18))
+  theme(plot.title = element_text(size = 20),
+        strip.text = element_text(size = 11),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 10, face = "bold"),
+        axis.title.y = element_text(size = 12))
 
 gender_outcomes
 ```
@@ -273,29 +279,31 @@ data_national_p1 <- elife %>%
   gather(prop_key, value = prop, prop_of_initial, prop_of_full, prop_of_accepted) %>%
   mutate(prop_key = factor(prop_key, 
                            levels = c("prop_of_initial", "prop_of_full", "prop_of_accepted"),
-                           labels = c("prop_of_initial" = "Prop. of initial submissions", 
-                                      "prop_of_full" = "Prop. of full submissions", 
-                                      "prop_of_accepted" = "Prop. of accepted submissions")),
-         ca_country = reorder(ca_country, paper_count)
+                           labels = c("prop_of_initial" = "Prop. of initial sub.", 
+                                      "prop_of_full" = "Prop. of full sub.", 
+                                      "prop_of_accepted" = "Prop. of accepted sub.")),
+         ca_country = reorder(ca_country, paper_count),
+         prop = prop * 100
   ) 
 
 p1 <- data_national_p1 %>%
   # Start ggplot
   ggplot(aes(x = ca_country, y = prop)) +
   geom_bar(stat = "identity", color = "black", alpha = 0.8, fill = "dodgerblue4", position = position_dodge(1)) +
-  geom_text(aes(y = prop, label = paste0(round(prop, 3) * 100, "%")), size = 2.5, hjust = -0.2, family = "Times", position = position_dodge(1)) +
+  geom_text(aes(y = prop, label = paste0(round(prop, 1), "%")), size = 3, hjust = -0.2, family = "Times", position = position_dodge(1)) +
   scale_y_continuous(limits = c(0, 1)) +
   facet_wrap(~prop_key, labeller = labeller(key = labels)) +
   theme_dakota() +
   coord_flip() +
-  ylim(0, 0.7) +
+  ylim(0, 75) +
   labs(y = "",
        title = "B") +
   theme(
     strip.background = element_blank(),
-    text = element_text(size = 10, family = "Times"),
-    plot.title = element_text(size = 18),
-    strip.text = element_text(face = "bold"),
+    axis.title.x = element_blank(),
+    text = element_text(size = 12, family = "Times"),
+    plot.title = element_text(size = 20),
+    axis.text.x = element_text(size = 9),
     axis.title.y = element_blank()
   )
   
@@ -330,6 +338,8 @@ data_national_p2 <- elife %>%
   group_by(measure_key) %>%
   mutate(
     se = 1.96 * sqrt(measurement * (1 - measurement) / paper_count),
+    measurement = measurement * 100,
+    se = se * 100,
     lower = measurement - se,
     upper = measurement + se
   ) 
@@ -337,19 +347,22 @@ data_national_p2 <- elife %>%
 p2 <- data_national_p2 %>%
   ggplot(aes(x = ca_country, y = measurement)) +
   geom_bar(stat = "identity", color = "black", fill = "dodgerblue4", alpha = 0.8) +
-  geom_text(aes(y = measurement, label = paste0(round(measurement, 3) * 100, "%")), size = 2.5, hjust = -0.6, family = "Times") +
+  geom_text(aes(y = measurement, label = paste0(round(measurement, 1), "%")), size = 3, hjust = -0.6, family = "Times") +
   geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
   facet_wrap(~measure_key, labeller = labeller(key = labels)) +
   theme_dakota() +
   labs(y = "%") +
   coord_flip() +
-  ylim(0, 0.7) +
+  ylim(0, 75) +
   theme(
     axis.title.y = element_blank(),
-    plot.title = element_text(size = 18)
+    axis.title.x element_blank(),
+    strip.background = element_blank(),
+    text = element_text(size = 12, family = "Times"),
+    axis.text.x = element_text(size = 9),
+    plot.title = element_text(size = 20)
   ) +
-  labs(y = "",
-       title = "C")
+  labs(title = "C")
 
 national_outcomes <- grid.arrange(p1, p2)
 
@@ -400,7 +413,7 @@ plot(g)
 ## Save the file
 ```{r}
 name <- paste0("~/Dropbox/eLife/elife-analysis/figures/main/", figure_name, figure_extension)
-ggsave(name, plot = g, height = 7, width = 10)
+ggsave(name, plot = g, height = 5, width = 10.5)
 ```
 
 

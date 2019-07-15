@@ -24,6 +24,19 @@ library(sjlabelled)
 library(sjmisc)
 library(grid)
 library(gridExtra)
+library(broom)
+
+# converts a provided p-value into a representation that is easier to visualize
+sig2ast <- function(p) { ifelse(p <= 0.0001, "***", 
+                                ifelse(p <= 0.001, "***", 
+                                       ifelse(p <= 0.01, "**", 
+                                              ifelse(p <= 0.05, "*", 
+                                                     ifelse(p < 0.1, ".", "ns")
+                                              )
+                                       )
+                                )
+                          )
+}
 ```
 
 ### Load the required data
@@ -51,7 +64,7 @@ dim(elife)
 # First, filter the data by removing the observations from Antarctica 
 # add a variable for "included"
 initial_submissions <- elife %>% filter(initial_decision_made)
-initial_submissions$included <- with(initial_submissions, initial_decision_made & ca_continent != "Antarctica" & !is.na(ca_institution_rank) & !is.na(ca_gender) & !is.na(ca_se_dist) & !is.na(se_gender))
+initial_submissions$included <- with(initial_submissions, initial_decision_made & ca_continent != "Antarctica" & !is.na(ca_institution_rank) & !is.na(ca_gender) & !is.na(ca_se_dist))
 
 
 full_submissions <- elife %>% filter(full_decision_made)
@@ -73,13 +86,13 @@ initial.cov.labels = c(
                "submission_typeSR" = "Submission Type = SR", 
                "submission_typeTR" = "Submission Type = TR", 
                "ca_genderM" = "Corr. Author is Male",
-               "ca_genderUNK" = "Corr. Author Gender UNK",
+               "ca_genderUNK" = "Corr. Author is Unknown Gender",
                "ca_institution_rankTop" = "Corr. Author Inst. Top",
-               "ca_continentAfrica" = "Corr. author from Africa",
-               "ca_continentAsia" = "Corr. author from Asia",
-               "ca_continentEurope" = "Corr. author from Europe",
-               "ca_continentOceania" = "Corr. author from Oceania",
-               "ca_continentSouth America" = "Corr. author from South America"
+               "ca_continentAfrica" = "Corr. Author from Africa",
+               "ca_continentAsia" = "Corr. Author from Asia",
+               "ca_continentEurope" = "Corr. Author from Europe",
+               "ca_continentOceania" = "Corr. Author from Oceania",
+               "ca_continentSouth America" = "Corr. Author from South America"
                )
 
 
@@ -99,24 +112,6 @@ stargazer(initial_model,
 ```
 
 
-### Plot the regression estimates for the initial submissions model
-```{r}
-initial_reg_plot <- plot_model(initial_model, 
-           vline.color = "black", 
-           #rm.terms = c("ca_genderUNK"),
-           sort.est = TRUE, 
-           show.values = TRUE, 
-           value.offset = .3, 
-           axis.labels = initial.cov.labels,
-           wrap.labels = 100, # basically, don't wrap the labels, squeeze them all in
-           title = "A. Encouragement of initial submissions",
-           axis.lim = c(0.1, 10)) +
-  theme_bw()
-
-initial_reg_plot
-```
-
-
 ### Full submissions model
 ```{r}
 full_model <- glm(accepted ~ submission_year + submission_type + fa_gender + la_gender + la_institution_rank + la_continent, data = subset(full_submissions, included), family = "binomial")
@@ -132,11 +127,11 @@ full.cov.labels = c("submission_year" = "Submission Year",
                "fa_genderUNK" = "First Author is Unknown Gender",
                "la_genderM" = "Last Author is Male",
                "la_institution_rankTop" = "Last Author Inst. Top",
-               "la_continentAfrica" = "Last author from Africa",
-               "la_continentAsia" = "Last author from Asia",
-               "la_continentEurope" = "Last author from Europe",
-               "la_continentOceania" = "Last author from Oceania",
-               "la_continentSouth America" = "Last author from South America"
+               "la_continentAfrica" = "Last Author from Africa",
+               "la_continentAsia" = "Last Author from Asia",
+               "la_continentEurope" = "Last Author from Europe",
+               "la_continentOceania" = "Last Author from Oceania",
+               "la_continentSouth America" = "Last Author from South America"
                )
                
 
@@ -158,30 +153,120 @@ stargazer(full_model,
 ```
 
 
-### Plot the regression estimates for full submissions
-```{r}
-full_reg_plot <- plot_model(full_model, 
-           vline.color = "black", 
-           sort.est = TRUE, 
-           show.values = TRUE, 
-           value.offset = .3, 
-           axis.labels = full.cov.labels,
-           wrap.labels = 100, # basically, don't wrap the labels, squeeze them all in
-           title = "B. Acceptance of full submissions",
-           axis.lim = c(0.1, 10)) +
-  theme_bw()
 
-full_reg_plot
+
+
+
+
+```{r}
+initial_tidy <- tidy(initial_model, conf.int = T, exponentiate = T) %>%
+  mutate(type = "Initial Submissions")
+full_tidy <- tidy(full_model, conf.int = T, exponentiate = T) %>%
+  mutate(type = "Full Submissions")
+
+all_submissions <- rbind(initial_tidy, full_tidy)
 ```
 
-### Arrange graphs
+
 ```{r}
-regressions_simple <- grid.arrange(initial_reg_plot, full_reg_plot, ncol = 2)
+initial.plot <- initial_tidy %>%
+  filter(term != "(Intercept)") %>%
+  mutate(
+    #type = factor(type, levels = c("Main Effects", "Global Interactions")),
+    ast = sig2ast(p.value),
+    ast.factor = factor(ast, 
+                 levels = c("ns", ".", "*", "**", "***"), 
+                 labels = c("p > 0.1", "p < 0.1", "p < 0.05", "p < 0.01", "p < 0.001")),
+    color.sig = ifelse(p.value < 0.1, ifelse(estimate > 1, "Positive", "Negative"), "Not Signigicant"),
+    term = as.factor(term),
+    term = plyr::revalue(term, initial.cov.labels),
+    term = reorder(term, estimate)
+  ) %>%
+  ggplot(aes(x = term, y = estimate, color = color.sig, shape = ast.factor)) +
+  geom_point(size = 2.5) +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.2) +
+  coord_flip() +
+  #facet_grid(~type, scales = "free") +
+  geom_text(aes(label = paste0(round(estimate, 3), 
+                               ifelse(ast %in% c("ns", "."), "", ast)), 
+                x = term, y = estimate), vjust = -0.6, hjust = -0.1, show.legend = F) +
+  scale_color_manual(name = "Direction of Effect", values = c("firebrick", "grey", "blue")) +
+  scale_shape_manual(name = "Significance Level", values = c(1, 10, 16, 17, 18), drop = F) +
+  geom_hline(yintercept = 1, color = "black") +
+  coord_flip(ylim = c(0.1, 3)) +
+  theme_minimal() +
+  guides(color = guide_legend(title.position = "top"),
+         shape = guide_legend(title.position = "top")) +
+  theme(axis.title.y = element_blank(),
+        axis.text.y = element_text(size = 9),
+        legend.position = "bottom",
+        plot.title = element_text(size = 12, face = "bold")) +
+  labs(y = "Odds Ratio",
+       title = "A. Initial Submissions")
+
+initial.plot 
 ```
+
+```{r}
+full.plot <- full_tidy %>%
+  filter(term != "(Intercept)") %>%
+  mutate(
+    ast = sig2ast(p.value),
+    ast.factor = factor(ast, 
+                 levels = c("ns", ".", "*", "**", "***"), 
+                 labels = c("p > 0.1", "p < 0.1", "p < 0.05", "p < 0.01", "p < 0.001")),
+    color.sig = ifelse(p.value < 0.1, ifelse(estimate > 1, "Positive", "Negative"), "Not Signigicant"),
+    term = as.factor(term),
+    term = plyr::revalue(term, full.cov.labels),
+    term = reorder(term, estimate)
+  ) %>%
+  ggplot(aes(x = term, y = estimate, color = color.sig, shape = ast.factor)) +
+  geom_point(size = 2.5) +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.2) +
+  #coord_flip() +
+  #facet_grid(~type, scales = "free") +
+  geom_text(aes(label = paste0(round(estimate, 3), 
+                               ifelse(ast %in% c("ns", "."), "", ast)), 
+                x = term, y = estimate), vjust = -0.6, hjust = -0.1, show.legend = F) +
+  scale_color_manual(name = "Direction of Effect", values = c("firebrick", "grey", "blue")) +
+  scale_shape_manual(name = "Significance Level", values = c(1, 10, 16, 15, 18), drop = F) +
+  geom_hline(yintercept = 1, color = "black") +
+  coord_flip(ylim = c(0.1, 3)) +
+  theme_minimal() +
+  guides(color = guide_legend(title.position = "top"),
+         shape = guide_legend(title.position = "top")) +
+  theme(axis.title.y = element_blank(),
+        axis.text.y = element_text(size = 9),
+        legend.position = "bottom",
+        plot.title = element_text(size = 12, face = "bold")) +
+  labs(y = "Odds Ratio",
+       title = "B. Full Submissions")
+
+full.plot
+```
+  
+  
+```{r}
+g_legend<-function(a.gplot){
+  tmp <- ggplot_gtable(ggplot_build(a.gplot))
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  legend <- tmp$grobs[[leg]]
+  return(legend)}
+
+mylegend <- g_legend(initial.plot)
+
+both.plots <- grid.arrange(arrangeGrob(initial.plot + theme(legend.position="none"),
+                         full.plot + theme(legend.position="none"),
+                         nrow=1),
+             mylegend, nrow=2,heights=c(10, 2))
+  
+both.plots
+```
+
 
 ### Save the output
 ```{r}
 name <- paste0("~/Dropbox/eLife/elife-analysis/figures/main/", figure_name, figure_extension)
-ggsave(name, plot = regressions_simple, height = 6, width = 10)
+ggsave(name, plot = both.plots, height = 8, width = 8)
 ```
-  
+
