@@ -64,7 +64,7 @@ dim(elife)
 # First, filter the data by removing the observations from Antarctica 
 # add a variable for "included"
 initial_submissions <- elife %>% filter(initial_decision_made)
-initial_submissions$included <- with(initial_submissions, initial_decision_made & ca_continent != "Antarctica" & !is.na(ca_institution_rank) & !is.na(ca_gender) & !is.na(ca_se_dist) & !is.na(se_gender))
+initial_submissions$included <- with(initial_submissions, initial_decision_made & ca_continent != "Antarctica" & !is.na(ca_institution_rank) & !is.na(ca_gender) & !is.na(ca_se_dist))
 
 
 full_submissions <- elife %>% filter(full_decision_made)
@@ -193,10 +193,13 @@ initial.plot <- initial_tidy %>%
   scale_color_manual(name = "Direction of Effect", values = c("firebrick", "grey", "blue")) +
   scale_shape_manual(name = "Significance Level", values = c(1, 10, 16, 17, 18), drop = F) +
   geom_hline(yintercept = 1, color = "black") +
-  ylim(0.1, 6) +
+  coord_flip(ylim = c(0.1, 3)) +
   theme_minimal() +
+  guides(color = guide_legend(title.position = "top"),
+         shape = guide_legend(title.position = "top")) +
   theme(axis.title.y = element_blank(),
         axis.text.y = element_text(size = 9),
+        legend.position = "bottom",
         plot.title = element_text(size = 12, face = "bold")) +
   labs(y = "Odds Ratio",
        title = "A. Initial Submissions")
@@ -220,7 +223,7 @@ full.plot <- full_tidy %>%
   ggplot(aes(x = term, y = estimate, color = color.sig, shape = ast.factor)) +
   geom_point(size = 2.5) +
   geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.2) +
-  coord_flip() +
+  #coord_flip() +
   #facet_grid(~type, scales = "free") +
   geom_text(aes(label = paste0(round(estimate, 3), 
                                ifelse(ast %in% c("ns", "."), "", ast)), 
@@ -228,10 +231,13 @@ full.plot <- full_tidy %>%
   scale_color_manual(name = "Direction of Effect", values = c("firebrick", "grey", "blue")) +
   scale_shape_manual(name = "Significance Level", values = c(1, 10, 16, 15, 18), drop = F) +
   geom_hline(yintercept = 1, color = "black") +
-  ylim(0.1, 6) +
+  coord_flip(ylim = c(0.1, 3)) +
   theme_minimal() +
+  guides(color = guide_legend(title.position = "top"),
+         shape = guide_legend(title.position = "top")) +
   theme(axis.title.y = element_blank(),
         axis.text.y = element_text(size = 9),
+        legend.position = "bottom",
         plot.title = element_text(size = 12, face = "bold")) +
   labs(y = "Odds Ratio",
        title = "B. Full Submissions")
@@ -252,7 +258,7 @@ mylegend <- g_legend(initial.plot)
 both.plots <- grid.arrange(arrangeGrob(initial.plot + theme(legend.position="none"),
                          full.plot + theme(legend.position="none"),
                          nrow=1),
-             mylegend, ncol=2,widths=c(10, 2))
+             mylegend, nrow=2,heights=c(10, 2))
   
 both.plots
 ```
@@ -261,6 +267,6 @@ both.plots
 ### Save the output
 ```{r}
 name <- paste0("~/Dropbox/eLife/elife-analysis/figures/main/", figure_name, figure_extension)
-ggsave(name, plot = both.plots, height = 6, width = 10)
+ggsave(name, plot = both.plots, height = 8, width = 8)
 ```
 

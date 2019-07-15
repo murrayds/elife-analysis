@@ -478,7 +478,7 @@ write.csv(elife_with_reviewer_info, file = path_to_save_non_anonymous)
 
 ############################################
 # 
-# eLife Anonymize dataset
+# eLife Anonymized dataset
 #
 ############################################
 
@@ -488,6 +488,7 @@ elife_anonymous <- elife_with_reviewer_info %>%
   # Also, lets remove variables that we will not prefently be working with, just to keep the table clean
   select(-c(
     ca_name, la_name, fa_name,  se_name, bre_name, reviewer1_name, reviewer2_name, reviewer3_name, reviewer4_name, 
+    se_gender,
     ca_institution, la_institution, fa_institution, se_institution, bre_institution, 
     reviewer1_institution, reviewer2_institution, reviewer3_institution, reviewer4_institution,
     se_country, bre_country, reviewer1_country, reviewer2_country, reviewer3_country, reviewer4_country,

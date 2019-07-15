@@ -165,6 +165,40 @@ p2 <- data_homophily %>%
 gender_homophily <- grid.arrange(p1, p2, nrow = 2)
 ```
 
+
+
+```{r}
+library(ggrepel)
+head(data_homophily)
+gender_homophily <- data_homophily %>%
+  mutate(composition = factor(composition, levels = c("All-female", "Mixed-gender", "All-male"))) %>%
+  ggplot(aes(x = composition, y = acceptance_rate, color = gender, shape = gender, group = gender)) +
+  geom_line() +
+  geom_point(size = 3.5) +
+  facet_wrap(~author_key, ncol = 1) +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.1) + 
+  coord_cartesian(ylim = c(30, 80)) +
+  geom_text_repel(aes(hjust = -0.5, vjust = -1, label = paste0(round(acceptance_rate, 1), "%"))) +
+  theme_dakota() +
+  scale_color_discrete(name = "Author Gender") +
+  scale_shape_discrete(name = "Author Gender") +
+  labs(y = "% of full submissions accepted",
+       x = "Reviewer Team Composition",
+       title = "A") +
+  theme(axis.title.x = element_text(face = "bold", size = 11),
+        axis.text.x = element_text(face = "bold"),
+        legend.title = element_text(size = 11),
+        legend.text = element_text(size = 10),
+        legend.position = "bottom",
+        strip.text.x = element_text(size = 12),
+        strip.text.y = element_text(size = 14, face = "bold"))
+  
+
+gender_homophily
+ggsave("~/Desktop/elife_lineplot.png", gender_homophily, height = 7, width = 7)
+```
+
+
 ###Signif. test resutls for figure 5
 ```{r}
 names(sig_list) <- c("Reviewers all Men - Corresponding", "Reviewers all Men - First", "Reviewers all Men - Last", 
@@ -278,7 +312,7 @@ countries_separate <- elife %>%
   labs(
     x = "",
     y = "% of full submissions accepted",
-    title = "D"
+    title = "C"
   ) +
   theme(
     axis.text.x = element_text(size = 11, angle = 330, vjust = 1, hjust = 0, face = "bold"),
@@ -427,7 +461,7 @@ countries_pooled <- d1.summ %>%
   labs(
     x = "",
     y = "% of full submissions accepted",
-    title = "C"
+    title = "B"
   ) +
   theme(axis.text.x = element_text(size = 11, angle = 330, vjust = 1, hjust = 0, face = "bold"),
         axis.title.y = element_text(size = 12))
