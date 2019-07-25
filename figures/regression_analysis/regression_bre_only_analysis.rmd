@@ -30,15 +30,12 @@ library(gridExtra)
 # Replace this string 
 elife <- read.csv(path_to_data)
 
-elife$ca_continent <- relevel(elife$ca_continent, ref = "North America")
 elife$fa_continent <- relevel(elife$fa_continent, ref = "North America")
 elife$la_continent <- relevel(elife$la_continent, ref = "North America")
-elife$se_continent <- relevel(elife$se_continent, ref = "North America")
 
 elife$composition <- relevel(elife$composition, ref = "Mixed")
 
 elife$la_institution_rank <- with(elife, ifelse(la_institution_rank == "Top", "Top", "Sandard/Unranked/Unknown"))
-elife$ca_institution_rank <- with(elife, ifelse(ca_institution_rank == "Top", "Top", "Sandard/Unranked/Unknown"))
 
 elife$submission_year <- elife$submission_year - 2012
 dim(elife)
@@ -46,70 +43,8 @@ dim(elife)
 
 ### Define initial and full submissions
 ```{r}
-# First, filter the data by removing the observations from Antarctica 
-# add a variable for "included"
-initial_submissions <- elife %>% filter(initial_decision_made)
-initial_submissions$included <- with(initial_submissions, initial_decision_made & ca_continent != "Antarctica" & !is.na(ca_institution_rank) & !is.na(ca_gender) & !is.na(ca_se_dist) & !is.na(se_gender))
-
-
 full_submissions <- elife %>% filter(full_decision_made)
 full_submissions$included <- with(full_submissions, la_continent != "Antarctica" & fa_continent != "Antarctica" & !is.na(la_gender) & la_gender != "UNK" & composition != "Uncertain" & !is.na(la_reviewer_dist) & !is.na(la_reviewer_dist_zero) & !is.na(la_institution_rank) & !is.na(la_continent) & !is.na(fa_gender))
-```
-
-### Construct the initial submissions model
-```{r}
-initial_model <- glm(encouraged ~ submission_year + submission_type + ca_gender +  ca_institution_rank + ca_continent + I(ca_se_dist / 1000000) + ca_se_dist_zero + ca_se_dist_zero, data = subset(initial_submissions, included), family = "binomial")
-summary(initial_model)
-```
-
-### Construct a regression table for the 
-```{r}
-initial.cov.labels = c("submission_year" = "Submission Year", 
-               "submission_typeSR" = "Submission Type = SR", 
-               "submission_typeTR" = "Submission Type = TR", 
-               "ca_genderM" = "Corr. Author is Male",
-               "ca_genderUNK" = "Corr. Author Gender UNK",
-               "ca_institution_rankTop" = "Corr. Author Inst. Top 50",
-               "ca_institution_rankStandard/Unranked/Unknown" = "Corr. Author Inst. Below 200",
-               "ca_continentAfrica" = "Corr. author from Africa",
-               "ca_continentAsia" = "Corr. author from Asia",
-               "ca_continentEurope" = "Corr. author from Europe",
-               "ca_continentOceania" = "Corr. author from Oceania",
-               "ca_continentSouth America" = "Corr. author from South America",
-               "se_genderM" = "Senior Editor is Male",
-               "I(ca_se_dist/1e+06)" = "Geographic distance (1000s km)",
-               "ca_se_dist_zeroTRUE" = "Geographic distance is zero",
-               "ca_genderM:se_genderM" = "Corr. author male * Senior editor male",
-               "ca_genderUNK:se_genderM" = "Corr. author UNK * Senior editor male"
-               
-               )
-
-out <- capture.output(stargazer(initial_model, 
-                                ci = T, 
-                                align = T, 
-                                covariate.labels = initial.cov.labels, 
-                                model.names = T,
-                                style = "ajs"
-                                ))
-
-#cat(paste(out, collapse = "\n"), "\n", file="~/Desktop/encourage_model.txt", append=F)
-out
-```
-
-### Construct the initial regression plot
-```{r}
-initial_reg_plot <- plot_model(initial_model, 
-           vline.color = "black", 
-           sort.est = TRUE, 
-           show.values = TRUE, 
-           value.offset = .3, 
-           axis.labels = initial.cov.labels,
-           wrap.labels = 100, # basically, don't wrap the labels, squeeze them all in
-           title = "Encouragement of initial submissions",
-           axis.lim = c(0.1, 10)) +
-  theme_bw()
-
-initial_reg_plot
 ```
 
 
@@ -163,14 +98,15 @@ summary(full_model)
 anova(full_model, test = "Chisq")
 ```
 
+
 ### Construct the plot for full submissions
 ```{r}
-full.cov.labels = c("submission_year" = "Submission Year", 
+full.cov.labels = c(
+               "submission_year" = "Submission Year", 
                "submission_typeSR" = "Submission Type = SR", 
                "submission_typeTR" = "Submission Type = TR", 
                "fa_genderM" = "First Author is Male",
                "fa_genderUNK" = "First Author is Unknown Gender",
-               "la_institution_rankStandard/Unranked/Unknown" = "Last Author Inst. Below 200",
                "la_institution_rankTop" = "Last Author Inst. Top 50",
                "la_continentAfrica" = "Last author from Africa",
                "la_continentAsia" = "Last author from Asia",
@@ -182,7 +118,7 @@ full.cov.labels = c("submission_year" = "Submission Year",
                "la_reviewer_dist_zeroTRUE" = "Total dist. between author and reviewers is zero",
                "la_bre_dist_zeroTRUE" = "Dist. between author and rev. editor is zero",
                "author_bre_interactionFemale Author, Male Rev. Editor" = "Last author female - male rev. editor",
-               "author_bre_interactionFemale Author, Female Rev. Editor" = "Last author female - female rev. editor",
+               #"author_bre_interactionFemale Author, Female Rev. Editor" = "Last author female - female rev. editor",
                "author_bre_interactionMale Author, Female Rev. Editor" = "Last author male - female rev. editor",
                "author_bre_interactionMale Author, Male Rev. Editor" = "Last author male - male rev. editor",
                "composition_adjAll Women" = "All Female Reviewers",
@@ -211,8 +147,11 @@ stargazer(full_model,
           covariate.labels = full.cov.labels,
           t.auto = F,
           p.auto = F,
+          ci = T, 
+          align = T,
+          apply.coef = exp,
           type = "latex",
-          font.size = "small",
+          font.size = "tiny",
           style = "ajs")
 ```
 
