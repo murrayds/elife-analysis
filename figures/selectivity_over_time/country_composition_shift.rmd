@@ -19,16 +19,21 @@ path_to_data <- "https://www.dropbox.com/s/97im2cayb1trlax/formatted_elife.csv?d
 library(tidyverse)
 library(grid)
 library(gridExtra)
+library(stargazer)
 
 # setup theme
 theme_dakota <- function () { 
     theme_bw(base_size=10, base_family="Times") %+replace% 
         theme(
             strip.background = element_blank(),
-            strip.text = element_text(face = "bold"),
-            plot.title = element_text(size = 11, face = "bold"),
-            axis.text.x = element_text(size = 9, margin = margin(t = 5, b = 5)),
+            strip.text = element_text(size = 12, face = "bold"),
+            plot.title = element_text(size = 12, face = "bold"),
+            axis.text.x = element_text(size = 12, margin = margin(t = 5, b = 5)),
+            axis.title.x = element_text(size = 12, face = "bold"),
+            axis.title.y = element_text(size = 12, angle = 90),
+            axis.text.y = element_text(size = 10, margin = margin(t = 5, b = 5)),
             legend.title = element_blank(),
+            legend.text = element_text(size = 12),
             legend.position = "bottom"
         )
 }
@@ -60,6 +65,36 @@ elife <- read_csv(path_to_data)
 head(elife)
 ```
 
+```{r}
+la_submission_table <- elife %>%
+  filter(has_full_submission & !is.na(la_continent)) %>%
+  group_by(la_continent) %>%
+  summarize(
+    count = n()
+  ) %>%
+  arrange(desc(count)) %>%
+  rename(Continent = la_continent)
+
+la_submission_table
+
+ca_submission_table <- elife %>%
+  filter(!is.na(ca_continent)) %>%
+  group_by(ca_continent) %>%
+  summarize(
+    count = n()
+  ) %>%
+  arrange(desc(count)) %>%
+  rename(Continent = ca_continent)
+
+ca_submission_table
+
+all_submissions <- ca_submission_table %>%
+  left_join(la_submission_table, by = ("Continent")) %>%
+  rename(`Initial submissions` = count.x,
+         `Full submissions` = count.y)
+
+stargazer(all_submissions, style = "ajs", summary = F)
+```
 
 ```{r}
 country_over_time <- elife %>%
@@ -105,5 +140,5 @@ country_over_time
 ```{r}
 ## Save the file
 name <- paste0("~/Dropbox/eLife/elife-analysis/figures/supp/", figure_name, figure_extension)
-ggsave(name, plot = country_over_time, height = 6, width = 10)
+ggsave(name, plot = country_over_time, height = 5, width = 7)
 ```

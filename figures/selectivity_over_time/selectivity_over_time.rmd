@@ -23,10 +23,11 @@ theme_dakota <- function () {
     theme_bw(base_size=10, base_family="Times") %+replace% 
         theme(
             strip.background = element_blank(),
-            strip.text = element_text(face = "bold"),
+            strip.text = element_text(size = 14, face = "bold"),
             plot.title = element_text(size = 11, face = "bold"),
             axis.text.x = element_text(size = 9, margin = margin(t = 5, b = 5)),
             legend.title = element_blank(),
+            legend.text = element_text(size = 11),
             legend.position = "bottom"
         )
 }
@@ -116,7 +117,7 @@ selectivity_over_time
 ### Save the figure and associated data
 ```{r}
 name <- paste0("~/Dropbox/eLife/elife-analysis/figures/main/", figure_name, figure_extension)
-ggsave(name, plot = selectivity_over_time, height = 4, width = 7.5)
+ggsave(name, plot = selectivity_over_time, height = 5, width = 8)
 
 name_csv1 <- paste0("~/Dropbox/eLife/elife-analysis/formatted_data/", figure_name, "_leftpanel_data.csv")
 name_csv2 <- paste0("~/Dropbox/eLife/elife-analysis/formatted_data/", figure_name, "_rightpanel_data.csv")

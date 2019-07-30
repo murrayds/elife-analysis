@@ -24,9 +24,12 @@ theme_dakota <- function () {
     theme_bw(base_size=10, base_family="Times") %+replace% 
         theme(
             strip.background = element_blank(),
-            strip.text = element_text(face = "bold"),
-            plot.title = element_text(size = 11, face = "bold"),
-            axis.text.x = element_text(size = 9, margin = margin(t = 5, b = 5)),
+            strip.text = element_text(size = 12, face = "bold"),
+            plot.title = element_text(size = 12, face = "bold"),
+            axis.text.x = element_text(size = 12, margin = margin(t = 5, b = 5)),
+            axis.title.x = element_text(size = 12, face = "bold"),
+            axis.title.y = element_text(size = 12, angle = 90),
+            axis.text.y = element_text(size = 10, margin = margin(t = 5, b = 5), hjust = 1),
             legend.title = element_blank(),
             legend.position = "bottom"
         )
@@ -63,9 +66,6 @@ gender_by_country <- elife %>%
   ylim(0, 0.5) +
   coord_flip() +
   theme_dakota() +
-  theme(
-    axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)
-  ) +
   labs(x = "Country of corresponding author",
        y = "Proportion of initial submissions with a female correpsonding author") +
   scale_fill_discrete(labels = c("F" = "Female", "M" = "Male"))

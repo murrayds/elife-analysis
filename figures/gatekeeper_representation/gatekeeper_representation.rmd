@@ -23,7 +23,7 @@ theme_dakota <- function () {
     theme_bw(base_size=10, base_family="Times") %+replace% 
         theme(
             strip.background = element_blank(),
-            strip.text = element_text(size = 12),
+            strip.text = element_text(size = 11),
             plot.title = element_text(size = 18, face = "bold"),
             axis.text.x = element_text(size = 9, margin = margin(t = 5, b = 5), face = "bold"),
             legend.title = element_blank(),
@@ -220,9 +220,7 @@ p2 <- people %>%
   ggplot(aes(x = continent, y = prop, fill = continent)) +
   geom_bar(stat = "identity", alpha = 0.8, color = "black") +
   geom_bar(stat = "identity", aes(y = expected_prop), alpha = 0, color = "black", fill = "white", size = 0.5, linetype = "longdash") +
-  #geom_text(aes(label = paste0(round(prop, 3) * 100, "%"), y = 0.05), size = 2) +
-  #geom_text(aes(label = ifelse(sig == "N/A", "", sig), x = 3.5, y = 92)) +
-  #geom_segment(aes(x = 1, xend = 6, y = ifelse(sig != "N/A", 85, 101), yend = ifelse(sig != "N/A", 85, 101)), color = "black") +
+  #geom_text(aes(label = paste0(round(prop, 1), "%"), y = prop + 15), size = 2.5) +
   facet_wrap(~type, nrow = 1, labeller = labeller(type = label_wrap_gen(10))) +
   theme_dakota() +
   ylim(c(0, 100)) +

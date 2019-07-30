@@ -23,11 +23,12 @@ theme_dakota <- function () {
     theme_bw(base_size=10, base_family="Times") %+replace% 
         theme(
             strip.background = element_blank(),
-            strip.text = element_text(face = "bold"),
-            plot.title = element_text(size = 11, face = "bold"),
-            axis.text.x = element_text(size = 9, margin = margin(t = 5, b = 5)),
+            strip.text = element_text(size = 12, face = "bold"),
+            plot.title = element_text(size = 20, face = "bold"),
+            axis.text.x = element_text(size = 12, margin = margin(t = 5, b = 5)),
+            axis.title.x = element_blank(),
             legend.title = element_blank(),
-            legend.position = "bottom"
+            legend.position = "none"
         )
 }
 
@@ -147,14 +148,15 @@ gender_outcomes <- elife %>%
   ggplot(aes(x = gender, y = measurement, color = factor(gender), shape = factor(gender), fill = factor(gender))) +
   geom_bar(stat = "identity", alpha = 0.8, color = "black") +
   #geom_text(aes(y = 0.08, label = paper_count), size = 2.5, color = "black") +
-  geom_text(aes(x = gender, y = measurement + 0.1, label = ifelse(sig %in% c("*", "**"), round(measurement, 3) * 100, "")), color = "black", size = 2.5) +
+  geom_text(aes(x = gender, y = measurement + 0.1, label = ifelse(sig %in% c("*", "**"), round(measurement, 3) * 100, "")), color = "black", size = 3) +
   #facet_grid(measure_key ~ author_key) +
   geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2, color = "black") +
   # Plot the text for signif check. For final publication we decided to not draw text for N/A 
   geom_text(aes(x = 1.5, y = ifelse(sig == "N/A", 1.1, 0.95), label = ifelse(measure_key == "Submissions", "", as.character(sig))), color = "black") +
   geom_segment(aes(x = 1, xend = 2, y = ifelse(sig != "N/A", 0.85, 1.1), yend = ifelse(sig != "N/A", 0.85, 1.1)), color = "black") +
-  facet_grid(author_key ~ measure_key) +
+  facet_grid(author_key ~ measure_key, switch = "y") +
   coord_cartesian(ylim = c(0, 1)) +
+  scale_y_continuous(position = "right") +
   theme_dakota() +
   guides(fill = F) +
   labs(
@@ -169,5 +171,5 @@ gender_outcomes
 ```{r}
 ## Save the file
 name <- paste0("~/Dropbox/eLife/elife-analysis/figures/supp/", figure_name, figure_extension)
-ggsave(name, plot = gender_outcomes, height = 6, width = 10)
+ggsave(name, plot = gender_outcomes, height = 6, width = 6)
 ```

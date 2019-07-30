@@ -23,11 +23,14 @@ theme_dakota <- function () {
     theme_bw(base_size=10, base_family="Times") %+replace% 
         theme(
             strip.background = element_blank(),
-            strip.text = element_text(face = "bold"),
+            strip.text = element_text(size = 12, face = "bold"),
             plot.title = element_text(size = 11, face = "bold"),
-            axis.text.x = element_text(size = 9, margin = margin(t = 5, b = 5)),
+            axis.text.y = element_text(size = 10),
+            axis.title.y = element_text(size = 12),
+            axis.text.x = element_text(size = 12, margin = margin(t = 5, b = 5)),
             legend.title = element_blank(),
             legend.position = "bottom"
+            
         )
 }
 
@@ -86,7 +89,7 @@ continental_composition <- elife %>%
   gather(contains_key, contains, contains_africa, contains_asia, contains_na, contains_eu, contains_sa, contains_oceania) %>%
   group_by(contains_key, contains, bre_continent) %>%
   summarize(
-    prop = n() / total[1]
+    prop = n() / total[1] * 100
   ) %>%
   ungroup() %>%
   mutate(
@@ -101,16 +104,19 @@ continental_composition <- elife %>%
   ggplot(aes(x = contains_key, y = prop, fill = contains_key)) +
   geom_bar(stat = "identity", color = "black", alpha = 0.8) +
   facet_wrap(~bre_continent, ncol = 6) +
-  geom_text(aes(label = paste0(round(prop, 3) * 100, "%"), y = prop + 0.025), size = 2) +
+  geom_text(aes(label = paste0(round(prop, 1), "%"), y = prop + 5), size = 2.5) +
   theme_dakota() +
   scale_fill_brewer(palette = "Blues", direction = -1) +
-  ylim(0, 1.0) +
-   guides(fill = F) +
+  ylim(0, 100) +
+  guides(fill = F) +
+  #coord_flip() +
   theme(
-    axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)
+    axis.text.x = element_text(angle = 90, size = 12,  hjust = 1),
+    axis.title.y = element_text(angle = 90, size = 12),
+    axis.title.x = element_text(size = 12)
   ) +
   labs(y = "Proportion",
-       x = "Composition of invited peer reviewer teams"
+       x = "Reviewer continent"
        )
 
 
@@ -121,5 +127,5 @@ continental_composition
 ```{r}
 ## Save the file
 name <- paste0("~/Dropbox/eLife/elife-analysis/figures/supp/", figure_name, figure_extension)
-ggsave(name, plot = continental_composition, height = 6, width = 10)
+ggsave(name, plot = continental_composition, height = 6, width = 9)
 ```
