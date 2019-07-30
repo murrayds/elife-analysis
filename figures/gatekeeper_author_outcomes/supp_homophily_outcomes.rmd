@@ -23,9 +23,11 @@ theme_dakota <- function () {
     theme_bw(base_size=10, base_family="Times") %+replace% 
         theme(
             strip.background = element_blank(),
-            strip.text = element_text(face = "bold"),
+            strip.text = element_text(size = 12, face = "bold"),
             plot.title = element_text(size = 11, face = "bold"),
-            axis.text.x = element_text(size = 9, margin = margin(t = 5, b = 5)),
+            axis.text.x = element_text(size = 12, margin = margin(t = 5, b = 5)),
+            axis.title.x = element_blank(),
+            axis.title.y = element_text(size = 12),
             legend.title = element_blank(),
             legend.position = "bottom"
         )
@@ -117,13 +119,14 @@ homophily_outcomes <- elife %>%
   geom_text(aes(x = 1.5, y = 0.90, label = sig), color = "black") +
   #geom_text(aes(x = gender, y = 0.1, label = round(acceptance_rate, 3) * 100 ), color = "black") +
   geom_segment(aes(x = 1, xend = 2, y = ifelse(sig != "N/A", 0.8, 1.1), yend = ifelse(sig != "N/A", 0.8, 1.1)), color = "black") +
-  facet_grid(author_key ~ composition) +
+  facet_grid(author_key ~ composition, switch = "y") +
   ylim(0, 1) +
   theme_dakota() +
+  scale_y_continuous(position = "right") +
   guides(fill = F) +
   labs(y = "% of full submissions accepted",
        x = "Gender of Author"
-  ) 
+  )
 
 homophily_outcomes
 ```
@@ -132,5 +135,5 @@ homophily_outcomes
 ```{r}
 ## Save the file
 name <- paste0("~/Dropbox/eLife/elife-analysis/figures/supp/", figure_name, figure_extension)
-ggsave(name, plot = homophily_outcomes, height = 6, width = 10)
+ggsave(name, plot = homophily_outcomes, height = 5, width = 7)
 ```

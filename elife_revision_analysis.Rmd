@@ -1,0 +1,254 @@
+---
+title: "Analyses run in response to revisions"
+author: "Dakota Murray"
+output:
+  html_document:
+    df_print: paged
+  html_notebook: default
+  pdf_document: default
+---
+
+First, load the data and setup the environment. Replace the string marked below with the path to the file on your computer. 
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(lmtest)
+library(tidyr)
+library(stargazer)
+library(dotwhisker)
+
+# Replace this string 
+path_to_data <- "formatted_data/formatted_elife.csv"
+elife <- read.csv(path_to_data)
+
+elife$ca_continent <- relevel(elife$ca_continent, ref = "North America")
+elife$fa_continent <- relevel(elife$fa_continent, ref = "North America")
+elife$la_continent <- relevel(elife$la_continent, ref = "North America")
+elife$se_continent <- relevel(elife$se_continent, ref = "North America")
+elife$submission_year <- elife$submission_year - 2012
+
+elife$la_institution_rank <- (ifelse(is.na(elife$la_institution_rank), "Unknown/Unranked", as.character(elife$la_institution_rank)))
+elife$ca_institution_rank <- (ifelse(is.na(elife$ca_institution_rank), "Unknown/Unranked", as.character(elife$ca_institution_rank)))
+
+elife$ca_institution_rank <- relevel(factor(elife$ca_institution_rank, levels = c("Standard/Unranked/Unknown", "Proficient", "Top")), ref = "Proficient")
+elife$la_institution_rank <- relevel(factor(elife$la_institution_rank, levels = c("Standard/Unranked/Unknown", "Proficient", "Top")), ref = "Proficient")
+
+table(elife$la_institution_rank)
+
+
+dim(elife)
+```
+
+
+## Reviewer 2
+
+Below are some of the comments made by reviewer 2. At the moment, these have largely been adressed by constructing a series of multiple logistic regression model. 
+
+
+> *To my mind, Figure 5 (and the similar supplementary figure) holds some of the most important results in the study: it shows the % submissions that were accepted, split by the gender of the author(s) and the gender of the reviewers. In my opinion it would be ideal to test the following three null hypotheses:*
+
+> - *The acceptance rate is the same for male and female authors*
+> - *The acceptance rate is the same irrespective of the reviewers’ genders*
+> - *Male and female reviewers do not differ in how often they accept papers authored by women versus men.*
+
+> *However, the latter two hypotheses don’t seem to be tested anywhere in the paper, and this is a shame because the paper draws conclusions that rely on them. For example the authors write: “The acceptance rate for manuscripts with male last authors was significantly higher than for female last authors, and this gender inequity was greatest when the team of reviewers was all male; mixed-gender gatekeeper teams lead to more equitable peer review outcomes” (the latter part is not formally tested).*
+
+> *So basically I think the authors should fit a model to the data that is something like: glm(Accepted ~ Author_gender \* Reviewer_gender, family = “binomial”)*
+
+> *here “Accepted" is a binary variable (0 or 1) describing if the paper was accepted or not. If male reviewers reject women’s papers significantly more often than female reviewers, we should see a statistically significant interaction term. Also, one can examine the main effect of Reviewer_gender to see if men and women are equally strict/permissive as reviewers (I’m not sure this is tested anywhere at present, but it’s interesting and relevant to the themes about idealised peer review in the introduction).*
+
+Submission year is a numeric variable, here coded between 0 (2012) to 5 (2017). Submission type is a categorical variable indicating type of submission, where "RA = Research Article" is the reference, and "TR = Tools and Resources" and "SR = Short Report". 
+
+```{r, results='asis'}
+# First, filter the data by removing the observations from Antarctica 
+# add a variable for "included"
+initial_submissions <- elife %>% filter(initial_decision_made)
+initial_submissions$included <- with(initial_submissions, initial_decision_made & ca_continent != "Antarctica" & !is.na(ca_institution_rank) & !is.na(ca_gender) & !is.na(ca_se_dist) & !is.na(se_gender))
+
+#selection(included ~ ca_continent + ca_gender, encouraged ~ submission_year + submission_type)
+model_e1 <- glm(encouraged ~ submission_year + submission_type, data = subset(initial_submissions, included), family = "binomial")
+summary(model_e1)
+```
+
+
+
+The second model adds charactersitics of the corrseopnding author to the model. The gender of the corresponding author is represented as `ca_gender`, where the reference level is "F = Female", and "UNK" means that the gender could not be identified. The prestige of the corresponding author is represented as `ca_institution_rank`, where "Middle" is the reference, which corresponds to the author's institution being in positions 51-200 of the Shanghai rankings; "Top" indicates that their institution ranks within the top 50 institutions, while "Unranked" means that their institution was not listed. `ca_continent` Indicates the continent of the author's listed country of affiliation, where "North America" is the reference; those who lsit their continent as "Antarctica" have been excluded.
+```{r}
+model_e2 <- glm(encouraged ~ submission_year + submission_type + ca_gender + ca_institution_rank + ca_continent, data = subset(initial_submissions, included), family = "binomial")
+summary(model_e2)
+```
+
+Here I add characteristics of the editor. Because the number of editors is so small, I only include in the data their gender, and so this is all I include in the model. `se_gender` corresponds to the senior editor gender, where the reference level is "F = female". 
+```{r}
+model_e3 <- glm(encouraged ~ submission_year + submission_type + ca_gender + ca_institution_rank + ca_continent + se_gender, data = subset(initial_submissions, included), family = "binomial")
+summary(model_e3)
+```
+
+Finally, I add variables corresponding to the relationship between reviewer and author. `ca_se_dist` is the distance (transformed into 1000's of km) betwee the centroid of the countries of the corresponding author and the senior editor. `ca_se_dist_zero` indicates that this distance is zero. I also add the interaction between the senior editor and correpsonding author gender. 
+```{r}
+model_e4 <- glm(encouraged ~ submission_year + submission_type + ca_gender +  ca_institution_rank + ca_continent + se_gender + I(ca_se_dist / 1000000) + ca_se_dist_zero + ca_se_dist_zero + se_gender * ca_gender , data = subset(initial_submissions, included), family = "binomial")
+summary(model_e4)
+```
+
+We test whether each model is an improvement over the base model (the one that contains only submission year and type). Model 2 (containing author characteristics) is an improvement over the base model. Model 3 (reviewer characteristis) is an improvement over the gender model. Model 4 (interaction between corresponding and editor gender) shows no improvement over model 3. 
+```{r}
+lmtest::lrtest(model_e1, model_e2, model_e3, model_e4)
+```
+
+This can largely be ignored for now, it simply constructs the regression table
+```{r}
+cov.labels = c("Intercept" = "Intercept",
+               "submission_year" = "Submission Year", 
+               "submission_typeSR" = "Submission Type = SR", 
+               "submission_typeTR" = "Submission Type = TR", 
+               "ca_genderM" = "Corr. Author is Male",
+               "ca_genderUNK" = "Corr. Author Gender UNK",
+               "ca_institution_rankStandard/Unranked/Unknown" = "Corr. Author Inst. Prestige: 200+/Unranked/Unknown",
+               "ca_institution_rankTop" = "Corr. Author Inst. Prestige: Top 50",
+               "ca_continentAfrica" = "Corr. author from Africa",
+               "ca_continentAsia" = "Corr. author from Asia",
+               "ca_continentEurope" = "Corr. author from Europe",
+               "ca_continentOceania" = "Corr. author from Oceania",
+               "ca_continentSouth America" = "Corr. author from South America",
+               "se_genderM" = "Senior Editor is Male",
+               "I(ca_se_dist/1e+06)" = "Author-reviewer distance (1000s km)",
+               "ca_se_dist_zeroTRUE" = "Author-reviewer distance is zero",
+               "ca_genderM:se_genderM" = "Corr. author male * Senior editor male",
+               "ca_genderUNK:se_genderM" = "Corr. author UNK * Senior editor male"
+               )
+
+col.labels = c("Contextual", "Author", "Reviewer", "Interaction")
+
+
+model_e1.p <- (as.numeric(summary(model_e1)$coefficients[,4]))
+model_e2.p <- (as.numeric(summary(model_e2)$coefficients[,4]))
+model_e3.p <- (as.numeric(summary(model_e3)$coefficients[,4]))
+model_e4.p <- (as.numeric(summary(model_e4)$coefficients[,4]))
+
+p.values <- list(model_e1.p, model_e2.p, model_e3.p, model_e4.p)
+
+out <- capture.output(stargazer(model_e1, model_e2, model_e3, model_e4, 
+                                ci = T, 
+                                align = T, 
+                                column.labels = col.labels,
+                                covariate.labels = cov.labels, 
+                                model.names = T,
+                                #apply.ci = exp,
+                                apply.coef = exp,
+                                #star.cutoffs = c(0.01, 0.001, 0.0001)
+                                p = p.values,
+                                p.auto = F,
+                                style = "ajs",
+                                out = "~/Desktop/encourage_model2.txt"
+                                ))
+cat(paste(out, collapse = "\n"), "\n", file="~/Desktop/encourage_model.txt", append=F)
+```
+
+
+```{r}
+library(sjPlot)
+names(model_e4$coefficients) <- cov.labels
+model_initial <- plot_model(model_e4, sort.est = TRUE, vline.color = "black", show.values = TRUE, value.offset = 0.3, value.size = 3) +
+  theme_bw() +
+  labs(title = "Logistic regression—Initial Submissions",
+       caption = "n = 23,729\nGender ref = Female\nPrestige ref = 50-200\nContinent ref = North America")
+
+ggsave("~/Desktop/initial.png", model_initial, height = 9, width = 7)
+```
+
+I then repeat this same process, except this time I focus only on full submissions. As before, the first model shows the base characteristics (submission year and type), and we slowly build to the model. Contrary to our examination of initial submissions, there is no significant effect of submission type here. 
+
+The variables at each stage are largely the same, except this time based on the characteristis of the first and last author. 
+```{r}
+full_submissions <- elife %>% filter(full_decision_made)
+full_submissions$included <- with(full_submissions, la_continent != "Antarctica" & fa_continent != "Antarctica" & !is.na(la_gender) & la_gender != "UNK" & composition != "Uncertain" & !is.na(la_reviewer_dist) & !is.na(la_reviewer_dist_zero) & !is.na(la_institution_rank) & !is.na(la_continent) & !is.na(fa_gender))
+  
+model_a1 <- glm(accepted ~ submission_year + submission_type , data = subset(full_submissions, included), family = "binomial")
+summary(model_a1)
+```
+
+For the author characteristics, we consider only the first and the last author. Again, the reference level for gender is female, and the reference for continent is North America. 
+```{r}
+model_a2 <- glm(accepted ~ submission_year + submission_type + fa_gender + la_gender + la_institution_rank + la_continent, data = subset(full_submissions, included), family = "binomial")
+summary(model_a2)
+```
+
+Because there are multiple reviewers, I include a variable indicating reviewer team composition, rather than a gender variable for each. The reference level of this vairable is `All-male team`, which means that all reviewers are male. `Mixed` indicates that there are both men and women on the reviewer team. `All women` indicates that all reviewers are women. 
+```{r}
+model_a3 <- glm(accepted ~ submission_year + submission_type + fa_gender + la_gender + la_institution_rank + la_continent + composition, data = subset(full_submissions, included), family = "binomial")
+summary(model_a3)
+```
+
+
+As with teh first set of models, I include geographic distance between author and reviewers; however, since there are multiple reviewers, I calculate the average distance between the author and each of the reviewers. 
+```{r}
+model_a4 <- glm(accepted ~ submission_year + submission_type + fa_gender + la_gender + la_institution_rank + la_continent + composition + I(la_reviewer_dist/ 1000000) + la_reviewer_dist_zero + la_gender * composition, data = subset(full_submissions, included), family = "binomial")
+summary(model_a4)
+```
+
+```{r}
+lmtest::lrtest(model_a1, model_a2, model_a3, model_a4)
+```
+
+Again, this can be safely ignored, is simply constructs the regression table. 
+```{r}
+cov.labels = c("Intercept" = "Intercept",
+               "submission_year" = "Submission Year", 
+               "submission_typeSR" = "Submission Type = SR", 
+               "submission_typeTR" = "Submission Type = TR", 
+               "fa_genderM" = "First Author is Male",
+               "fa_genderUNK" = "First Author Gender Unknown",
+               "la_genderM" = "Last Author is Male",
+               "la_institution_rankStandard/Unranked/Unknown" = "Last Author Inst. Prestige: 200+/Unranked/Unknown",
+               "la_institution_rankTop" = "Last Author Inst. Prestige: Top 50",
+               "la_continentAfrica" = "Last author from Africa",
+               "la_continentAsia" = "Last author from Asia",
+               "la_continentEurope" = "Last author from Europe",
+               "la_continentOceania" = "Last author from Oceania",
+               "la_continentSouth America" = "Last author from South America",
+               "compositionAll Women" = "Reviewers all women",
+               "compositionMixed" = "Reviewers mixed gender",
+               "I(la_reviewer_dist/1e+06)" = "Sum of author-reviewer distance (1000s km)",
+               "la_reviewer_dist_zeroTRUE" = "Sum of distance is zero",
+               "la_genderM:compositionAll Women" = "Last author male * Reviewers all women",
+               "la_genderM:compositionMixed" = "Last author male * Reviewers mixed"
+               )
+               
+col.labels = c("Contextual", "Author", "Reviewer", "Interaction")
+
+model_a1.p <- (as.numeric(summary(model_a1)$coefficients[,4]))
+model_a2.p <- (as.numeric(summary(model_a2)$coefficients[,4]))
+model_a3.p <- (as.numeric(summary(model_a3)$coefficients[,4]))
+model_a4.p <- (as.numeric(summary(model_a4)$coefficients[,4]))
+
+p.values <- list(model_a1.p, model_a2.p, model_a3.p, model_a4.p)
+
+out <- capture.output(stargazer(model_a1, model_a2, model_a3, model_a4, 
+                                ci = T, 
+                                align = T, 
+                                column.labels = col.labels,
+                                covariate.labels = cov.labels, 
+                                model.names = T,
+                                apply.coef = exp,
+                                p = p.values,
+                                p.auto = F,
+                                style = "ajs",
+                                out = "~/Desktop/accept_model2.txt"
+                                ))
+
+
+
+cat(paste(out, collapse = "\n"), "\n", file="~/Desktop/accept_model.txt", append=TRUE)
+```
+
+
+```{r}
+names(model_a4$coefficients) <- cov.labels
+model_full <- plot_model(model_a4, sort.est = TRUE, vline.color = "black", show.values = TRUE, value.offset = 0.3, value.size = 3) +
+  theme_bw() +
+  labs(title = "Logistic regression—Full Submissions",
+       caption = "n = 6,508\nGender ref = Female\nPrestige ref = 50-200\nContinent ref = North America")
+
+model_full
+ggsave("~/Desktop/full.png", model_full, height = 9, width = 7)
+```
+

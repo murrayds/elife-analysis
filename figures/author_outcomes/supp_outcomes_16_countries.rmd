@@ -25,7 +25,7 @@ theme_dakota <- function () {
             strip.background = element_blank(),
             strip.text = element_text(face = "bold"),
             plot.title = element_text(size = 11, face = "bold"),
-            axis.text.x = element_text(size = 9, margin = margin(t = 5, b = 5)),
+            axis.text.x = element_text(size = 10, margin = margin(t = 5, b = 5)),
             legend.title = element_blank(),
             legend.position = "bottom"
         )
@@ -93,15 +93,15 @@ p1 <- elife %>%
   gather(prop_key, value = prop, prop_of_initial, prop_of_full, prop_of_accepted) %>%
   mutate(prop_key = factor(prop_key, 
                            levels = c("prop_of_initial", "prop_of_full", "prop_of_accepted"),
-                           labels = c("prop_of_initial" = "Prop. of initial submissions", 
-                                      "prop_of_full" = "Prop. of full submissions", 
-                                      "prop_of_accepted" = "Prop. of accepted submissions")),
+                           labels = c("prop_of_initial" = "Prop. of initial", 
+                                      "prop_of_full" = "Prop. of all full", 
+                                      "prop_of_accepted" = "Prop. of accepted full")),
          ca_country = reorder(ca_country, paper_count)
   ) %>%
   # Start ggplot
   ggplot(aes(x = ca_country, y = prop)) +
   geom_bar(stat = "identity", color = "black", alpha = 0.8, fill = "dodgerblue4", position = position_dodge(1)) +
-  geom_text(aes(y = prop, label = paste0(round(prop, 3) * 100, "%")), size = 2.5, hjust = -0.2, family = "Times", position = position_dodge(1)) +
+  geom_text(aes(y = prop, label = paste0(round(prop, 3) * 100, "%")), size = 3, hjust = -0.2, family = "Times", position = position_dodge(1)) +
   scale_y_continuous(limits = c(0, 1)) +
   facet_wrap(~prop_key, labeller = labeller(key = labels)) +
   theme_dakota() +
@@ -110,8 +110,8 @@ p1 <- elife %>%
   labs(y = "") +
   theme(
     strip.background = element_blank(),
-    text = element_text(size = 10, family = "Times"),
-    plot.title = element_text(size = 12),
+    text = element_text(size = 12, family = "Times"),
+    plot.title = element_text(size = 12, face = "bold"),
     strip.text = element_text(face = "bold"),
     axis.title.y = element_blank()
   )
@@ -139,9 +139,9 @@ p2 <- elife %>%
   gather(measure_key, value = measurement, encourage_rate, accept_rate, encourage_accept_rate) %>%
   mutate(measure_key = factor(measure_key, 
                            levels = c("encourage_rate", "encourage_accept_rate", "accept_rate"),
-                           labels = c("encourage_rate" = "% of initial submissions encouraged", 
-                                      "encourage_accept_rate" = "% of full submissions accepted",
-                                      "accept_rate" = "% of initial submissions accepted"
+                           labels = c("encourage_rate" = "% of initial encouraged", 
+                                      "encourage_accept_rate" = "% of full accepted",
+                                      "accept_rate" = "% of initial accepted"
                                       )
                            ) # end factor
   ) %>%
@@ -153,15 +153,19 @@ p2 <- elife %>%
   ) %>%
   ggplot(aes(x = ca_country, y = measurement)) +
   geom_bar(stat = "identity", color = "black", fill = "dodgerblue4", alpha = 0.8) +
-  geom_text(aes(y = upper, label = paste0(round(measurement, 3) * 100, "%")), size = 2.5, hjust = -0.4, family = "Times") +
+  geom_text(aes(y = upper, label = paste0(round(measurement, 3) * 100, "%")), size = 3, hjust = -0.4, family = "Times") +
   geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
   facet_wrap(~measure_key, labeller = labeller(key = labels)) +
   theme_dakota() +
-  labs(y = "%") +
   coord_flip() +
   ylim(0, 0.75) +
   theme(
-    axis.title.y = element_blank()
+    strip.background = element_blank(),
+    text = element_text(size = 12, family = "Times"),
+    plot.title = element_text(size = 12, face = "bold"),
+    strip.text = element_text(face = "bold"),
+    axis.title.y = element_blank(),
+    axis.title.x = element_blank()
   )
 
 countries_16 <- grid.arrange(p1, p2)
@@ -173,5 +177,5 @@ plot(countries_16)
 ```{r}
 ## Save the file
 name <- paste0("~/Dropbox/eLife/elife-analysis/figures/supp/", figure_name, figure_extension)
-ggsave(name, plot = countries_16, height = 6, width = 10)
+ggsave(name, plot = countries_16, height = 6, width = 7)
 ```

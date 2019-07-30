@@ -23,8 +23,8 @@ theme_dakota <- function () {
     theme_bw(base_size=10, base_family="Times") %+replace% 
         theme(
             strip.background = element_blank(),
-            strip.text = element_text(size = 11),
-            plot.title = element_text(size = 14, face = "bold"),
+            strip.text = element_text(size = 12),
+            plot.title = element_text(size = 22, face = "bold"),
             axis.text.x = element_text(size = 12, margin = margin(t = 5, b = 5)),
             legend.title = element_blank(),
             legend.position = "bottom"
@@ -158,6 +158,7 @@ gender_outcomes <- data %>%
   geom_bar(stat = "identity", alpha = 0.8, color = "black") +
   geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2, color = "black") +
   geom_text(aes(x = 1.5, y = 89, label = ifelse(measure_key == "Submissions", "", as.character(sig))), color = "black", size = 4) +
+  geom_text(aes(x = gender, y = measurement + 5, label = paste0(round(measurement, 1), "%")), color = "black", size = 3) +
   geom_segment(aes(x = 1, xend = 2, y = ifelse(sig != "N/A", 85, 1.1), yend = ifelse(sig != "N/A", 85, 1.1)), color = "black") +
   facet_wrap(~author_key) +
   coord_cartesian(ylim = c(0, 100)) +
@@ -168,10 +169,10 @@ gender_outcomes <- data %>%
     y = "% of full submissions accepted",
     title = "A"
   ) +
-  theme(plot.title = element_text(size = 20),
-        strip.text = element_text(size = 11),
+  theme(
+        strip.text = element_text(size = 12),
         axis.title.x = element_blank(),
-        axis.text.x = element_text(size = 10, face = "bold"),
+        axis.text.x = element_text(size = 12, face = "bold", angle = 45, hjust = 1, vjust = 1),
         axis.title.y = element_text(size = 12))
 
 gender_outcomes
@@ -279,9 +280,9 @@ data_national_p1 <- elife %>%
   gather(prop_key, value = prop, prop_of_initial, prop_of_full, prop_of_accepted) %>%
   mutate(prop_key = factor(prop_key, 
                            levels = c("prop_of_initial", "prop_of_full", "prop_of_accepted"),
-                           labels = c("prop_of_initial" = "Prop. of initial sub.", 
-                                      "prop_of_full" = "Prop. of full sub.", 
-                                      "prop_of_accepted" = "Prop. of accepted sub.")),
+                           labels = c("prop_of_initial" = "Prop. of initial", 
+                                      "prop_of_full" = "Prop. of all full", 
+                                      "prop_of_accepted" = "Prop. of accepted full")),
          ca_country = reorder(ca_country, paper_count),
          prop = prop * 100
   ) 
@@ -292,18 +293,18 @@ p1 <- data_national_p1 %>%
   geom_bar(stat = "identity", color = "black", alpha = 0.8, fill = "dodgerblue4", position = position_dodge(1)) +
   geom_text(aes(y = prop, label = paste0(round(prop, 1), "%")), size = 3, hjust = -0.2, family = "Times", position = position_dodge(1)) +
   scale_y_continuous(limits = c(0, 1)) +
-  facet_wrap(~prop_key, labeller = labeller(key = labels)) +
+  facet_wrap(~prop_key, labeller = label_wrap_gen(16)) +
   theme_dakota() +
   coord_flip() +
-  ylim(0, 75) +
+  ylim(0, 80) +
   labs(y = "",
        title = "B") +
   theme(
     strip.background = element_blank(),
     axis.title.x = element_blank(),
     text = element_text(size = 12, family = "Times"),
-    plot.title = element_text(size = 20),
-    axis.text.x = element_text(size = 9),
+    axis.text.x = element_text(size = 10),
+    axis.text.y = element_text(size = 11, face = "bold"),
     axis.title.y = element_blank()
   )
   
@@ -330,9 +331,9 @@ data_national_p2 <- elife %>%
   gather(measure_key, value = measurement, encourage_rate, accept_rate, encourage_accept_rate) %>%
   mutate(measure_key = factor(measure_key, 
                            levels = c("encourage_rate", "encourage_accept_rate", "accept_rate"),
-                           labels = c("encourage_rate" = "% of initial sub. encouraged", 
-                                      "encourage_accept_rate" = "% of full sub. accepted",
-                                      "accept_rate" = "% of initial sub. accepted"
+                           labels = c("encourage_rate" = "% of initial encouraged", 
+                                      "encourage_accept_rate" = "% of full accepted",
+                                      "accept_rate" = "% of initial accepted"
                                       ))
   ) %>%
   group_by(measure_key) %>%
@@ -347,20 +348,20 @@ data_national_p2 <- elife %>%
 p2 <- data_national_p2 %>%
   ggplot(aes(x = ca_country, y = measurement)) +
   geom_bar(stat = "identity", color = "black", fill = "dodgerblue4", alpha = 0.8) +
-  geom_text(aes(y = measurement, label = paste0(round(measurement, 1), "%")), size = 3, hjust = -0.6, family = "Times") +
+  geom_text(aes(y = measurement, label = paste0(round(measurement, 1), "%")), size = 3, hjust = -0.2, family = "Times") +
   geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
-  facet_wrap(~measure_key, labeller = labeller(key = labels)) +
+  facet_wrap(~measure_key, labeller = label_wrap_gen(16)) +
   theme_dakota() +
   labs(y = "%") +
   coord_flip() +
-  ylim(0, 75) +
+  ylim(0, 80) +
   theme(
     axis.title.y = element_blank(),
-    axis.title.x element_blank(),
+    axis.title.x = element_blank(),
     strip.background = element_blank(),
     text = element_text(size = 12, family = "Times"),
-    axis.text.x = element_text(size = 9),
-    plot.title = element_text(size = 20)
+    axis.text.x = element_text(size = 10),
+    axis.text.y = element_text(size = 11, face = "bold")
   ) +
   labs(title = "C")
 
@@ -380,17 +381,17 @@ data_table
 
 ### Proportion of intiial submissions constituted by top 8 counties
 ```{r}
-sum(data_table$`Prop. of initial submissions`)
+sum(data_table$`Prop. of initial sub.`)
 ```
 
 ### Proportion of full submissions constituted by top 8 counties
 ```{r}
-sum(data_table$`Prop. of full submissions`)
+sum(data_table$`Prop. of full sub.`)
 ```
 
 ### Proportion of accepted submissions constituted by top 8 counties
 ```{r}
-sum(data_table$`Prop. of accepted submissions`)
+sum(data_table$`Prop. of accepted sub.`)
 ```
 
 ###Data used to produce figure 5, bottom panel
@@ -405,7 +406,7 @@ data_table
 
 Construct a combined figure
 ```{r}
-g <- grid.arrange(gender_outcomes, national_outcomes, ncol = 2, widths = 1:2)
+g <- grid.arrange(gender_outcomes, national_outcomes, ncol = 2, widths = 2:3)
 plot(g)
 ```
 
@@ -413,7 +414,7 @@ plot(g)
 ## Save the file
 ```{r}
 name <- paste0("~/Dropbox/eLife/elife-analysis/figures/main/", figure_name, figure_extension)
-ggsave(name, plot = g, height = 5, width = 10.5)
+ggsave(name, plot = g, height = 6, width = 9)
 ```
 
 

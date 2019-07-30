@@ -23,9 +23,13 @@ theme_dakota <- function () {
     theme_bw(base_size=10, base_family="Times") %+replace% 
         theme(
             strip.background = element_blank(),
-            strip.text = element_text(face = "bold"),
-            plot.title = element_text(size = 11, face = "bold"),
-            axis.text.x = element_text(size = 9, margin = margin(t = 5, b = 5)),
+            strip.text = element_text(size = 12, face = "bold"),
+            
+            plot.title = element_text(size = 14, face = "bold"),
+            axis.title.x = element_text(size = 12, face = "bold"),
+            axis.text.x = element_text(size = 12, margin = margin(t = 5, b = 5)),
+            axis.text.y = element_text(size = 10),
+            axis.title.y = element_text(size = 12, angle = 90),
             legend.title = element_blank(),
             legend.position = "bottom"
         )
@@ -67,7 +71,7 @@ rev_editor_composition <- elife %>%
   mutate(total = n()) %>%
   group_by(composition_adj, bre_gender) %>%
   summarize(
-    prop = n() / total[1]
+    prop = n() / total[1] * 100
   ) %>%
   ungroup() %>%
   mutate(
@@ -77,11 +81,11 @@ rev_editor_composition <- elife %>%
   ggplot(aes(x = composition_adj, y = prop, fill = composition_adj)) +
   geom_bar(stat = "identity", color = "black", alpha = 0.8) +
   facet_wrap(~bre_gender) +
-  geom_text(aes(label = paste0(round(prop, 3) * 100, "%"), y = prop + 0.025), size = 2.5) +
+  geom_text(aes(label = paste0(round(prop, 1), "%"), y = prop + 5), size = 3) +
   theme_dakota() +
   scale_fill_brewer(palette = "Accent") +
   guides(fill = F) +
-  ylim(0, 0.7) +
+  ylim(0, 100) +
   labs(y = "Proportion",
        x = "Composition of invited peer reviewer teams"
        )
@@ -93,5 +97,5 @@ rev_editor_composition
 ```{r}
 ## Save the file
 name <- paste0("~/Dropbox/eLife/elife-analysis/figures/supp/", figure_name, figure_extension)
-ggsave(name, plot = rev_editor_composition, height = 6, width = 10)
+ggsave(name, plot = rev_editor_composition, height = 6, width = 7)
 ```
