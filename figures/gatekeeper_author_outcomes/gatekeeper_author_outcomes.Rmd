@@ -26,7 +26,7 @@ theme_dakota <- function () {
             strip.background = element_blank(),
             #strip.text = element_text(face = "bold"),
             plot.title = element_text(size = 20, face = "bold"),
-            axis.text.x = element_text(size = 9, margin = margin(t = 5, b = 5), face = "bold"),
+            axis.text.x = element_text(size = 12, margin = margin(t = 5, b = 5), face = "bold"),
             legend.title = element_blank(),
             strip.text = element_text(size = 11),
             legend.position = "bottom"
@@ -173,22 +173,27 @@ head(data_homophily)
 gender_homophily <- data_homophily %>%
   mutate(composition = factor(composition, levels = c("All-female", "Mixed-gender", "All-male"))) %>%
   ggplot(aes(x = composition, y = acceptance_rate, color = gender, shape = gender, group = gender)) +
-  geom_line() +
-  geom_point(size = 3.5) +
+  geom_line(alpha = 0.5, width = 0.5) +
+  geom_point(size = 3) +
   facet_wrap(~author_key, ncol = 1) +
-  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.1) + 
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.1, alpha = 0.8) + 
   coord_cartesian(ylim = c(30, 80)) +
-  geom_text_repel(aes(hjust = -0.5, vjust = -1, label = paste0(round(acceptance_rate, 1), "%"))) +
+  geom_text_repel(aes(label = paste0(round(acceptance_rate, 1), "%")), hjust = 1.5, vjust = -3, size = 3, 
+                  segment.alpha = 0.6, segmnet.size = 0.1, force = 50, segment.color = "grey") +
   theme_dakota() +
   scale_color_discrete(name = "Author Gender") +
   scale_shape_discrete(name = "Author Gender") +
   labs(y = "% of full submissions accepted",
        x = "Reviewer Team Composition",
        title = "A") +
-  theme(axis.title.x = element_text(face = "bold", size = 11),
-        axis.text.x = element_text(face = "bold"),
+  theme(
+    #axis.title.x = element_text(face = "bold", size = 11),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(face = "bold", angle = 30, hjust = 1, vjust = 1, size = 11),
+        axis.text.y = element_text(size = 10),
+        axis.title.y = element_text(size = 12),
         legend.title = element_text(size = 11),
-        legend.text = element_text(size = 10),
+        legend.text = element_text(size = 11),
         legend.position = "bottom",
         strip.text.x = element_text(size = 12),
         strip.text.y = element_text(size = 14, face = "bold"))
@@ -294,30 +299,33 @@ countries_separate <- elife %>%
   mutate(totals = sum(paper_count)) %>%
   ungroup() %>%
   left_join(sig_df) %>%
-  #top_n(16, totals) %>% # 8 countries, 3 authorship types per country, therefore first 24 rows
+  mutate(ca_country = ifelse(ca_country == "United States", "U.S.", ifelse(ca_country == "United Kingdom", "U.K.", ca_country))) %>%
   mutate(ca_country = factor(sapply(as.character(ca_country), simpleCap))) %>%
   # Start ggplot
   ggplot(aes(x = la_country_homophily, y = encourage_accept_rate, fill = la_country_homophily)) +
-  geom_bar(stat = "identity", position = position_dodge(), color = "black", alpha = 0.8) +
-  geom_errorbar(aes(ymin = lower, ymax = upper), color = "black", width = 0.2) +
-  geom_text(aes(label = paper_count, y = 7.5), size = 4) +
-  geom_text(aes(label = sig, x = 1.5, y = 86), size = 4) +
-  geom_segment(aes(x = 1, xend = 2, y = ifelse(sig != "N/A", 80, 101), yend = ifelse(sig != "N/A", 80, 101)), color = "black") +
-  facet_wrap(~ca_country, nrow = 2, ncol = 4, labeller = label_wrap_gen()) +
-  theme_dakota() +
-  guides(fill = FALSE) +
-  scale_fill_brewer(palette = "Oranges", labels = c("No Homogeneity", "Homogeneity")) +
-  scale_y_continuous(limits = c(0, 100), position = "right") +
-  scale_x_discrete(labels = c("No Homogeneity", "Homogeneity")) +
-  labs(
-    x = "",
-    y = "% of full submissions accepted",
-    title = "C"
-  ) +
-  theme(
-    axis.text.x = element_text(size = 11, angle = 330, vjust = 1, hjust = 0, face = "bold"),
-    axis.title.y = element_text(size = 12)
-  )
+    geom_bar(stat = "identity", position = position_dodge(), color = "black", alpha = 0.8) +
+    geom_errorbar(aes(ymin = lower, ymax = upper), color = "black", width = 0.2) +
+    #geom_text(aes(label = paper_count, y = 7.5), size = 4) +
+    geom_text(aes(label = paste0(round(encourage_accept_rate, 1), "%"), y = upper + 8), size = 3) +
+    geom_text(aes(label = sig, x = 1.5, y = 96), size = 4) +
+    geom_segment(aes(x = 1, xend = 2, y = ifelse(sig != "N/A", 90, 101), yend = ifelse(sig != "N/A", 90, 101)), color = "black") +
+    facet_wrap(~ca_country, nrow = 2, ncol = 4, labeller = label_wrap_gen()) +
+    theme_dakota() +
+    guides(fill = FALSE) +
+    scale_fill_brewer(palette = "Oranges", labels = c("No Homogeneity", "Homogeneity")) +
+    scale_y_continuous(limits = c(0, 100), position = "right") +
+    scale_x_discrete(labels = c("No Homogeneity", "Homogeneity")) +
+    labs(
+      x = "",
+      y = "% of full submissions accepted",
+      title = "C"
+    ) +
+    theme(
+      strip.text = element_text(size = 13),
+      axis.text.x = element_text(size = 11, angle = 330, vjust = 1, hjust = 0, face = "bold"),
+      axis.title.y = element_text(size = 12),
+      plot.title = element_text(size = 22, face = "bold")
+    )
 
 countries_separate 
 ```
@@ -447,9 +455,10 @@ countries_pooled <- d1.summ %>%
   ggplot(aes(x = la_country_homophily, y = encourage_accept_rate, fill = la_country_homophily)) +
   geom_bar(stat = "identity", position = position_dodge(), color = "black", alpha = 0.8) +
   geom_errorbar(aes(ymin = lower, ymax = upper), color = "black", width = 0.2) +
-  geom_text(aes(label = paper_count, y = 10), size = 4) +
-  geom_text(aes(label = sig, x = 1.5, y = 85), size = 4) +
-  geom_segment(aes(x = 1, xend = 2, y = ifelse(sig != "N/A", 80, 101), yend = ifelse(sig != "N/A", 80, 101)), color = "black") +
+  #geom_text(aes(label = paper_count, y = 10), size = 4) +
+  geom_text(aes(label = paste0(round(encourage_accept_rate, 1), "%"), y = upper + 8), size = 3) +
+  geom_text(aes(label = sig, x = 1.5, y = 96), size = 4) +
+  geom_segment(aes(x = 1, xend = 2, y = ifelse(sig != "N/A", 90, 101), yend = ifelse(sig != "N/A", 90, 101)), color = "black") +
   facet_wrap(~type, ncol = 4, labeller = label_wrap_gen(20)) +
   coord_cartesian(ylim = c(0.0, 100)) +
   theme_dakota() +
@@ -464,7 +473,8 @@ countries_pooled <- d1.summ %>%
     title = "B"
   ) +
   theme(axis.text.x = element_text(size = 11, angle = 330, vjust = 1, hjust = 0, face = "bold"),
-        axis.title.y = element_text(size = 12))
+        axis.title.y = element_text(size = 12),
+        strip.text = element_text(size = 12))
 
 countries_pooled
 ```
@@ -489,19 +499,20 @@ fig7.B_sig_table
 ### Presence of author-reviewer national homogeny by country of correposnding author
 ```{r rows.print = 20}
 full <- elife %>% 
-  filter(has_full_submission) %>%
+  filter(has_full_submission & !is.na(la_country)) %>%
   group_by(ca_country) %>%
   summarize(
     submissions = n(),
-    prop_homogeny = sum(la_country_homophily, na.rm = T) / submissions
+    num_homogeny =  sum(la_country_homophily, na.rm = T),
+    prop_homogeny = num_homogeny / submissions
   ) %>%
   arrange(-prop_homogeny) %>%
   top_n(20) %>%
   mutate(prop_homogeny = round(prop_homogeny, 3))
 
-names(full) <- c("Country", "# Submissions", "% Country Homogeneity")
+names(full) <- c("Country", "# Submissions", "# Homogeneity", "% Country Homogeneity")
 
-stargazer(full, type = "latex", summary = FALSE, rownames = FALSE, font.size = "scriptsize", digits = )
+stargazer(full, type = "latex", summary = FALSE, rownames = FALSE, font.size = "scriptsize")
 ```
 
 ### Proportion of manuscripts where the corresponding author country is the same as the first and last author country
@@ -564,14 +575,14 @@ prop.table(table(with_homogeny$ca_country))
 
 ```{r}
 g1 <- grid.arrange(countries_pooled, countries_separate, ncol = 1, heights = 2:3)
-g <- grid.arrange(gender_homophily, g1, ncol = 2)
+g <- grid.arrange(gender_homophily, g1, ncol = , widths = 2:3)
 ```
 
 
 ```{r}
 ## Save the file
 name <- paste0("~/Dropbox/eLife/elife-analysis/figures/main/", figure_name, figure_extension)
-ggsave(name, plot = g, height = 8, width = 10)
+ggsave(name, plot = g, height = 7, width = 8)
 ```
 
 
