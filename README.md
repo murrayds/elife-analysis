@@ -28,7 +28,7 @@ Fig 7: figures/regression_analysis/regression_analysis_interaction.rmd
 
 Fig SI 1: figures/revision_information/average_revisions.rmd
 
-Fig SI 2: figures/appeals/gender_and_appeals.rmd
+Fig SI 2*: figures/appeals/gender_and_appeals.rmd
 
 Fig SI 3: figures/author_outcomes/supp_submission_outcomes.rmd
 
@@ -44,6 +44,7 @@ Fig SI 8: figures/gatekeeper_representation/supp_reviewing_editor_composition.rm
 
 Fig SI 9: figures/gatekeeper_representation/reviewing_editor_continental_comp.rmd
 
+\* Requires the full, non-anonymized data file to execute. 
 
 ## Contact
 If you have questions regarding the code and the anaysis, please direct them to myself, Dakota Murray, at dakota.s.murray@gmail.com. Please feel free to follow up if I am slow to respond.
