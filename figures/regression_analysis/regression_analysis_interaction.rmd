@@ -174,12 +174,6 @@ anova(standard_interaction, test = "Chisq")
 ```
 
 
-```{r}
-exp <- glm(accepted ~ submission_year + submission_type + fa_gender + la_institution_rank + la_gender + la_continent + I(la_reviewer_dist/ 1000000) + la_reviewer_dist_zero + composition + la_gender:composition, data = subset(full_with_inter, included & composition != "All Women"), family = "binomial")
-anova(exp, test = "Chisq")
-summary(exp)
-```
-
 
 Mixed-gender only
 ```{r}
@@ -199,13 +193,13 @@ summary(all_male)
 main_effects_tidy <- tidy(main_effects, conf.int = T, exponentiate = T) %>%
   mutate(type = "Main Effects")
 standard_interaction_tidy <- tidy(standard_interaction, conf.int = T, exponentiate = T) %>%
-  mutate(type = "With Interaction")
+  mutate(type = "Standard Interaction")
 mixed_only_tidy <- tidy(mixed, conf.int = T, exponentiate = T) %>%
   mutate(type = "Mixed Reviewers Only")
 all_male_only_tidy <- tidy(all_male, conf.int = T, exponentiate = T) %>%
   mutate(type = "All-Male Reviewers Only")
 global_tidy <- tidy(full_model, conf.int = T, exponentiate = T) %>%
-  mutate(type = "With Interactions")
+  mutate(type = "Gender homogeny interaction")
 
 all_models <- rbind(main_effects_tidy,
       standard_interaction_tidy,
@@ -244,12 +238,12 @@ full.cov.labels = c(
 
 
 both.full.plots <- all_models %>%
-  filter(type == "With Interactions" | type == "Main Effects") %>%
+  filter(type == "Gender homogeny interaction" | type == "Main Effects") %>%
   filter(term != "(Intercept)") %>%
   mutate(
     type = factor(type, 
-                  levels = c("Main Effects", "With Interactions"),
-                  labels = c("A. Main Effects", "B. With Interactions")),
+                  levels = c("Main Effects", "Gender homogeny interaction"),
+                  labels = c("A.", "B.")),
     ast = sig2ast(p.value),
     ast.factor = factor(ast, 
                  levels = c("ns", ".", "*", "**", "***"), 
@@ -276,10 +270,10 @@ both.full.plots <- all_models %>%
   guides(color = guide_legend(title.position = "top"),
          shape = guide_legend(title.position = "top")) +
   theme(axis.title.y = element_blank(),
-        strip.text = element_text(size = 12, face = "bold"),
+        strip.text = element_text(size = 20, face = "bold"),
         legend.position = "bottom",
         legend.text = element_text(size = 11),
-        legend.title = element_text(size = 12),
+        legend.title = element_blank(),
         legend.direction = "vertical",
         axis.text.y = element_text(size = 11)) +
   labs(y = "Odds Ratio")
@@ -516,10 +510,6 @@ stargazer(all_male, mixed,
 
 ```
 
-```{r}
-new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
-if(length(new.packages)) install.packages(new.packages)
-```
 
 ### Save the plot
 ```{r}

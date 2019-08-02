@@ -7,7 +7,7 @@ output: html_notebook
 
 ### Set parameters for the name and extension of the figure
 ```{r}
-figure_name <- "fig_6"
+figure_name <- "fig_5"
 figure_extension <- ".pdf"
 
 path_to_data <- "https://www.dropbox.com/s/97im2cayb1trlax/formatted_elife.csv?dl=1"
@@ -203,9 +203,9 @@ initial.plot <- initial_tidy %>%
         axis.text.y = element_text(size = 9),
         legend.position = "bottom",
         legend.text = element_text(size = 11),
-        legend.title = element_text(size = 12),
+        legend.title = element_blank(),
         legend.direction = "vertical",
-        plot.title = element_text(size = 12, face = "bold", hjust = 0.5)) +
+        plot.title = element_text(size = 14, face = "bold", hjust = 0.5)) +
   labs(y = "Odds Ratio",
        title = "A. Initial Submissions")
 
@@ -247,7 +247,7 @@ full.plot <- full_tidy %>%
         legend.position = "bottom",
         legend.text = element_text(size = 11),
         legend.title = element_text(size = 12),
-        plot.title = element_text(size = 12, face = "bold", hjust = 0.5)) +
+        plot.title = element_text(size = 14, face = "bold", hjust = 0.5)) +
   labs(y = "Odds Ratio",
        title = "B. Full Submissions")
 
