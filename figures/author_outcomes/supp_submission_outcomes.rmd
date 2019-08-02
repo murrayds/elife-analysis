@@ -148,7 +148,7 @@ gender_outcomes <- elife %>%
   ggplot(aes(x = gender, y = measurement, color = factor(gender), shape = factor(gender), fill = factor(gender))) +
   geom_bar(stat = "identity", alpha = 0.8, color = "black") +
   #geom_text(aes(y = 0.08, label = paper_count), size = 2.5, color = "black") +
-  geom_text(aes(x = gender, y = measurement + 0.1, label = ifelse(sig %in% c("*", "**"), round(measurement, 3) * 100, "")), color = "black", size = 3) +
+  geom_text(aes(x = gender, y = measurement + 0.1, label = ifelse(sig %in% c("*", "**", "***"), round(measurement, 3) * 100, "")), color = "black", size = 3) +
   #facet_grid(measure_key ~ author_key) +
   geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2, color = "black") +
   # Plot the text for signif check. For final publication we decided to not draw text for N/A 
